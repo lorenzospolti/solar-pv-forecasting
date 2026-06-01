@@ -1,0 +1,30 @@
+# Reproducible conda environment for Apple Silicon (M4). conda-forge only —
+# avoids channel mixing and bundles libomp for LightGBM/XGBoost (plan §Env).
+# Create:  conda env create -f environment.yml   (or `mamba env create -f ...`)
+# Then:    conda activate pv && pip install -e ".[forecast,dev]"
+name: pv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - statsmodels
+  - lightgbm           # via conda-forge, NOT pip (bundles libomp)
+  - py-xgboost
+  - pvlib
+  - pytorch            # CPU/MPS build on osx-arm64
+  - pytorch-lightning
+  - gluonts            # gluonts[torch]; no MXNet backend on arm64
+  - pyarrow
+  - pyyaml
+  - matplotlib
+  - jupyterlab
+  - tqdm
+  - pytest
+  - ruff
+  - pip
+  # darts (with foundation-model wrappers) + chronos go through pip after creation:
+  #   pip install "u8darts[torch]" "chronos-forecasting>=2.0"

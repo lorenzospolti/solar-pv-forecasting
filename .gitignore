@@ -1,0 +1,27 @@
+# data (large / re-downloadable) — keep the dirs, not the contents
+data/raw/*
+data/interim/*
+data/processed/*
+data/external/*
+!data/**/.gitkeep
+
+# results & model artifacts
+results/*.parquet
+results/*.log
+mlruns/
+*.ckpt
+*.pt
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+
+# os / editor
+.DS_Store
+.vscode/

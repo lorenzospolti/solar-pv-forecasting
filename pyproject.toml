@@ -1,0 +1,41 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pvfc"
+version = "0.0.1"
+description = "Day-ahead PV power forecasting benchmark: classical/ML/deep vs time-series foundation models"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Lorenzo Spolti" }]
+dependencies = [
+  "numpy",
+  "pandas",
+  "scikit-learn",
+  "scipy",
+  "statsmodels",
+  "lightgbm",
+  "pvlib",
+  "pyarrow",
+  "pyyaml",
+  "matplotlib",
+  "tqdm",
+]
+
+[project.optional-dependencies]
+# installed via pip after the conda core env (newer than conda-forge):
+forecast = ["u8darts[torch]", "chronos-forecasting>=2.0"]
+dev = ["pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]

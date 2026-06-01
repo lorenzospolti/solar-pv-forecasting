@@ -1,0 +1,41 @@
+# Composed experiment config. The full resolved dict is SHA1-hashed into the
+# results-row key, so editing this file produces a new, traceable run.
+seed: 0
+
+data:
+  dataset: hkust_rooftop_pv          # primary (Dryad doi:10.5061/dryad.m37pvmd99)
+  site_id: HK_station_01             # used by data.load_station (real run)
+  synthetic_days: 540                # used with --synthetic (harness dev / tests)
+  target: power                      # modelled in clear-sky-index space (k = power/p_clear)
+  weather_mode: oracle               # oracle (measured) | nwp (forecast archive) — see plan §Data
+  capacity_kw: null                  # filled from metadata at load time
+
+splits:                              # expanding-window blocked walk-forward (whole-day blocks)
+  initial_train_days: 365
+  test_days: 30
+  embargo_days: 1                    # >= horizon (day-ahead = 1 day)
+  step_days: 30
+  max_folds: 6
+
+evaluation:
+  daytime_only: true                 # report daytime mask; also rerun all-hours for the thesis
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence       # skill-score denominator
+
+# Model ladder. Baselines run today; darts/foundation models activate as their
+# wrappers land (Weeks 5-8). Comment/uncomment to scope a run.
+models:
+  - name: persistence
+  - name: smart_persistence
+  - name: seasonal_naive
+    params: {season_hours: 24}
+  # - name: sarima
+  # - name: lightgbm
+  #   params: {lags: [24, 48, 168], quantile: true}
+  # - name: lstm
+  #   params: {input_chunk_length: 168, output_chunk_length: 24, bidirectional: false}
+  # - name: chronos2          # zero-shot foundation model
+  # - name: timesfm           # PyTorch checkpoint only (never JAX)
+  # - name: ttm
+  # - name: moirai
