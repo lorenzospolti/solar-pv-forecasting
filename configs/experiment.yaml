@@ -4,7 +4,8 @@ seed: 0
 
 data:
   dataset: hkust_rooftop_pv          # primary (Dryad doi:10.5061/dryad.m37pvmd99)
-  site_id: HK_station_01             # used by data.load_station (real run)
+  site_id: "CYT (Station 1)"         # a discovered HKUST station; pvfc.data.list_stations()
+                                     #   lists all 60 (names like "Library", "LSK North", ...)
   synthetic_days: 540                # used with --synthetic (harness dev / tests)
   target: power                      # modelled in clear-sky-index space (k = power/p_clear)
   weather_mode: oracle               # oracle (measured) | nwp (forecast archive) — see plan §Data
@@ -23,18 +24,23 @@ evaluation:
   quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
   reference: smart_persistence       # skill-score denominator
 
-# Model ladder. Baselines run today; darts/foundation models activate as their
-# wrappers land (Weeks 5-8). Comment/uncomment to scope a run.
+# Model ladder. Baselines run today. SARIMA + LightGBM are implemented (Week 5);
+# uncomment for the first real results table — they are markedly slower than the
+# baselines (LightGBM trains a quantile model per horizon step), so they are left
+# off the synthetic `make smoke`. Deep/foundation models land in Weeks 6-8.
 models:
   - name: persistence
   - name: smart_persistence
   - name: seasonal_naive
     params: {season_hours: 24}
-  # - name: sarima
+  # --- implemented — enable for real runs (slower than baselines) ---
+  # - name: sarima            # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
+  #   params: {seasonal_m: 24, context_days: 60}
   # - name: lightgbm
   #   params: {lags: [24, 48, 168], quantile: true}
-  # - name: lstm
-  #   params: {input_chunk_length: 168, output_chunk_length: 24, bidirectional: false}
+  # - name: lstm              # point forecast; PyTorch via darts, MPS/CPU auto
+  #   params: {input_chunk_length: 168, hidden_dim: 32, n_epochs: 30}
+  # --- not wired yet (Weeks 8) ---
   # - name: chronos2          # zero-shot foundation model
   # - name: timesfm           # PyTorch checkpoint only (never JAX)
   # - name: ttm

@@ -12,6 +12,7 @@ dependencies:
   - scikit-learn
   - scipy
   - statsmodels
+  - statsforecast      # darts AutoARIMA backend (SARIMA auto-order search)
   - lightgbm           # via conda-forge, NOT pip (bundles libomp)
   - py-xgboost
   - pvlib

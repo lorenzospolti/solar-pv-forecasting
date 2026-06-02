@@ -94,7 +94,8 @@ def env_fingerprint() -> dict[str, str]:
     import platform
 
     fp = {"python": platform.python_version(), "platform": platform.platform()}
-    for mod in ("numpy", "pandas", "sklearn", "lightgbm", "statsmodels", "torch", "pvlib", "darts"):
+    for mod in ("numpy", "pandas", "sklearn", "lightgbm", "statsmodels",
+                "statsforecast", "torch", "pvlib", "darts"):
         try:
             m = __import__(mod)
             fp[mod] = getattr(m, "__version__", "?")

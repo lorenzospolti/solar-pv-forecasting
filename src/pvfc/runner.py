@@ -13,8 +13,8 @@ from __future__ import annotations
 
 import logging
 import time
-from dataclasses import asdict
 
+import numpy as np
 import pandas as pd
 
 from .data import StationSeries
@@ -66,8 +66,10 @@ def run_model(
             continue
 
         common = pred.index.intersection(ref_pred.index)
-        truth = full.loc[common, "power"]
-        mask = full.loc[common, "is_day"].to_numpy() if daytime_only else slice(None)
+        truth = full.loc[common, "power"].to_numpy()
+        day = full.loc[common, "is_day"].to_numpy().astype(bool)
+        mask = day if daytime_only else np.ones(len(common), dtype=bool)
+        mask &= np.isfinite(truth)  # drop data gaps so NaNs can't poison the metrics
 
         q_pred = None
         if model.supports_quantiles:
@@ -76,7 +78,7 @@ def run_model(
             q_pred = qcols or None
 
         scores = evaluate(
-            y_true=truth.to_numpy()[mask],
+            y_true=truth[mask],
             y_pred=pred.loc[common, "y_hat"].to_numpy()[mask],
             capacity=series.capacity,
             reference_pred=ref_pred.loc[common, "y_hat"].to_numpy()[mask],
@@ -86,7 +88,8 @@ def run_model(
             "model": model.name,
             "site": series.site_id,
             "fold": fold.index,
-            "n_test": int(mask.sum()) if daytime_only else len(common),
+            "daytime_only": daytime_only,
+            "n_test": int(mask.sum()),
             "fit_predict_s": round(fit_predict_s, 3),
             **scores.as_row(),
         }
@@ -94,8 +97,10 @@ def run_model(
             row["config_hash"] = config_hash(config)
         rows.append(row)
         skill = row.get("skill_rmse")
-        logger.info("model=%s fold=%d nRMSE=%.4f skill=%.3f",
-                    model.name, fold.index, row["nrmse"],
+        logger.info("model=%s fold=%d [%s..%s] daytime=%s nRMSE=%.4f skill=%.3f",
+                    model.name, fold.index,
+                    fold.test_idx.min().date(), fold.test_idx.max().date(),
+                    daytime_only, row["nrmse"],
                     skill if skill is not None else float("nan"))
     return rows
 

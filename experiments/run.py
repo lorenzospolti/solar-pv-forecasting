@@ -45,7 +45,12 @@ def main() -> None:
     if args.synthetic:
         series = datamod.synthetic_station(days=cfg["data"].get("synthetic_days", 540))
     else:
-        series = datamod.load_station(cfg["data"]["site_id"])
+        d = cfg["data"]
+        series = datamod.load_station(
+            d["site_id"],
+            weather_mode=d.get("weather_mode", "oracle"),
+            capacity=d.get("capacity_kw"),
+        )
 
     # --- splitter ---
     sp = cfg["splits"]
@@ -58,14 +63,22 @@ def main() -> None:
     )
 
     # --- models -> harness ---
+    # Report both daytime-only (headline) and all-hours when the config asks for
+    # the daytime mask; the two runs are distinguished by the `daytime_only` column
+    # (and the config hash). A fresh model is built per run so stateful (darts)
+    # models never carry fit state across runs.
     all_rows: list[dict] = []
+    daytime_modes = [True, False] if cfg.get("evaluation", {}).get("daytime_only", True) else [False]
     for m in cfg["models"]:
-        model = build(m["name"], **m.get("params", {}))
-        run_cfg = {"data": cfg["data"], "splits": sp, "model": m, "seed": cfg.get("seed", 0)}
-        all_rows.extend(run_model(model, series, splitter, config=run_cfg))
+        for daytime in daytime_modes:
+            model = build(m["name"], **m.get("params", {}))
+            run_cfg = {"data": cfg["data"], "splits": sp, "model": m,
+                       "seed": cfg.get("seed", 0), "daytime_only": daytime}
+            all_rows.extend(run_model(model, series, splitter, daytime_only=daytime, config=run_cfg))
 
     df = append_results(all_rows, args.results)
-    print(df[["model", "fold", "nrmse", "nmae", "skill_rmse", "fit_predict_s"]].to_string(index=False))
+    cols = ["model", "fold", "daytime_only", "nrmse", "nmae", "skill_rmse", "fit_predict_s"]
+    print(df[cols].to_string(index=False))
     print(f"\nWrote {len(all_rows)} rows to {args.results}")
 
 

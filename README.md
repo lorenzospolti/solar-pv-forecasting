@@ -47,5 +47,13 @@ Full rationale, schedule, risks, and reading list: see the thesis plan at
 `~/.claude/plans/analyze-thoroughly-this-project-kind-bear.md`.
 
 ## Status
-Week 1 — scaffold + environment + baselines + harness spine. Baselines run
-end-to-end on synthetic data; darts/foundation wrappers are stubs (Weeks 5-8).
+Harness spine + baselines + **real HKUST ETL** + **NWP weather feed** (Open-Meteo)
++ **SARIMA (AutoARIMA), LightGBM, and LSTM** wrappers are implemented and verified on
+synthetic data. Foundation-model wrappers (Chronos-2, TimesFM-2.5, TTM) are next
+(Week 8) — the darts 0.41 classes are present and constructible in the env.
+
+To run on real data: download `Dataset.zip` from
+[Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.m37pvmd99) into `data/raw/`
+(the page guards automated downloads, so use a browser), then `make data` to
+extract + inspect, set `data.site_id` in the config to a discovered station, and
+`make check-data` / `python experiments/run.py --config configs/experiment.yaml`.

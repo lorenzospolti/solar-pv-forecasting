@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install check test smoke lint clean reproduce
+.PHONY: help env install check test smoke lint clean reproduce data nwp-cache check-data
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -18,6 +18,15 @@ test: # run the pytest harness smoke tests
 
 smoke: # end-to-end harness run on a synthetic station (no data download)
 	python experiments/run.py --config configs/experiment.yaml --synthetic
+
+data: # extract + inspect the HKUST Dryad dataset (download Dataset.zip into data/raw first)
+	python experiments/get_data.py
+
+nwp-cache: # pre-fetch + cache the Open-Meteo archived-forecast weather for HKUST
+	python -c "from pvfc.weather import fetch_open_meteo; from pvfc.data import HKUST_LAT, HKUST_LON; fetch_open_meteo(HKUST_LAT, HKUST_LON, '2021-01-01', '2023-12-31')"
+
+check-data: # verify the real-data ETL pipeline (requires `make data`)
+	python experiments/check_data.py
 
 lint: # ruff
 	ruff check src experiments tests

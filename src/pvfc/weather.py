@@ -1,0 +1,112 @@
+"""NWP forecast-weather feed for the realistic day-ahead experiment.
+
+The HKUST campus-tower weather is *measured* (perfect foresight). For an honest
+day-ahead setup the covariates a model sees must be what was *forecast* at issue
+time. We source those from the Open-Meteo **Historical Forecast API** for the
+HKUST coordinates and cache them locally (one parquet per year).
+
+Honesty caveat (documented in the thesis plan): the Historical Forecast API is
+stitched from the first hours of successive model runs — a best-available
+near-analysis, not a frozen 24-h-lead forecast. The truly frozen feed (Previous
+Runs API) only archives back to Jan 2024, which does not overlap the 2021-2023 PV
+window. We therefore use this feed as a "best-available archived forecast" that
+sits between the measured oracle (upper bound) and a true day-ahead forecast, and
+label it as such. Hold it fixed across all models.
+"""
+from __future__ import annotations
+
+import logging
+from pathlib import Path
+
+import pandas as pd
+
+from .data import WEATHER_COLS
+
+logger = logging.getLogger("pvfc.weather")
+
+OPEN_METEO_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
+EXTERNAL_DIR = Path(__file__).resolve().parents[2] / "data" / "external"
+
+# Open-Meteo hourly variable -> canonical frame column. The first four cover the
+# canonical WEATHER_COLS; cloud_cover/direct/diffuse are kept as extra covariates.
+_OM_RENAME = {
+    "shortwave_radiation": "ghi",
+    "temperature_2m": "temp_air",
+    "wind_speed_10m": "wind_speed",
+    "relative_humidity_2m": "rh",
+    "cloud_cover": "cloud_cover",
+    "direct_radiation": "ghi_direct",
+    "diffuse_radiation": "ghi_diffuse",
+}
+NWP_VARS = list(_OM_RENAME)
+
+
+def _cache_path(lat: float, lon: float, year: int, cache_dir: Path) -> Path:
+    return cache_dir / f"openmeteo_{lat:.4f}_{lon:.4f}_{year}.parquet"
+
+
+def _fetch_year(lat: float, lon: float, start: str, end: str) -> pd.DataFrame:
+    """One Open-Meteo request -> hourly UTC frame with canonical-renamed columns."""
+    import requests
+
+    params = {
+        "latitude": lat, "longitude": lon,
+        "start_date": start, "end_date": end,
+        "hourly": ",".join(NWP_VARS), "timezone": "UTC",
+    }
+    r = requests.get(OPEN_METEO_URL, params=params, timeout=60)
+    r.raise_for_status()
+    hourly = r.json()["hourly"]
+    idx = pd.DatetimeIndex(pd.to_datetime(hourly["time"]), tz="UTC")
+    data = {_OM_RENAME[v]: hourly[v] for v in NWP_VARS if v in hourly}
+    return pd.DataFrame(data, index=idx).sort_index()
+
+
+def fetch_open_meteo(lat: float, lon: float, start: str, end: str,
+                     cache_dir: Path = EXTERNAL_DIR) -> pd.DataFrame:
+    """Hourly archived-forecast weather for [start, end] (YYYY-MM-DD), tz-aware UTC.
+
+    Caches one parquet per calendar year in ``cache_dir``; missing years are
+    fetched and written. Returns the concatenated frame sliced to [start, end].
+    """
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    y0, y1 = int(start[:4]), int(end[:4])
+    parts = []
+    for year in range(y0, y1 + 1):
+        cp = _cache_path(lat, lon, year, cache_dir)
+        if cp.exists():
+            parts.append(pd.read_parquet(cp))
+            continue
+        y_start = max(start, f"{year}-01-01")
+        y_end = min(end, f"{year}-12-31")
+        logger.info("Open-Meteo fetch %s %s..%s", year, y_start, y_end)
+        df = _fetch_year(lat, lon, y_start, y_end)
+        df.to_parquet(cp)
+        parts.append(df)
+    out = pd.concat(parts).sort_index()
+    out = out[~out.index.duplicated(keep="first")]
+    return out.loc[start:end]
+
+
+def attach_nwp_forecast(frame: pd.DataFrame, lat: float, lon: float,
+                        cache_dir: Path = EXTERNAL_DIR) -> pd.DataFrame:
+    """Replace ``frame``'s weather columns with issue-time-aligned archived forecasts.
+
+    ``power``/``p_clear``/``k``/``is_day`` are preserved (they derive from measured
+    power and deterministic pvlib geometry, legitimately known ahead). The forecast
+    columns are reindexed onto the frame's hourly UTC index, so a model reading the
+    canonical WEATHER_COLS in ``future`` sees forecasts rather than measurements.
+    """
+    start = frame.index.min().strftime("%Y-%m-%d")
+    end = frame.index.max().strftime("%Y-%m-%d")
+    nwp = fetch_open_meteo(lat, lon, start, end, cache_dir=cache_dir)
+    nwp = nwp.reindex(frame.index)
+
+    out = frame.copy()
+    # drop any measured weather columns, then graft the forecast ones in
+    out = out.drop(columns=[c for c in out.columns if c in set(WEATHER_COLS)
+                            or c in ("cloud_cover", "ghi_direct", "ghi_diffuse")],
+                   errors="ignore")
+    for col in nwp.columns:
+        out[col] = nwp[col].to_numpy()
+    return out
