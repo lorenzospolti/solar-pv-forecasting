@@ -1,28 +1,34 @@
 """Adapters wrapping darts models in the Forecaster interface.
 
-darts (v0.41, pinned) is the unified spine: baselines, classical (ARIMA/SARIMAX),
-ML (LightGBM/XGBoost), deep (LSTM/TFT/TiDE/…) and foundation models behind one
-fit()/predict() API. We wrap them so the harness stays model-agnostic.
+darts (>=0.41) is the unified spine: baselines, classical (ARIMA/SARIMAX), ML
+(LightGBM), deep (LSTM/TFT/TiDE) and **foundation** models (Chronos-2,
+TimesFM-2.5, TiRex) behind one fit()/predict() API. We wrap them so the harness
+stays model-agnostic.
 
 The recipe (plan §Software-architecture): model the clear-sky index ``k`` as the
 target; pass ``p_clear`` + calendar + (forecast) weather as *future covariates*
 known at issue time; reconstruct power as ``k_hat * p_clear``; populate quantile
 columns where supported.
 
-Runner contract this fits: ``fit(train)`` once per fold, then ``predict(history,
-future)`` per test-day with a fresh, growing ``history``. Both model families used
-here accept a fresh series at predict time:
-  * LightGBM is a *global* model — ``predict(n, series=history, future_covariates=…)``.
-  * ARIMA is a *transferable local* model — same call refits on the given series.
-Local models are capped to a recent ``context_days`` window so the per-day refit
-stays tractable on multi-year hourly data.
+Architecture vs. label
+----------------------
+A model spec has a config ``name`` (the results-row label, e.g. ``chronos2_ft``)
+and an ``arch`` (which darts class to build, e.g. ``chronos2``). ``arch`` defaults
+to ``name``. This lets zero-shot and fine-tuned variants of the same foundation
+model coexist as distinct, separately-scored rows.
 
-Week 5 wires SARIMA + LightGBM; deep/foundation models (lstm, tft, chronos2, …)
-follow in Weeks 6-8 via the same conversion helpers.
+Runner contract: ``fit(train)`` once per fold, then ``predict(history, future)``
+per test-day with a fresh, growing ``history``.
+  * LightGBM / foundation models are *global* — ``predict(n, series=history, …)``.
+  * ARIMA is a *transferable local* model — refits on the given (capped) series.
+  * Foundation models require ``fit()`` even for **zero-shot** (it is training-free
+    unless ``finetune`` is set); per test-day ``predict`` does in-context inference
+    on that day's history.
 """
 from __future__ import annotations
 
 import logging
+import re
 
 import numpy as np
 import pandas as pd
@@ -35,19 +41,55 @@ from .base import Forecaster
 
 logger = logging.getLogger("pvfc.models")
 
-# config name -> (darts module path, class name). SARIMA uses the statsmodels-backed
-# ARIMA (no statsforecast dependency); the rest land in Weeks 6-8.
+# config arch -> (darts module path, class name).
 DARTS_CLASSES = {
-    "sarima": ("darts.models", "ARIMA"),           # statsmodels SARIMAX, transferable
+    "sarima": ("darts.models", "ARIMA"),            # statsmodels SARIMAX / AutoARIMA, transferable
     "lightgbm": ("darts.models", "LightGBMModel"),  # global, native quantile likelihood
     "lstm": ("darts.models", "RNNModel"),           # model="LSTM", unidirectional on MPS
     "tft": ("darts.models", "TFTModel"),
     "tide": ("darts.models", "TiDEModel"),
+    # foundation models (darts native): Chronos-2 (>=0.40), TimesFM-2.5 (>=0.41), TiRex (>=0.44)
     "chronos2": ("darts.models", "Chronos2Model"),
     "timesfm": ("darts.models", "TimesFM2p5Model"),
+    "tirex": ("darts.models", "TiRexModel"),
 }
 
-_WIRED = {"sarima", "lightgbm", "lstm"}  # implemented so far
+#: foundation arches — global, training-free unless ``finetune`` is set
+_FOUNDATION = {"chronos2", "timesfm", "tirex"}
+
+#: arches with a working fit/predict path in this wrapper
+_WIRED = {"sarima", "lightgbm", "lstm", "chronos2", "timesfm", "tirex"}
+
+#: arches that are part of the thesis roster but have NO darts class (even 0.44).
+#: They need an external library; we fail loudly with guidance rather than silently.
+_EXTERNAL = {
+    "ttm": "IBM TinyTimeMixer is not in darts; install `granite-tsfm` and wrap it, "
+           "or use darts-master `PatchTSTFMModel`.",
+    "moirai": "Salesforce Moirai-2 is not in darts; install `uni2ts` and wrap it, "
+              "or substitute darts `TiRexModel` (arch: tirex).",
+}
+
+# Foundation models that, by default, accept future covariates in darts.
+_FOUNDATION_COV_DEFAULT = {"chronos2": True, "timesfm": False, "tirex": False}
+
+
+def _darts_at_least(min_version: str) -> bool:
+    """True if the installed darts is >= ``min_version`` (e.g. '0.42')."""
+    import darts
+
+    def parse(v: str) -> tuple[int, ...]:
+        return tuple(int(re.sub(r"\D.*$", "", p) or 0) for p in v.split(".")[:3])
+
+    return parse(getattr(darts, "__version__", "0")) >= parse(min_version)
+
+
+def _quantile_regression(quantiles):
+    """Import QuantileRegression across darts layouts (moved to `.torch` in 0.44)."""
+    try:
+        from darts.utils.likelihood_models.torch import QuantileRegression
+    except ImportError:  # older darts
+        from darts.utils.likelihood_models import QuantileRegression
+    return QuantileRegression(list(quantiles))
 
 
 def _target_series(df: pd.DataFrame, target_col: str = "k"):
@@ -77,18 +119,25 @@ def _covariate_series(history: pd.DataFrame, future: pd.DataFrame, weather_cols:
 class DartsForecaster(Forecaster):
     """Adapter turning a darts model into a harness Forecaster (target = k)."""
 
-    def __init__(self, name: str, **params):
+    def __init__(self, name: str, arch: str | None = None, **params):
         self.name = name
+        self.arch = arch or name
         self.params = dict(params)
         self.supports_quantiles = bool(params.get("quantile", False))
         self.quantiles = [float(q) for q in DEFAULT_QUANTILES] if self.supports_quantiles else None
-        self.context_days = params.get("context_days", 60)  # cap for local refit cost
+        self.context_days = params.get("context_days", 60)  # cap for local/foundation refit cost
+        self.finetune = params.get("finetune", False)        # foundation: bool | dict
+        self._is_foundation = self.arch in _FOUNDATION
         self._weather_cols = params.get("weather_cols")      # None -> auto-detect available
+        # foundation covariate use is per-arch (some checkpoints are univariate)
+        self._use_cov = bool(params.get(
+            "use_future_covariates", _FOUNDATION_COV_DEFAULT.get(self.arch, True)
+        )) if self._is_foundation else True
         self._model = None
         self._mode = None        # "global" | "local"
-        self._likelihood = None  # "quantile" (lightgbm/QR) | "sample" (arima) | None
+        self._likelihood = None  # "quantile" | "sample" | None
         self._fit_cols: list[str] = []
-        self._scale = False      # torch models (LSTM) need train-fit input scaling
+        self._scale = False      # torch RNN (LSTM) needs train-fit input scaling
         self._tscaler = None
         self._cscaler = None
 
@@ -97,15 +146,25 @@ class DartsForecaster(Forecaster):
         wanted = self._weather_cols if self._weather_cols is not None else WEATHER_COLS
         return [c for c in wanted if c in df.columns]
 
+    def _device_trainer_kwargs(self) -> dict:
+        from ..utils import get_device
+
+        device = get_device()  # MPS with CPU fallback (handles the Tahoe bug)
+        return {
+            "accelerator": "mps" if device == "mps" else "cpu",
+            "enable_progress_bar": False, "enable_model_summary": False, "logger": False,
+        }
+
     def _build(self) -> None:
         if self._model is not None:
             return
+        if self.arch in _EXTERNAL:
+            raise NotImplementedError(f"arch '{self.arch}': {_EXTERNAL[self.arch]}")
         seed = int(self.params.get("seed", 0))
-        if self.name == "lightgbm":
+        if self.arch == "lightgbm":
             from darts.models import LightGBMModel
 
             self._mode, self._likelihood = "global", ("quantile" if self.supports_quantiles else None)
-            # config gives positive look-back hours; darts wants strictly-negative lags
             lags = [-abs(int(h)) for h in self.params.get("lags", [24, 48, 168])]
             self._model = LightGBMModel(
                 lags=lags,
@@ -116,7 +175,7 @@ class DartsForecaster(Forecaster):
                 random_state=seed,
                 verbose=-1,
             )
-        elif self.name == "sarima":
+        elif self.arch == "sarima":
             self._mode = "local"
             season = int(self.params.get("seasonal_m", 24))
             try:  # preferred: statsforecast AutoARIMA (automatic order search, transferable)
@@ -136,17 +195,14 @@ class DartsForecaster(Forecaster):
                 self._model = ARIMA(p=order[0], d=order[1], q=order[2],
                                     seasonal_order=seasonal, random_state=seed)
                 self._likelihood = "sample" if self.supports_quantiles else None
-        elif self.name == "lstm":
+        elif self.arch == "lstm":
             from darts.models import RNNModel
-
-            from ..utils import get_device
 
             self._mode, self._scale = "global", True
             if self.supports_quantiles:  # quantile LSTM (via a Scaler pipeline) is future work
                 logger.warning("lstm: quantile output not wired yet; producing point forecasts")
                 self.supports_quantiles, self.quantiles = False, None
             icl = int(self.params.get("input_chunk_length", 168))
-            device = get_device()  # MPS with CPU fallback (handles the Tahoe bug)
             self._model = RNNModel(
                 model="LSTM",
                 input_chunk_length=icl,
@@ -157,50 +213,110 @@ class DartsForecaster(Forecaster):
                 n_epochs=int(self.params.get("n_epochs", 20)),
                 random_state=seed,
                 force_reset=True,
-                pl_trainer_kwargs={
-                    "accelerator": "mps" if device == "mps" else "cpu",
-                    "enable_progress_bar": False, "enable_model_summary": False, "logger": False,
-                },
+                pl_trainer_kwargs=self._device_trainer_kwargs(),
             )
+        elif self._is_foundation:
+            self._build_foundation(seed)
         else:
             raise NotImplementedError(
-                f"darts model '{self.name}' is not wired yet (Weeks 6-8). "
-                f"Wired now: {sorted(_WIRED)}."
+                f"darts arch '{self.arch}' is not wired. Wired: {sorted(_WIRED)}."
             )
 
+    def _build_foundation(self, seed: int) -> None:
+        """Construct a darts foundation model (zero-shot, or fine-tuned if requested)."""
+        self._mode = "global"
+        module, cls_name = DARTS_CLASSES[self.arch]
+        import importlib
+
+        cls = getattr(importlib.import_module(module), cls_name)
+
+        kwargs: dict = {
+            "input_chunk_length": int(self.params.get("input_chunk_length", 336)),
+            "output_chunk_length": int(self.params.get("output_chunk_length", 24)),
+            "random_state": seed,
+            "pl_trainer_kwargs": self._device_trainer_kwargs(),
+        }
+        if self.supports_quantiles:
+            kwargs["likelihood"] = _quantile_regression(self.quantiles)
+            self._likelihood = "quantile"
+        if self.arch == "chronos2" and self.params.get("hub_model_name"):
+            kwargs["hub_model_name"] = self.params["hub_model_name"]
+        if self.params.get("use_longer_projection_head") and self.arch == "timesfm":
+            kwargs["use_longer_projection_head"] = True
+        if self.finetune:
+            if not _darts_at_least("0.42"):
+                import darts
+                raise RuntimeError(
+                    f"fine-tuning foundation models needs darts>=0.42; installed "
+                    f"{getattr(darts, '__version__', '?')}. Upgrade (pip install -U u8darts) "
+                    "or run this model zero-shot (drop `finetune: true`)."
+                )
+            kwargs["enable_finetuning"] = self.finetune  # True (full) or {"unfreeze"|"freeze": [...]}
+            kwargs["n_epochs"] = int(self.params.get("n_epochs", 5))
+            if self.params.get("batch_size"):
+                kwargs["batch_size"] = int(self.params["batch_size"])
+        try:
+            self._model = cls(**kwargs)
+        except TypeError as exc:  # a checkpoint that rejects likelihood/cov kwargs
+            logger.warning("%s: retrying construction without optional kwargs (%s)", self.name, exc)
+            for k in ("likelihood", "use_longer_projection_head"):
+                kwargs.pop(k, None)
+            self.supports_quantiles, self.quantiles, self._likelihood = False, None, None
+            self._model = cls(**kwargs)
+
+    # ------------------------------------------------------------------ #
     def fit(self, train: pd.DataFrame) -> "DartsForecaster":
         self._build()
-        self._fit_cols = self._resolve_weather_cols(train)
+        self._fit_cols = self._resolve_weather_cols(train) if self._use_cov else []
         target = _target_series(train, "k")
-        cov = _covariate_series(train, train.iloc[0:0], self._fit_cols)
+        cov = _covariate_series(train, train.iloc[0:0], self._fit_cols) if self._use_cov else None
         if self._scale:  # train-only fit, applied identically at predict (leakage-safe)
             from darts.dataprocessing.transformers import Scaler
 
-            self._tscaler, self._cscaler = Scaler().fit(target), Scaler().fit(cov)
-            target, cov = self._tscaler.transform(target), self._cscaler.transform(cov)
-        self._model.fit(target, future_covariates=cov)
+            self._tscaler = Scaler().fit(target)
+            target = self._tscaler.transform(target)
+            if cov is not None:
+                self._cscaler = Scaler().fit(cov)
+                cov = self._cscaler.transform(cov)
+        self._fit_model(target, cov)
         return self
+
+    def _fit_model(self, target, cov) -> None:
+        """Fit, tolerating foundation checkpoints that reject future covariates."""
+        try:
+            if cov is not None:
+                self._model.fit(target, future_covariates=cov)
+            else:
+                self._model.fit(target)
+        except (TypeError, ValueError) as exc:
+            if cov is not None and self._is_foundation:
+                logger.warning("%s: fitting without future covariates (%s)", self.name, exc)
+                self._use_cov = False
+                self._model.fit(target)
+            else:
+                raise
 
     def predict(self, history: pd.DataFrame, future: pd.DataFrame) -> pd.DataFrame:
         n = len(future)
         hist = history
-        if self._mode == "local" and self.context_days:
+        if self.context_days and (self._mode == "local" or self._is_foundation):
             cutoff = history.index.max() - pd.Timedelta(days=self.context_days)
             hist = history.loc[history.index >= cutoff]
         target = _target_series(hist, "k")
-        cov = _covariate_series(hist, future, self._fit_cols)
+        cov = _covariate_series(hist, future, self._fit_cols) if self._use_cov else None
         p_clear = future["p_clear"]
 
         if self.supports_quantiles:
             kq = enforce_monotone_quantiles(self._predict_quantiles(target, cov, n))
             k_point = kq[0.5]
         elif self._scale:
+            cov_t = self._cscaler.transform(cov) if (cov is not None and self._cscaler) else None
             fc = self._model.predict(n=n, series=self._tscaler.transform(target),
-                                     future_covariates=self._cscaler.transform(cov))
+                                     future_covariates=cov_t)
             k_point = np.asarray(self._tscaler.inverse_transform(fc).values()).reshape(-1)[:n]
             kq = None
         else:
-            fc = self._model.predict(n=n, series=target, future_covariates=cov)
+            fc = self._predict_point(target, cov, n)
             k_point = np.asarray(fc.values()).reshape(-1)[:n]
             kq = None
 
@@ -212,21 +328,54 @@ class DartsForecaster(Forecaster):
                     pd.Series(arr, index=future.index), p_clear).to_numpy()
         return out
 
+    def _predict_point(self, target, cov, n):
+        """Deterministic predict, tolerating foundation models without covariates."""
+        if cov is not None:
+            try:
+                return self._model.predict(n=n, series=target, future_covariates=cov)
+            except (TypeError, ValueError) as exc:
+                if self._is_foundation:
+                    logger.warning("%s: predicting without future covariates (%s)", self.name, exc)
+                    self._use_cov = False
+                    return self._model.predict(n=n, series=target)
+                raise
+        return self._model.predict(n=n, series=target)
+
     def _predict_quantiles(self, target, cov, n: int) -> dict[float, np.ndarray]:
         """Return {tau: k-array(n)} from whichever probabilistic path the model uses."""
-        if self._likelihood == "quantile":  # LightGBM quantile likelihood
-            fc = self._model.predict(n=n, series=target, future_covariates=cov,
-                                     predict_likelihood_parameters=True)
+        if self._likelihood == "quantile":  # LightGBM / foundation quantile likelihood
+            kw = dict(n=n, series=target, predict_likelihood_parameters=True)
+            if cov is not None:
+                kw["future_covariates"] = cov
+            try:
+                fc = self._model.predict(**kw)
+            except (TypeError, ValueError) as exc:
+                if cov is not None and self._is_foundation:
+                    logger.warning("%s: quantile predict without covariates (%s)", self.name, exc)
+                    self._use_cov = False
+                    kw.pop("future_covariates", None)
+                    fc = self._model.predict(**kw)
+                else:
+                    raise
             df = fc.to_dataframe()
-            parsed = {round(float(c.rsplit("_q", 1)[1]), 2): df[c].to_numpy()[:n] for c in df.columns}
+            parsed = {round(float(c.rsplit("_q", 1)[1]), 2): df[c].to_numpy()[:n]
+                      for c in df.columns if "_q" in c}
             return {q: parsed[q] for q in self.quantiles if q in parsed}
         # sampling path (ARIMA): Monte-Carlo draws -> empirical quantiles
-        fc = self._model.predict(n=n, series=target, future_covariates=cov, num_samples=200)
+        kw = dict(n=n, series=target, num_samples=200)
+        if cov is not None:
+            kw["future_covariates"] = cov
+        fc = self._model.predict(**kw)
         vals = fc.all_values()  # (time, component, samples)
         return {q: np.quantile(vals[:, 0, :], q, axis=-1)[:n] for q in self.quantiles}
 
 
 def build_darts_model(name: str, **kwargs) -> Forecaster:
-    if name not in DARTS_CLASSES:
-        raise KeyError(f"No darts mapping for '{name}'. Known: {sorted(DARTS_CLASSES)}")
-    return DartsForecaster(name, **kwargs)
+    """Build a DartsForecaster. ``name`` is the results label; ``arch`` (kwarg,
+    default ``name``) selects the darts class — so e.g. a fine-tuned variant can
+    use ``name: chronos2_ft, arch: chronos2``."""
+    arch = kwargs.pop("arch", name)
+    if arch not in DARTS_CLASSES and arch not in _EXTERNAL:
+        known = sorted(set(DARTS_CLASSES) | set(_EXTERNAL))
+        raise KeyError(f"No darts mapping for arch '{arch}' (from model '{name}'). Known: {known}")
+    return DartsForecaster(name, arch=arch, **kwargs)

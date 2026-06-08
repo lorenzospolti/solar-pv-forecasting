@@ -47,13 +47,22 @@ Full rationale, schedule, risks, and reading list: see the thesis plan at
 `~/.claude/plans/analyze-thoroughly-this-project-kind-bear.md`.
 
 ## Status
-Harness spine + baselines + **real HKUST ETL** + **NWP weather feed** (Open-Meteo)
-+ **SARIMA (AutoARIMA), LightGBM, and LSTM** wrappers are implemented and verified on
-synthetic data. Foundation-model wrappers (Chronos-2, TimesFM-2.5, TTM) are next
-(Week 8) — the darts 0.41 classes are present and constructible in the env.
+Harness spine + baselines + **real HKUST ETL** (per-station nameplate capacity from
+the Brick `.ttl` metadata) + **NWP weather feed** (Open-Meteo) + **SARIMA (AutoARIMA),
+LightGBM, and LSTM** wrappers are implemented. **Foundation-model wrappers (Chronos-2,
+TimesFM-2.5, TiRex) are now wired** in `darts_wrapper.py` — zero-shot and fine-tuned
+(via an `arch`/label split; `make report` builds tables + figures from results).
+Zero-shot Chronos-2/TimesFM-2.5 run on darts 0.41; **fine-tuning needs darts>=0.42**
+(pin is `u8darts[torch]>=0.43`). Moirai-2 and TTM are *not* in darts — see
+`PLAN_OF_ACTION.md` §5 for the roster decision.
 
 To run on real data: download `Dataset.zip` from
 [Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.m37pvmd99) into `data/raw/`
 (the page guards automated downloads, so use a browser), then `make data` to
-extract + inspect, set `data.site_id` in the config to a discovered station, and
-`make check-data` / `python experiments/run.py --config configs/experiment.yaml`.
+extract + inspect, then run the model ladder on a station, e.g.:
+
+```bash
+python experiments/run.py --config configs/experiment.yaml --site "CYT (Station 1)" --weather-mode oracle
+python experiments/run.py --config configs/experiment.yaml --site "CYT (Station 1)" --weather-mode nwp
+make report   # -> thesis/tables/ + thesis/figures/
+```

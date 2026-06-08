@@ -95,6 +95,7 @@ def run_model(
         }
         if config:
             row["config_hash"] = config_hash(config)
+            row["weather_mode"] = (config.get("data") or {}).get("weather_mode")
         rows.append(row)
         skill = row.get("skill_rmse")
         logger.info("model=%s fold=%d [%s..%s] daytime=%s nRMSE=%.4f skill=%.3f",
@@ -106,13 +107,27 @@ def run_model(
 
 
 def append_results(rows: list[dict], path: str) -> pd.DataFrame:
-    """Append rows to the canonical parquet results store (creating it if new)."""
+    """Upsert rows into the canonical parquet results store (creating it if new).
+
+    The store is keyed by ``config_hash``: any existing rows whose ``config_hash``
+    matches one in ``rows`` are dropped before the new rows are written, so
+    re-running a config *replaces* its rows instead of duplicating them (the
+    README's "config-hash keyed" contract). Rows without a ``config_hash`` (e.g.
+    ad-hoc runs) are always appended.
+    """
     import os
+
+    if not rows:
+        return pd.read_parquet(path) if os.path.exists(path) else pd.DataFrame()
 
     df_new = pd.DataFrame(rows)
     df_new["env"] = [env_fingerprint()] * len(df_new)
     if os.path.exists(path):
-        df = pd.concat([pd.read_parquet(path), df_new], ignore_index=True)
+        df_old = pd.read_parquet(path)
+        if "config_hash" in df_new.columns and "config_hash" in df_old.columns:
+            new_hashes = set(df_new["config_hash"].dropna())
+            df_old = df_old[~df_old["config_hash"].isin(new_hashes)]
+        df = pd.concat([df_old, df_new], ignore_index=True)
     else:
         df = df_new
     df.to_parquet(path, index=False)

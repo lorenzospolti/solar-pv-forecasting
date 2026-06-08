@@ -31,6 +31,7 @@ HKUST_TZ = "Asia/Hong_Kong"  # UTC+8, no DST
 
 RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 PROCESSED_DIR = Path(__file__).resolve().parents[2] / "data" / "processed"
+METADATA_TTL = RAW_DIR / "Dataset" / "Metadata" / "PV generation system metadata.ttl"
 
 # Canonical weather columns present in BOTH oracle and nwp modes, so a model's
 # covariate config is identical regardless of weather source (only the values
@@ -166,15 +167,79 @@ def _read_weather(raw_dir: Path) -> pd.DataFrame:
     return wx.resample("1h").mean()
 
 
-def _derive_capacity(power: pd.Series, override: float | None) -> float:
-    """Installed kW: explicit override if given, else a robust high quantile of
-    observed power (a sound nameplate proxy used only for metric normalization and
-    the p_clear clip). Per-station nameplate lives only in the Brick .ttl; wire it
-    here once the .ttl layout is inspected."""
+def _norm_key(s: str) -> str:
+    """Collapse a station name to a comparison key: lowercase, alphanumerics only."""
+    import re
+
+    return re.sub(r"[^a-z0-9]", "", str(s).lower())
+
+
+# CSV stem -> TTL entity spelling mismatches that survive _norm_key (Centre/Center, etc.).
+_CAPACITY_ALIASES = {"indoorsportscentre": "indoorsportcenter"}
+
+_CAPACITY_CACHE: dict[str, float] | None = None
+
+
+def load_nameplate_capacities(ttl_path: Path = METADATA_TTL) -> dict[str, float]:
+    """Parse per-system rated power (kW) from the Brick metadata .ttl.
+
+    Each ``pvsystem:<name> a brick:PV_Generation_System`` block carries an
+    ``ext:ratedPowerOutput [ brick:hasUnit unit:KW ; brick:value <X> ]``. Returns
+    ``{_norm_key(name): kW}`` (regex-parsed; no rdflib dependency). Cached after
+    first read. Returns ``{}`` if the file is absent.
+    """
+    global _CAPACITY_CACHE
+    if _CAPACITY_CACHE is not None:
+        return _CAPACITY_CACHE
+    import re
+
+    caps: dict[str, float] = {}
+    if Path(ttl_path).exists():
+        text = Path(ttl_path).read_text(encoding="utf-8", errors="replace")
+        block = re.compile(
+            r"pvsystem:(\S+)\s+a\s+brick:PV_Generation_System\s*;(.*?)"
+            r"(?:\.\s*\n\s*\n|\.\s*\npvsystem:|\Z)",
+            re.S,
+        )
+        rated = re.compile(
+            r"ratedPowerOutput\s*\[\s*brick:hasUnit\s+unit:KW\s*;\s*brick:value\s+([0-9.]+)"
+        )
+        for m in block.finditer(text):
+            rm = rated.search(m.group(2))
+            if rm:
+                caps[_norm_key(m.group(1))] = float(rm.group(1))
+    else:
+        logger.warning("metadata .ttl not found at %s; nameplate lookup disabled", ttl_path)
+    _CAPACITY_CACHE = caps
+    return caps
+
+
+def station_capacity(site_id: str, ttl_path: Path = METADATA_TTL) -> float | None:
+    """Nameplate kW for ``site_id`` from Brick metadata, or ``None`` if not found."""
+    caps = load_nameplate_capacities(ttl_path)
+    key = _norm_key(site_id)
+    key = _CAPACITY_ALIASES.get(key, key)
+    return caps.get(key)
+
+
+def _derive_capacity(power: pd.Series, override: float | None, site_id: str | None = None) -> float:
+    """Installed kW for metric normalization and the p_clear clip.
+
+    Priority: explicit ``override`` -> Brick-metadata nameplate (``station_capacity``)
+    -> robust 0.999-quantile of observed power (fallback proxy). The nameplate is
+    the physically correct denominator; the proxy is only used when no metadata
+    match exists (e.g. the synthetic station or an unmatched name).
+    """
     if override:
         return float(override)
+    if site_id is not None:
+        nameplate = station_capacity(site_id)
+        if nameplate:
+            logger.info("capacity: %r -> %.2f kW nameplate (Brick metadata)", site_id, nameplate)
+            return float(nameplate)
     cap = float(power.quantile(0.999))
-    logger.warning("capacity: no override; using 0.999-quantile of power = %.2f kW", cap)
+    logger.warning("capacity: no nameplate for %r; using 0.999-quantile of power = %.2f kW",
+                   site_id, cap)
     return cap
 
 
@@ -212,7 +277,7 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "ora
     # short daytime gaps: interpolate; longer gaps stay NaN (guarded in the runner)
     frame["power"] = frame["power"].interpolate(limit=2).clip(lower=0.0)
 
-    cap = _derive_capacity(frame["power"], capacity)
+    cap = _derive_capacity(frame["power"], capacity, site_id=site_id)
     frame = attach_clearsky(frame, capacity=cap)
 
     if weather_mode == "nwp":

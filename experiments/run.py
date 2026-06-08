@@ -34,11 +34,22 @@ def main() -> None:
     ap.add_argument("--config", default=str(ROOT / "configs" / "experiment.yaml"))
     ap.add_argument("--synthetic", action="store_true",
                     help="use a synthetic station instead of real HK data")
+    ap.add_argument("--all-models", action="store_true",
+                    help="with --synthetic, also run non-baseline models (needs darts)")
+    ap.add_argument("--weather-mode", choices=["oracle", "nwp"], default=None,
+                    help="override data.weather_mode (oracle=measured, nwp=archived forecast)")
+    ap.add_argument("--site", default=None, help="override data.site_id (a discovered HKUST station)")
     ap.add_argument("--results", default=str(ROOT / "results" / "results.parquet"))
     args = ap.parse_args()
 
     setup_logging()
     cfg = load_config(args.config)
+    # CLI overrides flow into cfg["data"], so they are captured in the config hash
+    # (oracle vs nwp and per-site runs become distinct, traceable result rows).
+    if args.weather_mode is not None:
+        cfg["data"]["weather_mode"] = args.weather_mode
+    if args.site is not None:
+        cfg["data"]["site_id"] = args.site
     set_seed(cfg.get("seed", 0))
 
     # --- data ---
@@ -67,9 +78,16 @@ def main() -> None:
     # the daytime mask; the two runs are distinguished by the `daytime_only` column
     # (and the config hash). A fresh model is built per run so stateful (darts)
     # models never carry fit state across runs.
+    # The synthetic path is the fast, dependency-light harness check (`make smoke`):
+    # run baselines only unless --all-models is given, so it needs no darts/torch.
+    models = cfg["models"]
+    if args.synthetic and not args.all_models:
+        _BASELINES = {"persistence", "smart_persistence", "seasonal_naive"}
+        models = [m for m in models if m["name"] in _BASELINES]
+
     all_rows: list[dict] = []
     daytime_modes = [True, False] if cfg.get("evaluation", {}).get("daytime_only", True) else [False]
-    for m in cfg["models"]:
+    for m in models:
         for daytime in daytime_modes:
             model = build(m["name"], **m.get("params", {}))
             run_cfg = {"data": cfg["data"], "splits": sp, "model": m,

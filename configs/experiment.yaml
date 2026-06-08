@@ -24,24 +24,37 @@ evaluation:
   quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
   reference: smart_persistence       # skill-score denominator
 
-# Model ladder. Baselines run today. SARIMA + LightGBM are implemented (Week 5);
-# uncomment for the first real results table — they are markedly slower than the
-# baselines (LightGBM trains a quantile model per horizon step), so they are left
-# off the synthetic `make smoke`. Deep/foundation models land in Weeks 6-8.
+# Model ladder. Baselines + SARIMA/LightGBM/LSTM run on real data (enabled below);
+# they are markedly slower than the baselines (LightGBM trains a quantile model per
+# horizon step; SARIMA refits per day; LSTM trains), so the synthetic `make smoke`
+# stays baseline-only via --synthetic. Foundation models are wired (chronos2,
+# timesfm, tirex) but commented: they need darts>=0.43 + a HuggingFace download and
+# are best run on the Mac (MPS). See darts_wrapper.py for the arch/label mechanism.
 models:
   - name: persistence
   - name: smart_persistence
   - name: seasonal_naive
     params: {season_hours: 24}
-  # --- implemented — enable for real runs (slower than baselines) ---
-  # - name: sarima            # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
-  #   params: {seasonal_m: 24, context_days: 60}
-  # - name: lightgbm
-  #   params: {lags: [24, 48, 168], quantile: true}
-  # - name: lstm              # point forecast; PyTorch via darts, MPS/CPU auto
-  #   params: {input_chunk_length: 168, hidden_dim: 32, n_epochs: 30}
-  # --- not wired yet (Weeks 8) ---
-  # - name: chronos2          # zero-shot foundation model
-  # - name: timesfm           # PyTorch checkpoint only (never JAX)
-  # - name: ttm
-  # - name: moirai
+  # --- classical / ML / deep (implemented & enabled for real runs) ---
+  - name: sarima              # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
+    params: {seasonal_m: 24, context_days: 60, quantile: true}
+  - name: lightgbm            # global, native quantile likelihood
+    params: {lags: [24, 48, 168], quantile: true}
+  - name: lstm                # point forecast; PyTorch via darts, MPS/CPU auto
+    params: {input_chunk_length: 168, hidden_dim: 32, n_epochs: 30}
+  # --- foundation models: ZERO-SHOT (wired; darts>=0.43 + HF download; run on the Mac) ---
+  # - name: chronos2
+  #   params: {input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+  #            hub_model_name: "autogluon/chronos-2-small"}
+  # - name: timesfm
+  #   params: {input_chunk_length: 512, output_chunk_length: 24, quantile: true,
+  #            use_future_covariates: false}   # TimesFM-2.5 covariate support varies; off by default
+  # --- foundation models: FINE-TUNED (darts>=0.42; `arch` selects the class, `name` is the label) ---
+  # - name: chronos2_ft
+  #   params: {arch: chronos2, input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+  #            finetune: true, n_epochs: 5, hub_model_name: "autogluon/chronos-2-small"}
+  # - name: tirex             # NX-AI TiRex, zero-shot (darts>=0.44)
+  #   params: {input_chunk_length: 512, output_chunk_length: 24, quantile: true}
+  # --- NOT in darts (even 0.44) — need external libs or a scope decision (see PLAN_OF_ACTION §5) ---
+  # - name: ttm      # IBM TinyTimeMixer -> needs `granite-tsfm`, or darts-master PatchTSTFMModel
+  # - name: moirai   # Salesforce Moirai-2 -> needs `uni2ts`; consider substituting TiRex instead

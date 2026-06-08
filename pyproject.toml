@@ -25,8 +25,11 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# installed via pip after the conda core env (newer than conda-forge):
-forecast = ["u8darts[torch]", "chronos-forecasting>=2.0"]
+# installed via pip after the conda core env (newer than conda-forge).
+# darts>=0.43: native Chronos-2 + TimesFM-2.5 foundation models AND fine-tuning
+# (`enable_finetuning`, added 0.42). darts>=0.44 additionally ships TiRexModel.
+# Zero-shot Chronos-2/TimesFM-2.5 already work on 0.41, but fine-tuning needs >=0.42.
+forecast = ["u8darts[torch]>=0.43", "chronos-forecasting>=2.0"]
 dev = ["pytest", "ruff"]
 
 [tool.setuptools.packages.find]

@@ -14,14 +14,18 @@ _BASE_REGISTRY: dict[str, type[Forecaster]] = {
 
 
 def build(name: str, **kwargs) -> Forecaster:
-    """Instantiate a forecaster by config name."""
+    """Instantiate a forecaster by config name.
+
+    Baselines come from the local registry; everything else is delegated to the
+    darts wrapper, which resolves the architecture from the ``arch`` kwarg
+    (default = ``name``) and validates it. This lets labels like ``chronos2_ft``
+    (``arch: chronos2``) coexist with their zero-shot sibling.
+    """
     if name in _BASE_REGISTRY:
         return _BASE_REGISTRY[name](**kwargs)
-    if name in {"sarima", "lightgbm", "lstm", "tft", "tide", "chronos2", "timesfm", "ttm", "moirai"}:
-        from .darts_wrapper import build_darts_model
+    from .darts_wrapper import build_darts_model
 
-        return build_darts_model(name, **kwargs)
-    raise KeyError(f"Unknown model '{name}'. Known: {sorted(_BASE_REGISTRY)} + darts/foundation models.")
+    return build_darts_model(name, **kwargs)
 
 
 __all__ = ["Forecaster", "Persistence", "SmartPersistence", "SeasonalNaive", "build"]

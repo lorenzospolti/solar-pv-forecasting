@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install check test smoke lint clean reproduce data nwp-cache check-data
+.PHONY: help env install check test smoke lint clean reproduce data nwp-cache check-data report
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -36,3 +36,6 @@ clean: # remove caches and the results store
 
 reproduce: # regenerate all results from raw (filled in as the project grows)
 	python experiments/run.py --config configs/experiment.yaml
+
+report: # build thesis tables + figures from results/results.parquet
+	python experiments/report.py
