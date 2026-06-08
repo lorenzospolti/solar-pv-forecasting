@@ -4,6 +4,11 @@ _Prepared 8 June 2026 · Bachelor's thesis, Università di Milano-Bicocca, targe
 
 **Thesis question (Variant B):** do time-series *foundation models* (Chronos-2, TimesFM-2.5, TinyTimeMixer, Moirai-2) — zero-shot and fine-tuned — match or beat purpose-trained models (smart persistence, SARIMA, LightGBM, LSTM) for day-ahead hourly PV power on consumer hardware (M4, 16 GB), and at what compute cost? Scored in clear-sky-index space, by skill over smart persistence, with probabilistic calibration.
 
+> **✅ Implemented in the 8 Jun 2026 session** (committed `fddfba0`, merged to `main`, tag `v0.3-foundation-wired`):
+> Phase 0 (idempotent results store, stray file removed) · Phase 1 (SARIMA/LightGBM/LSTM enabled; `--site`/`--weather-mode`/`--all-models` flags) · Phase 2 (per-station nameplate capacity from the Brick `.ttl`; CYT now 25 kW, caches regenerated) · Phase 3 (Chronos-2/TimesFM-2.5/TiRex wired, zero-shot + fine-tune via an `arch`/label split; `darts>=0.43` pin; Moirai/TTM guarded) · Phase 4 (`experiments/report.py` → tables + figures) · Phase 5 (manuscript skeleton + `references.bib`). Verified: ruff clean, 8/8 tests pass, synthetic E2E idempotent, real CYT baselines over 6 folds.
+>
+> **⛔ Still requires your Mac (can't run in the sandbox):** rebuild the env at `darts>=0.43`; run the full ladder (SARIMA/LightGBM/LSTM, then foundation models) on real stations × {oracle, nwp}; download the HF foundation checkpoints; decide the station panel and the Moirai/TTM roster (§5); write the manuscript. The phases below are the durable roadmap; checkboxes left unticked are the parts that still need a real run or your decision.
+
 ---
 
 ## 1. Where the project actually stands
