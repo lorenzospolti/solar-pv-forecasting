@@ -19,12 +19,14 @@ EPS = 1e-6
 def clearsky_index(power: pd.Series, p_clear: pd.Series, clip: float = 1.3) -> pd.Series:
     """k = power / p_clear on the daytime mask; 0 at night; clip cloud-enhancement.
 
-    p_clear<=EPS (night / very low sun) -> k = 0 (and these are masked out of
-    fitting). The clip caps physically-implausible k>clip from cloud enhancement.
+    p_clear<=EPS (night / very low sun) -> k = 0. Daytime hours where ``power``
+    is missing stay NaN (NOT 0): a data gap is not "no generation", and training
+    on fake zeros would bias every model. Downstream consumers ffill (darts
+    target builder) or mask (the evaluator drops non-finite truth).
     """
     k = power / p_clear.where(p_clear > EPS)
     k = k.clip(lower=0.0, upper=clip)
-    return k.fillna(0.0)
+    return k.where(p_clear > EPS, 0.0)  # night -> 0; daytime gaps stay NaN
 
 
 def reconstruct_power(k: pd.Series, p_clear: pd.Series) -> pd.Series:

@@ -43,7 +43,7 @@ def daytime_mask(index: pd.DatetimeIndex, lat: float, lon: float, max_zenith: fl
 
 def empirical_clearsky_power(
     power: pd.Series, ghi_clear: pd.Series, capacity: float | None = None,
-    quantile: float = 0.95,
+    quantile: float = 0.95, fit_mask: pd.Series | None = None,
 ) -> pd.Series:
     """Scale clear-sky GHI to a clear-sky *power* ceiling per (month, hour).
 
@@ -52,8 +52,15 @@ def empirical_clearsky_power(
     p_clear = ratio * ghi_clear. This absorbs azimuth/tilt/efficiency without a
     full physical model and stays robust to outliers. A pvlib ModelChain can
     replace this later for a physics-based comparison.
+
+    ``fit_mask`` (boolean, aligned with ``power``) restricts the rows used to FIT
+    the performance-ratio table; the template is still APPLIED to the full index.
+    Pass the initial training window so the target transform never sees test-period
+    data (leakage guard) — the template is then identical for every fold.
     """
     df = pd.DataFrame({"power": power, "ghi_clear": ghi_clear})
+    if fit_mask is not None:
+        df = df[fit_mask.reindex(df.index).fillna(False).astype(bool)]
     df = df[df["ghi_clear"] > 1.0]
     ratio = (df["power"] / df["ghi_clear"]).clip(lower=0)
     key = [df.index.month, df.index.hour]

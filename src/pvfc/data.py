@@ -292,14 +292,28 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "ora
 
 
 def attach_clearsky(frame: pd.DataFrame, capacity: float, lat: float = HKUST_LAT,
-                    lon: float = HKUST_LON, altitude: float = HKUST_ALT) -> pd.DataFrame:
-    """Add p_clear, k and is_day columns to an hourly power frame."""
+                    lon: float = HKUST_LON, altitude: float = HKUST_ALT,
+                    fit_days: int | None = 365) -> pd.DataFrame:
+    """Add p_clear, k and is_day columns to an hourly power frame.
+
+    The empirical performance-ratio table behind ``p_clear`` is FIT on the first
+    ``fit_days`` calendar days only (default 365 = the splitter's initial train
+    window, which is inside every fold's training set by construction) and then
+    applied to the whole index — so the clear-sky template, and therefore the
+    target ``k``, never embeds test-period information. Residual drift
+    (degradation/soiling after year 1) is a documented simplification.
+    ``fit_days=None`` fits on everything (synthetic/diagnostic use only).
+    """
     from . import clearsky as cs
     from .normalize import clearsky_index
 
     idx = frame.index
     ghi_clear = cs.clearsky_ghi(idx, lat, lon, altitude)
-    p_clear = cs.empirical_clearsky_power(frame["power"], ghi_clear, capacity=capacity)
+    fit_mask = None
+    if fit_days is not None:
+        fit_mask = pd.Series(idx < idx.min() + pd.Timedelta(days=fit_days), index=idx)
+    p_clear = cs.empirical_clearsky_power(frame["power"], ghi_clear, capacity=capacity,
+                                          fit_mask=fit_mask)
     out = frame.copy()
     out["p_clear"] = p_clear
     out["k"] = clearsky_index(out["power"], out["p_clear"])

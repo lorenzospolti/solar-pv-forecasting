@@ -20,8 +20,6 @@ from pathlib import Path
 
 import pandas as pd
 
-from .data import WEATHER_COLS
-
 logger = logging.getLogger("pvfc.weather")
 
 OPEN_METEO_URL = "https://historical-forecast-api.open-meteo.com/v1/forecast"
@@ -39,6 +37,23 @@ _OM_RENAME = {
     "diffuse_radiation": "ghi_diffuse",
 }
 NWP_VARS = list(_OM_RENAME)
+
+# Open-Meteo convention: radiation variables are *backward-averaged* — the value
+# stamped HH is the mean over [HH-1, HH] — while our frames are hour-beginning
+# (resampled mean over [HH, HH+1]). These columns must therefore be shifted -1 h
+# to align (verified on CYT: daytime corr(measured, forecast GHI) 0.66 -> 0.77,
+# and the diurnal forecast peak moves from 13:00 back to 12:00 local).
+# Instantaneous variables (temp/wind/rh/cloud_cover) are valid AT HH and stay put.
+_BACKWARD_AVERAGED = ("ghi", "ghi_direct", "ghi_diffuse")
+
+
+def _align_om_conventions(df: pd.DataFrame) -> pd.DataFrame:
+    """Shift backward-averaged Open-Meteo columns onto hour-beginning labels."""
+    out = df.copy()
+    for col in _BACKWARD_AVERAGED:
+        if col in out.columns:
+            out[col] = out[col].shift(-1)
+    return out
 
 
 def _cache_path(lat: float, lon: float, year: int, cache_dir: Path) -> Path:
@@ -85,7 +100,8 @@ def fetch_open_meteo(lat: float, lon: float, start: str, end: str,
         parts.append(df)
     out = pd.concat(parts).sort_index()
     out = out[~out.index.duplicated(keep="first")]
-    return out.loc[start:end]
+    # cache files keep the raw Open-Meteo stamps; alignment happens at load time
+    return _align_om_conventions(out).loc[start:end]
 
 
 def attach_nwp_forecast(frame: pd.DataFrame, lat: float, lon: float,
@@ -93,20 +109,19 @@ def attach_nwp_forecast(frame: pd.DataFrame, lat: float, lon: float,
     """Replace ``frame``'s weather columns with issue-time-aligned archived forecasts.
 
     ``power``/``p_clear``/``k``/``is_day`` are preserved (they derive from measured
-    power and deterministic pvlib geometry, legitimately known ahead). The forecast
-    columns are reindexed onto the frame's hourly UTC index, so a model reading the
-    canonical WEATHER_COLS in ``future`` sees forecasts rather than measurements.
+    power and deterministic pvlib geometry, legitimately known ahead). EVERY other
+    (measured) column is dropped — including tower rainfall/slp/visibility — so the
+    nwp frame cannot leak measured future weather no matter which covariate list a
+    model is configured with. The forecast columns are reindexed onto the frame's
+    hourly UTC index.
     """
     start = frame.index.min().strftime("%Y-%m-%d")
     end = frame.index.max().strftime("%Y-%m-%d")
     nwp = fetch_open_meteo(lat, lon, start, end, cache_dir=cache_dir)
     nwp = nwp.reindex(frame.index)
 
-    out = frame.copy()
-    # drop any measured weather columns, then graft the forecast ones in
-    out = out.drop(columns=[c for c in out.columns if c in set(WEATHER_COLS)
-                            or c in ("cloud_cover", "ghi_direct", "ghi_diffuse")],
-                   errors="ignore")
+    keep = ["power", "p_clear", "k", "is_day"]
+    out = frame[[c for c in keep if c in frame.columns]].copy()
     for col in nwp.columns:
         out[col] = nwp[col].to_numpy()
     return out

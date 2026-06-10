@@ -71,13 +71,14 @@ def main() -> None:
         embargo_days=sp["embargo_days"],
         step_days=sp.get("step_days"),
         max_folds=sp.get("max_folds"),
+        day_tz=sp.get("day_tz"),
     )
 
     # --- models -> harness ---
-    # Report both daytime-only (headline) and all-hours when the config asks for
-    # the daytime mask; the two runs are distinguished by the `daytime_only` column
-    # (and the config hash). A fresh model is built per run so stateful (darts)
-    # models never carry fit state across runs.
+    # Each model is fit ONCE per fold; the runner scores the same predictions under
+    # both the daytime-only (headline) and all-hours masks, distinguished by the
+    # `daytime_only` column. A fresh model is built per model entry so stateful
+    # (darts) models never carry fit state across entries.
     # The synthetic path is the fast, dependency-light harness check (`make smoke`):
     # run baselines only unless --all-models is given, so it needs no darts/torch.
     models = cfg["models"]
@@ -85,17 +86,18 @@ def main() -> None:
         _BASELINES = {"persistence", "smart_persistence", "seasonal_naive"}
         models = [m for m in models if m["name"] in _BASELINES]
 
+    daytime_modes = (True, False) if cfg.get("evaluation", {}).get("daytime_only", True) \
+        else (False,)
     all_rows: list[dict] = []
-    daytime_modes = [True, False] if cfg.get("evaluation", {}).get("daytime_only", True) else [False]
     for m in models:
-        for daytime in daytime_modes:
-            model = build(m["name"], **m.get("params", {}))
-            run_cfg = {"data": cfg["data"], "splits": sp, "model": m,
-                       "seed": cfg.get("seed", 0), "daytime_only": daytime}
-            all_rows.extend(run_model(model, series, splitter, daytime_only=daytime, config=run_cfg))
+        model = build(m["name"], **m.get("params", {}))
+        run_cfg = {"data": cfg["data"], "splits": sp, "model": m, "seed": cfg.get("seed", 0)}
+        all_rows.extend(run_model(model, series, splitter,
+                                  daytime_modes=daytime_modes, config=run_cfg))
 
     df = append_results(all_rows, args.results)
-    cols = ["model", "fold", "daytime_only", "nrmse", "nmae", "skill_rmse", "fit_predict_s"]
+    cols = [c for c in ("model", "fold", "daytime_only", "nrmse", "nmae", "skill_rmse",
+                        "fit_s", "predict_s", "peak_rss_mb") if c in df.columns]
     print(df[cols].to_string(index=False))
     print(f"\nWrote {len(all_rows)} rows to {args.results}")
 

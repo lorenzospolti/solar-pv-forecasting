@@ -4,6 +4,12 @@ Expanding-window blocked walk-forward on *whole-day blocks*, chronological,
 with an embargo gap of at least the forecast horizon (1 day for day-ahead).
 No shuffling, ever. The *same* Splitter instance is reused by every model so
 all models see identical folds (see plan §Evaluation, §Risk-3 leakage).
+
+Day blocks are defined in ``day_tz`` (the site's local timezone) when given:
+for an UTC+8 site, UTC-normalized "days" would run 08:00->07:59 local, so the
+issue time would sit mid-morning and forecasts would straddle two solar days.
+Setting ``day_tz="Asia/Hong_Kong"`` makes blocks (and therefore the runner's
+issue boundaries) true local calendar days. HK has no DST -> unambiguous.
 """
 from __future__ import annotations
 
@@ -32,6 +38,7 @@ class ExpandingWindowSplitter:
     embargo_days       : gap between train end and test start (>= horizon).
     step_days          : how far the origin advances each fold (default = test_days).
     max_folds          : optional cap.
+    day_tz             : timezone defining "a day" (None -> the index's own tz).
     """
 
     initial_train_days: int = 365
@@ -39,11 +46,17 @@ class ExpandingWindowSplitter:
     embargo_days: int = 1
     step_days: int | None = None
     max_folds: int | None = None
+    day_tz: str | None = None
+
+    def _day_index(self, index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+        """Each timestamp's calendar day (midnight) in the block timezone."""
+        return (index.tz_convert(self.day_tz) if self.day_tz else index).normalize()
 
     def split(self, index: pd.DatetimeIndex) -> Iterator[Fold]:
         if index.tz is None:
             raise ValueError("Index must be tz-aware (UTC). See plan §ETL.")
-        days = np.array(sorted(pd.Series(index.normalize()).unique()))
+        norm = self._day_index(index)
+        days = np.array(sorted(pd.Series(norm).unique()))
         step = self.step_days or self.test_days
         fold = 0
         train_end = self.initial_train_days
@@ -54,8 +67,8 @@ class ExpandingWindowSplitter:
                 break
             train_days = set(days[:train_end])
             test_day_set = set(days[test_start:test_end])
-            train_idx = index[index.normalize().isin(train_days)]
-            test_idx = index[index.normalize().isin(test_day_set)]
+            train_idx = index[norm.isin(train_days)]
+            test_idx = index[norm.isin(test_day_set)]
             if len(train_idx) and len(test_idx):
                 yield Fold(fold, train_idx, test_idx)
                 fold += 1

@@ -15,8 +15,10 @@ splits:                              # expanding-window blocked walk-forward (wh
   initial_train_days: 365
   test_days: 30
   embargo_days: 1                    # >= horizon (day-ahead = 1 day)
-  step_days: 30
-  max_folds: 6
+  step_days: 60                      # 60-day stride x 10 folds -> test windows span
+  max_folds: 10                      #   May 2022..Nov 2023 incl. winter (was: May-Oct 2022 only)
+  day_tz: Asia/Hong_Kong             # day blocks & issue times on LOCAL days (no DST in HK);
+                                     #   UTC days would put the issue time at 08:00 local
 
 evaluation:
   daytime_only: true                 # report daytime mask; also rerun all-hours for the thesis
@@ -31,10 +33,10 @@ evaluation:
 # timesfm, tirex) but commented: they need darts>=0.43 + a HuggingFace download and
 # are best run on the Mac (MPS). See darts_wrapper.py for the arch/label mechanism.
 models:
-  - name: persistence
+  - name: persistence              # same-hour-yesterday (24 h lag)
   - name: smart_persistence
-  - name: seasonal_naive
-    params: {season_hours: 24}
+  - name: seasonal_naive           # weekly lag — 24 h would duplicate `persistence`
+    params: {season_hours: 168}
   # --- classical / ML / deep (implemented & enabled for real runs) ---
   - name: sarima              # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
     params: {seasonal_m: 24, context_days: 60, quantile: true}

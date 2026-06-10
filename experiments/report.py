@@ -45,24 +45,35 @@ METRICS = [
     ("pinball", "Pinball", True),
     ("picp_80", "PICP-80", False),
     ("width_80", "Width-80", True),
+    ("fit_s", "Fit [s]", True),
+    ("predict_s", "Predict [s]", True),
     ("fit_predict_s", "Fit+pred [s]", True),
+    ("peak_rss_mb", "Peak RSS [MB]", True),
 ]
 GROUP_CANDIDATES = ["model", "weather_mode", "daytime_only"]
 
 
-def load_results(path: Path) -> pd.DataFrame:
+def load_results(path: Path, include_synthetic: bool = False) -> pd.DataFrame:
     if not path.exists():
         raise SystemExit(f"No results at {path}. Run experiments/run.py first.")
     df = pd.read_parquet(path)
+    if not include_synthetic and "site" in df.columns:
+        n = int((df["site"] == "synthetic").sum())
+        if n:
+            print(f"Excluding {n} synthetic rows (pass --include-synthetic to keep them).")
+        df = df[df["site"] != "synthetic"]
     if df.empty:
-        raise SystemExit(f"Results store {path} is empty.")
+        raise SystemExit(f"Results store {path} is empty (after synthetic filter).")
     return df
 
 
-def aggregate(df: pd.DataFrame) -> tuple[pd.DataFrame, list[str]]:
-    """Mean (+std) of each present metric over folds/sites, grouped by what we have."""
+def aggregate(df: pd.DataFrame, by_site: bool = False) -> tuple[pd.DataFrame, list[str]]:
+    """Mean (+std) of each present metric over folds (and sites unless ``by_site``)."""
     groups = [c for c in GROUP_CANDIDATES if c in df.columns]
+    if by_site and "site" in df.columns:
+        groups = ["site"] + groups
     present = [m for (m, _, _) in METRICS if m in df.columns]
+    present += sorted(c for c in df.columns if c.startswith("cov_q"))  # reliability
     agg = df.groupby(groups, dropna=False)[present].agg(["mean", "std", "count"])
     agg.columns = [f"{m}_{stat}" for m, stat in agg.columns]
     return agg.reset_index(), groups
@@ -78,9 +89,10 @@ def _to_md(frame: pd.DataFrame) -> str:
     return "\n".join([head, sep, *rows])
 
 
-def write_tables(agg: pd.DataFrame, groups: list[str], tables_dir: Path) -> Path:
+def write_tables(agg: pd.DataFrame, groups: list[str], tables_dir: Path,
+                 stem: str = "master_results") -> Path:
     tables_dir.mkdir(parents=True, exist_ok=True)
-    agg.to_csv(tables_dir / "master_results.csv", index=False)
+    agg.to_csv(tables_dir / f"{stem}.csv", index=False)
 
     # human-readable markdown: "mean±std" per metric
     show = agg.copy()
@@ -96,9 +108,9 @@ def write_tables(agg: pd.DataFrame, groups: list[str], tables_dir: Path) -> Path
     md = _to_md(show[cols])
     n_folds = int(agg[[c for c in agg.columns if c.endswith("_count")][0]].max()) if any(
         c.endswith("_count") for c in agg.columns) else 0
-    out = tables_dir / "master_results.md"
+    out = tables_dir / f"{stem}.md"
     out.write_text(
-        "# Master results\n\n"
+        f"# {stem.replace('_', ' ').title()}\n\n"
         f"Metrics aggregated over folds/sites (up to {n_folds} per group). "
         "Skill is over smart persistence; nRMSE/nMAE/CRPS are capacity-normalized.\n\n"
         + md + "\n"
@@ -147,6 +159,37 @@ def bar_figure(agg, groups, metric, label, figures_dir, fname, nominal=None):
     return path
 
 
+def reliability_figure(agg, groups, figures_dir):
+    """Reliability diagram: nominal quantile level vs mean empirical coverage."""
+    cov_cols = sorted([c for c in agg.columns if c.startswith("cov_q") and c.endswith("_mean")])
+    if not cov_cols:
+        return None
+    taus = [float(c[len("cov_q"):-len("_mean")]) for c in cov_cols]
+    data = _headline_slice(agg).dropna(subset=cov_cols, how="all")
+    if data.empty:
+        return None
+    fig, ax = plt.subplots(figsize=(5.2, 5.0))
+    ax.plot([0, 1], [0, 1], ls="--", c="grey", lw=1, label="perfect")
+    for _, r in data.iterrows():
+        cov = [r[c] for c in cov_cols]
+        if all(pd.isna(v) for v in cov):
+            continue
+        ax.plot(taus, cov, marker="o", ms=3.5, lw=1.2,
+                label=_model_label(r, groups).replace("\n", " "))
+    ax.set_xlabel("Nominal quantile level")
+    ax.set_ylabel("Empirical coverage")
+    ax.set_title("Reliability (quantile calibration)")
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
+    ax.legend(fontsize=7)
+    ax.grid(alpha=0.3)
+    fig.tight_layout()
+    path = figures_dir / "reliability.png"
+    fig.savefig(path, dpi=150)
+    plt.close(fig)
+    return path
+
+
 def scatter_skill_vs_compute(agg, groups, figures_dir):
     if not {"skill_rmse_mean", "fit_predict_s_mean"} <= set(agg.columns):
         return None
@@ -178,19 +221,26 @@ def main() -> None:
     ap.add_argument("--results", default=str(ROOT / "results" / "results.parquet"))
     ap.add_argument("--tables-dir", default=str(ROOT / "thesis" / "tables"))
     ap.add_argument("--figures-dir", default=str(ROOT / "thesis" / "figures"))
+    ap.add_argument("--include-synthetic", action="store_true",
+                    help="keep site=='synthetic' rows (harness checks; excluded by default)")
     args = ap.parse_args()
 
-    df = load_results(Path(args.results))
+    df = load_results(Path(args.results), include_synthetic=args.include_synthetic)
     agg, groups = aggregate(df)
     tables_dir, figures_dir = Path(args.tables_dir), Path(args.figures_dir)
     figures_dir.mkdir(parents=True, exist_ok=True)
 
     written = [write_tables(agg, groups, tables_dir)]
+    if "site" in df.columns and df["site"].nunique() > 1:
+        agg_site, groups_site = aggregate(df, by_site=True)
+        written.append(write_tables(agg_site, groups_site, tables_dir,
+                                    stem="master_results_by_site"))
     written.append(bar_figure(agg, groups, "skill_rmse", "Skill vs SP", figures_dir,
                               "skill_by_model.png"))
     written.append(bar_figure(agg, groups, "nrmse", "nRMSE", figures_dir, "nrmse_by_model.png"))
     written.append(bar_figure(agg, groups, "picp_80", "PICP-80", figures_dir,
                               "calibration_picp80.png", nominal=0.8))
+    written.append(reliability_figure(agg, groups, figures_dir))
     written.append(scatter_skill_vs_compute(agg, groups, figures_dir))
 
     print(f"Grouped by: {groups}")
@@ -198,10 +248,8 @@ def main() -> None:
     for p in written:
         if p is not None:
             print(f"  wrote {p}")
-    skipped = [n for p, n in zip(written, ["tables", "skill", "nrmse", "picp", "scatter"])
-               if p is None]
-    if skipped:
-        print(f"  skipped (no data): {skipped}")
+    if any(p is None for p in written):
+        print("  (some figures skipped — no data for them yet)")
 
 
 if __name__ == "__main__":

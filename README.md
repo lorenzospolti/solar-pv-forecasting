@@ -47,6 +47,16 @@ Full rationale, schedule, risks, and reading list: see the thesis plan at
 `~/.claude/plans/analyze-thoroughly-this-project-kind-bear.md`.
 
 ## Status
+**Protocol audit fixes applied (10 Jun 2026, `v0.4-protocol-fixes` — see
+`CRITICAL_REVIEW.md`):** Open-Meteo backward-averaged radiation realigned (−1 h);
+day blocks & issue times now on **local (HKT) days** (`splits.day_tz`); the clear-sky
+template is fit on the **first 365 days only** (no test-period leakage in `k`);
+daytime data gaps stay NaN instead of fake zeros; the runner strips `power`/`k` from
+the future frame, fits **once per fold** and scores both masks, and reports
+`fit_s`/`predict_s`/`peak_rss_mb` plus per-quantile coverage (`cov_q*`) for
+reliability diagrams; nwp frames carry **only** forecast weather; test folds now
+span May 2022–Nov 2023 (10 folds, 60-day stride). CYT processed caches regenerated.
+
 Harness spine + baselines + **real HKUST ETL** (per-station nameplate capacity from
 the Brick `.ttl` metadata) + **NWP weather feed** (Open-Meteo) + **SARIMA (AutoARIMA),
 LightGBM, and LSTM** wrappers are implemented. **Foundation-model wrappers (Chronos-2,

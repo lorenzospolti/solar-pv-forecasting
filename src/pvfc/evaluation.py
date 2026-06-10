@@ -134,6 +134,10 @@ def evaluate(
         if 0.1 in q_pred and 0.9 in q_pred:
             scores.picp_80 = picp(y_true, q_pred[0.1], q_pred[0.9])
             scores.width_80 = mean_interval_width(q_pred[0.1], q_pred[0.9], capacity)
+        # per-quantile empirical coverage -> tidy columns (cov_q0.1 .. cov_q0.9),
+        # the data behind the thesis reliability diagram (see report.py)
+        scores.extra.update({f"cov_q{tau}": cov
+                             for tau, cov in reliability(y_true, q_pred).items()})
     return scores
 
 

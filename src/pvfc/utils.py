@@ -79,6 +79,24 @@ def get_device(prefer: str = "mps") -> str:
     return "cpu"
 
 
+def peak_rss_mb() -> float | None:
+    """Peak resident-set size of this process in MB (None if unavailable).
+
+    Note: ru_maxrss is a process-lifetime high-water mark, so per-row values are
+    monotone within a run — read it as "RAM needed up to and including this
+    model", and run heavy models in separate processes for isolated numbers.
+    macOS reports bytes, Linux kilobytes.
+    """
+    try:
+        import resource
+        import sys
+
+        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        return round(rss / (1024 ** 2 if sys.platform == "darwin" else 1024), 1)
+    except Exception:  # noqa: BLE001 — e.g. Windows
+        return None
+
+
 def config_hash(config: dict[str, Any], length: int = 12) -> str:
     """SHA1 over canonical, sorted JSON of a config dict.
 
