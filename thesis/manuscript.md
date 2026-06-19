@@ -23,10 +23,13 @@ match/beat purpose-trained models on day-ahead hourly PV power on an M4/16 GB), 
 the compute cost. End with one sentence of significance.*
 
 This thesis asks whether time-series **foundation models** (Chronos-2, TimesFM-2.5,
-and others) — used **zero-shot** and **fine-tuned** — can match or beat
-purpose-trained classical, machine-learning, and deep models (smart persistence,
-SARIMA, LightGBM, LSTM) for **day-ahead hourly photovoltaic (PV) power** forecasting
-on **consumer hardware**, and at what compute cost. […]
+TiRex, Moirai-2, and the tiny TTM/TinyTimeMixer) — used **zero-shot** and
+**fine-tuned** — can match or beat purpose-trained classical, machine-learning,
+and deep models (smart persistence, SARIMA, LightGBM, LSTM) for **day-ahead hourly
+photovoltaic (PV) power** forecasting on **consumer hardware**, and at what compute
+cost. The roster mixes heavy transformer-class models (Chronos-2, TimesFM-2.5,
+Moirai-2) with the much smaller TTM (≈1–5 M parameters), specifically so the
+consumer-hardware question can be answered for both scales. […]
 
 ## 1. Introduction
 
@@ -105,12 +108,23 @@ The same `Splitter` and `Evaluator` are shared by every model.
 | Classical | SARIMA (AutoARIMA) |
 | ML | LightGBM (quantile) |
 | Deep | LSTM |
-| Foundation (zero-shot) | Chronos-2, TimesFM-2.5 *(TiRex optional)* |
-| Foundation (fine-tuned) | Chronos-2 *(others as compute allows)* |
+| Foundation (zero-shot) | Chronos-2, TimesFM-2.5, TiRex, **Moirai-2**, **TTM (TinyTimeMixer)** |
+| Foundation (fine-tuned) | Chronos-2, TimesFM-2.5, TiRex, **Moirai-2**, **TTM** *(as compute allows)* |
 
 *Scope note: state context lengths, fine-tuning epochs/frozen-layer policy, and the
-darts version used. Note Moirai-2 and TTM are not natively in darts (see Discussion /
-PLAN_OF_ACTION §5) and how they were handled (external lib, substitution, or scope cut).*
+darts version used. Chronos-2, TimesFM-2.5, and TiRex are darts-native (>=0.43/0.44).
+Moirai-2 and TTM are wired through a separate external-foundation wrapper
+(`src/pvfc/models/external_foundation.py`) that lazy-imports their optional libraries
+(`uni2ts` for Moirai-2; `granite-tsfm` for IBM's TinyTimeMixer). Both follow the same
+arch/label split as the darts foundation roster: zero-shot and fine-tuned variants
+score as separate rows. **TTM in particular fits the consumer-hardware story directly:
+at ≈1–5 M parameters it is two orders of magnitude smaller than the transformer-class
+foundation models and runs comfortably on CPU/MPS on an M4 with 16 GB unified memory,
+so it tests whether a tiny pre-trained model can match the heavier transformers on
+day-ahead PV without a GPU.** Moirai-2 ("R" variants) rounds out the comparison by
+adding a recent any-variate masked-encoder family beside the autoregressive
+transformer foundation models. Both are off by default in `configs/experiment.yaml`
+and opt-in via `pip install 'uni2ts>=1.2'` / `pip install 'granite-tsfm[notebooks]>=0.2.16'`.*
 
 ### 4.6 Reproducibility
 

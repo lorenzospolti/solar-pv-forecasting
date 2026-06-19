@@ -57,6 +57,24 @@ models:
   #            finetune: true, n_epochs: 5, hub_model_name: "autogluon/chronos-2-small"}
   # - name: tirex             # NX-AI TiRex, zero-shot (darts>=0.44)
   #   params: {input_chunk_length: 512, output_chunk_length: 24, quantile: true}
-  # --- NOT in darts (even 0.44) — need external libs or a scope decision (see PLAN_OF_ACTION §5) ---
-  # - name: ttm      # IBM TinyTimeMixer -> needs `granite-tsfm`, or darts-master PatchTSTFMModel
-  # - name: moirai   # Salesforce Moirai-2 -> needs `uni2ts`; consider substituting TiRex instead
+  # --- external-library foundation models (v0.5, off by default; opt-in deps) -----------------
+  # Moirai-2 needs the `uni2ts` package; TTM needs `granite-tsfm`. Both wrappers
+  # live in pvfc.models.external_foundation and lazy-import their dep, so the
+  # darts-native roster keeps working without them. Install on the Mac with:
+  #   pip install 'uni2ts>=1.2'                         # for moirai2 / moirai2_ft
+  #   pip install 'granite-tsfm[notebooks]>=0.2.16'     # for ttm / ttm_ft
+  # then UNCOMMENT the entries below. The arch/label split scores zero-shot and
+  # fine-tuned as separate rows (e.g. `moirai2` vs `moirai2_ft`).
+  # - name: moirai2           # Salesforce Moirai-2, zero-shot (uni2ts)
+  #   params: {input_chunk_length: 512, output_chunk_length: 24, quantile: true,
+  #            size: small, num_samples: 100}
+  # - name: moirai2_ft        # fine-tuned (arch selects the class, name is the label)
+  #   params: {arch: moirai2, input_chunk_length: 512, output_chunk_length: 24,
+  #            quantile: true, finetune: true, size: small, num_samples: 100}
+  # - name: ttm               # IBM TinyTimeMixer (TTM-R2), zero-shot (granite-tsfm)
+  #   params: {input_chunk_length: 512, output_chunk_length: 24, quantile: true,
+  #            checkpoint: "ibm-granite/granite-timeseries-ttm-r2"}
+  # - name: ttm_ft            # TTM fine-tuned hook (sets residual band from train)
+  #   params: {arch: ttm, input_chunk_length: 512, output_chunk_length: 24,
+  #            quantile: true, finetune: true,
+  #            checkpoint: "ibm-granite/granite-timeseries-ttm-r2"}

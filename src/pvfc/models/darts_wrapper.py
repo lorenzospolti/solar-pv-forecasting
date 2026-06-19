@@ -60,13 +60,14 @@ _FOUNDATION = {"chronos2", "timesfm", "tirex"}
 #: arches with a working fit/predict path in this wrapper
 _WIRED = {"sarima", "lightgbm", "lstm", "chronos2", "timesfm", "tirex"}
 
-#: arches that are part of the thesis roster but have NO darts class (even 0.44).
-#: They need an external library; we fail loudly with guidance rather than silently.
+#: arches that *used* to fail loudly because no darts class exists. As of
+#: v0.5 ``moirai2`` and ``ttm`` are wired via the external-foundation wrapper
+#: (see :mod:`pvfc.models.external_foundation`), so the registry only retains
+#: legacy aliases that should redirect a user who typed the v1 name.
 _EXTERNAL = {
-    "ttm": "IBM TinyTimeMixer is not in darts; install `granite-tsfm` and wrap it, "
-           "or use darts-master `PatchTSTFMModel`.",
-    "moirai": "Salesforce Moirai-2 is not in darts; install `uni2ts` and wrap it, "
-              "or substitute darts `TiRexModel` (arch: tirex).",
+    "moirai": "Salesforce Moirai v1 is not wired. Use `arch: moirai2` "
+              "(uni2ts; new external-foundation wrapper) or substitute darts "
+              "`TiRexModel` (arch: tirex).",
 }
 
 # Foundation models that, by default, accept future covariates in darts.

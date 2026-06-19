@@ -63,8 +63,36 @@ LightGBM, and LSTM** wrappers are implemented. **Foundation-model wrappers (Chro
 TimesFM-2.5, TiRex) are now wired** in `darts_wrapper.py` — zero-shot and fine-tuned
 (via an `arch`/label split; `make report` builds tables + figures from results).
 Zero-shot Chronos-2/TimesFM-2.5 run on darts 0.41; **fine-tuning needs darts>=0.42**
-(pin is `u8darts[torch]>=0.43`). Moirai-2 and TTM are *not* in darts — see
-`PLAN_OF_ACTION.md` §5 for the roster decision.
+(pin is `u8darts[torch]>=0.43`).
+
+**v0.5 (`v0.5-extended-foundation-roster`):** Moirai-2 (Salesforce, via `uni2ts`)
+and TTM / TinyTimeMixer (IBM, via `granite-tsfm`) are now wired through a separate
+*external-foundation* wrapper (`src/pvfc/models/external_foundation.py`). The
+arch/label split scores zero-shot and fine-tuned as distinct result rows
+(`moirai2`/`moirai2_ft`, `ttm`/`ttm_ft`). Both libraries are **optional**: the
+darts-native roster (Chronos-2, TimesFM-2.5, TiRex) keeps working without them.
+Each wrapper lazy-imports its dep and raises a clear install message if missing.
+
+### Foundation-model roster (v0.5)
+
+| Arch | Library | Zero-shot label | Fine-tuned label | Dep |
+|---|---|---|---|---|
+| chronos2 | darts | `chronos2` | `chronos2_ft` | `u8darts[torch]>=0.43` |
+| timesfm | darts | `timesfm` | `timesfm_ft` | `u8darts[torch]>=0.43` |
+| tirex | darts | `tirex` | `tirex_ft` | `u8darts[torch]>=0.44` |
+| moirai2 | **uni2ts** (optional) | `moirai2` | `moirai2_ft` | `uni2ts>=1.2` |
+| ttm | **granite-tsfm** (optional) | `ttm` | `ttm_ft` | `granite-tsfm[notebooks]>=0.2.16` |
+
+To opt into Moirai-2 / TTM on the Mac:
+
+```bash
+pip install 'uni2ts>=1.2'                      # for moirai2 / moirai2_ft
+pip install 'granite-tsfm[notebooks]>=0.2.16'  # for ttm / ttm_ft
+```
+
+Then uncomment the corresponding entries in `configs/experiment.yaml` (search
+for "external-library foundation models"). The first run downloads the HF
+checkpoint(s); subsequent runs reuse the cache.
 
 To run on real data: download `Dataset.zip` from
 [Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.m37pvmd99) into `data/raw/`
