@@ -15,16 +15,25 @@ import pandas as pd
 from .base import Forecaster
 
 
-def _lookup_same_hour(series: pd.Series, target_index: pd.DatetimeIndex, lag: pd.Timedelta) -> pd.Series:
-    """For each t in target_index, fetch series[t - lag], else fall back to the
-    most recent available value (forward-fill of the lagged source)."""
-    source = series.copy()
-    wanted = target_index - lag
-    vals = source.reindex(wanted)
+def _lookup_same_hour(series: pd.Series, target_index: pd.DatetimeIndex, lag: pd.Timedelta,
+                      max_back_days: int = 7) -> pd.Series:
+    """For each t in target_index, fetch series[t - lag]. Where that value is
+    missing (a data gap), step back whole days — t - lag - 1 d, - 2 d, ... up to
+    ``max_back_days`` — i.e. use the most recent value observed AT THE SAME HOUR.
+
+    Never fall back to the last value of the series: at issue time (local
+    midnight) that is a night-time zero, which would turn every post-gap hour of
+    the reference forecast into 0 kW and inflate every skill score. Values still
+    missing after ``max_back_days`` (a week-long outage) are 0.
+    """
+    vals = series.reindex(target_index - lag)
     vals.index = target_index
-    # backfill from the last observed value where the exact lag is missing
-    if vals.isna().any() and len(source):
-        vals = vals.fillna(source.dropna().iloc[-1])
+    for back in range(1, max_back_days + 1):
+        if not vals.isna().any():
+            break
+        older = series.reindex(target_index - lag - pd.Timedelta(days=back))
+        older.index = target_index
+        vals = vals.fillna(older)
     return vals.fillna(0.0)
 
 

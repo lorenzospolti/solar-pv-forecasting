@@ -7,6 +7,14 @@ A5  Per-quantile coverage columns emitted for the reliability diagram.
 B5  Models never see target-derived columns (power, k) for the horizon.
 B6  Daytime data gaps stay NaN in k (not fake zeros).
 B4  One fit per fold scores both daytime/all-hours masks.
+
+and for the ETL v2 / protocol fixes of 1 Oct 2026:
+
+C1  Clear-sky template binned by sun position: no hole when a month is missing.
+C2  Calendar-anchored folds: stations with different starts share test windows.
+C3  Persistence fallback uses the same hour on an earlier day, never a night zero.
+C4  Hourly files relabelled to interval start; 15-min files untouched.
+C5  Power above 1.1 x nameplate is removed before resampling.
 """
 from __future__ import annotations
 
@@ -48,21 +56,114 @@ def test_utc_vs_local_blocks_differ():
 
 
 # --------------------------------------------------------------------- A3 ---
+def _template_inputs(s):
+    from pvfc import clearsky as cs
+
+    idx = s.frame.index
+    ghi_clear = cs.clearsky_ghi_interval(idx, s.lat, s.lon, s.altitude)
+    decl, ha = cs.sun_coordinates(idx + pd.Timedelta(minutes=30), s.lon)
+    fit_mask = pd.Series(idx < idx.min() + pd.Timedelta(days=365), index=idx)
+    return ghi_clear, decl, ha, fit_mask
+
+
 def test_clearsky_template_ignores_future_data():
     from pvfc import clearsky as cs
 
     s = synthetic_station(days=540, seed=3)
     power = s.frame["power"].copy()
-    ghi_clear = cs.clearsky_ghi(power.index, s.lat, s.lon, s.altitude)
-    fit_mask = pd.Series(power.index < power.index.min() + pd.Timedelta(days=365),
-                         index=power.index)
-    base = cs.empirical_clearsky_power(power, ghi_clear, capacity=s.capacity,
+    ghi_clear, decl, ha, fit_mask = _template_inputs(s)
+    base = cs.empirical_clearsky_power(power, ghi_clear, decl, ha, capacity=s.capacity,
                                        fit_mask=fit_mask)
     corrupted = power.copy()
     corrupted.iloc[-90 * 24:] *= 7.0  # wild change AFTER the fit window
-    redo = cs.empirical_clearsky_power(corrupted, ghi_clear, capacity=s.capacity,
+    redo = cs.empirical_clearsky_power(corrupted, ghi_clear, decl, ha, capacity=s.capacity,
                                        fit_mask=fit_mask)
     pd.testing.assert_series_equal(base, redo)  # template must be unaffected
+
+
+# --------------------------------------------------------------------- C1 ---
+def test_template_has_no_hole_when_a_month_is_missing():
+    """ETL v1 regression: no February in the fit year gave p_clear = 0 all February."""
+    from pvfc import clearsky as cs
+
+    s = synthetic_station(days=540, seed=7)
+    power = s.frame["power"].copy()
+    power[power.index.month == 2] = np.nan  # a station outage covering February
+    ghi_clear, decl, ha, fit_mask = _template_inputs(s)
+    p_clear = cs.empirical_clearsky_power(power, ghi_clear, decl, ha, capacity=s.capacity,
+                                          fit_mask=fit_mask)
+    local = p_clear.tz_convert(HKT)
+    daily_max = local.groupby(local.index.date).max()
+    complete = local.groupby(local.index.date).size() == 24
+    daily_max = daily_max[complete]
+    assert (daily_max > 0.4 * s.capacity).all(), "a day without a clear-sky template"
+    assert daily_max.pct_change().abs().max() < 0.05, "template steps between days"
+
+
+# --------------------------------------------------------------------- C2 ---
+def test_first_test_day_aligns_stations_with_different_starts():
+    kw = dict(initial_train_days=365, test_days=30, embargo_days=1, step_days=60,
+              max_folds=3, day_tz=HKT, first_test_day="2022-07-05")
+    early = pd.date_range("2021-03-24", "2023-12-31", freq="1h", tz=HKT).tz_convert("UTC")
+    late = pd.date_range("2021-07-01", "2023-12-31", freq="1h", tz=HKT).tz_convert("UTC")
+    f_early = list(ExpandingWindowSplitter(**kw).split(early))
+    f_late = list(ExpandingWindowSplitter(**kw).split(late))
+    assert len(f_early) == len(f_late) == 3
+    for a, b in zip(f_early, f_late):
+        assert a.test_idx.equals(b.test_idx)          # identical scored windows
+    assert f_early[0].test_idx.tz_convert(HKT).min() == pd.Timestamp("2022-07-05", tz=HKT)
+    assert len(f_early[0].train_idx) > len(f_late[0].train_idx)  # all history is used
+
+
+def test_first_test_day_requires_a_full_training_year():
+    import pytest
+
+    short = pd.date_range("2021-12-01", "2023-12-31", freq="1h", tz=HKT).tz_convert("UTC")
+    sp = ExpandingWindowSplitter(initial_train_days=365, day_tz=HKT, first_test_day="2022-07-05")
+    with pytest.raises(ValueError, match="training days before first_test_day"):
+        next(sp.split(short))
+
+
+# --------------------------------------------------------------------- C3 ---
+def test_persistence_fallback_uses_same_hour_of_an_earlier_day():
+    from pvfc.models.baselines import SmartPersistence
+
+    idx = pd.date_range("2022-06-01", periods=4 * 24, freq="1h", tz="UTC")
+    k = pd.Series(np.tile(np.r_[np.zeros(6), np.full(12, 0.8), np.zeros(6)], 4), index=idx)
+    k.iloc[1 * 24:2 * 24] = np.r_[np.zeros(6), np.full(12, 0.5), np.zeros(6)]  # day 2: k = 0.5
+    k.iloc[2 * 24 + 8] = np.nan                       # day 3, hour 8: a data gap
+    frame = pd.DataFrame({"k": k, "p_clear": 10.0, "power": k * 10.0})
+    history, future = frame.iloc[:3 * 24], frame.iloc[3 * 24:].drop(columns=["power", "k"])
+    pred = SmartPersistence().predict(history, future)
+    # the gap hour falls back to the SAME hour one day earlier (k = 0.5 -> 5 kW), not 0 kW
+    assert pred["y_hat"].iloc[8] == 5.0
+    assert pred["y_hat"].iloc[9] == 8.0               # untouched hours use yesterday
+
+
+# --------------------------------------------------------------------- C4 ---
+def test_hourly_files_are_relabelled_to_interval_start(tmp_path):
+    from pvfc.data import _read_power
+
+    hourly = tmp_path / "hourly.csv"
+    hourly.write_text("Time,generation(kWh),power(W)\n2022-06-15 07:00:00,1.0,1000\n"
+                      "2022-06-15 08:00:00,2.0,2000\n2022-06-15 09:00:00,3.0,3000\n")
+    q15 = tmp_path / "q15.csv"
+    q15.write_text("Time,generation(kWh),power(W)\n2022-06-15 07:00:00,0.25,1000\n"
+                   "2022-06-15 07:15:00,0.5,2000\n2022-06-15 07:30:00,0.75,3000\n")
+    p_h, step_h = _read_power(hourly)
+    p_q, step_q = _read_power(q15)
+    first_h = p_h.index[0].tz_convert(HKT)
+    assert step_h == pd.Timedelta(hours=1) and first_h.hour == 6   # 07:00 stamp = 06:00-07:00
+    assert p_q.index[0].tz_convert(HKT).hour == 7 and step_q == pd.Timedelta(minutes=15)
+
+
+# --------------------------------------------------------------------- C5 ---
+def test_power_spikes_above_nameplate_are_removed():
+    from pvfc.data import _qc_power
+
+    raw = pd.Series([5.0, 10.9, 11.1, 3000.0, np.nan])
+    clean, n = _qc_power(raw, capacity=10.0)
+    assert n == 2 and clean.isna().sum() == 3 and clean.iloc[1] == 10.9
 
 
 # --------------------------------------------------------------------- B6 ---
