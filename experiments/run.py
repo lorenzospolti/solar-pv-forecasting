@@ -2,26 +2,37 @@
 
 Loads a composed YAML config, builds the dataset + splitter + models, runs each
 model through the shared harness, and appends tidy rows to the parquet results
-store keyed by config hash.
+store keyed by config hash. Rows are written after EACH model, so a crash in the
+middle of an overnight run loses at most the model that was running.
 
 Usage:
     python experiments/run.py --config configs/experiment.yaml
-    python experiments/run.py --config configs/experiment.yaml --synthetic   # no download needed
+    python experiments/run.py --site "LSK North" --weather-mode none --models lightgbm,lstm
+    python experiments/run.py --max-folds 1 --results results/smoke.parquet    # quick check
+    python experiments/run.py --config configs/experiment.yaml --synthetic     # no download
 """
 from __future__ import annotations
 
-import argparse
-from pathlib import Path
+import os
 
-import yaml
+# must be set before torch is imported (darts imports it): unsupported MPS ops
+# then fall back to CPU instead of crashing a run
+os.environ.setdefault("PYTORCH_ENABLE_MPS_FALLBACK", "1")
 
-from pvfc import data as datamod
-from pvfc.models import build
-from pvfc.runner import append_results, run_model
-from pvfc.splits import ExpandingWindowSplitter
-from pvfc.utils import set_seed, setup_logging
+import argparse  # noqa: E402
+import logging  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+import yaml  # noqa: E402
+
+from pvfc import data as datamod  # noqa: E402
+from pvfc.models import build  # noqa: E402
+from pvfc.runner import append_results, run_model  # noqa: E402
+from pvfc.splits import ExpandingWindowSplitter  # noqa: E402
+from pvfc.utils import set_seed, setup_logging  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
+logger = logging.getLogger("pvfc.run")
 
 
 def load_config(path: str) -> dict:
@@ -36,35 +47,45 @@ def main() -> None:
                     help="use a synthetic station instead of real HK data")
     ap.add_argument("--all-models", action="store_true",
                     help="with --synthetic, also run non-baseline models (needs darts)")
-    ap.add_argument("--weather-mode", choices=["oracle", "nwp"], default=None,
-                    help="override data.weather_mode (oracle=measured, nwp=archived forecast)")
+    ap.add_argument("--weather-mode", choices=datamod.WEATHER_MODES, default=None,
+                    help="override data.weather_mode (nwp=archived forecast, none=no weather "
+                         "covariates, oracle=measured tower, diagnostics only)")
     ap.add_argument("--site", default=None, help="override data.site_id (a discovered HKUST station)")
+    ap.add_argument("--models", default=None,
+                    help="comma-separated config names to run (default: every model in the config)")
+    ap.add_argument("--max-folds", type=int, default=None, help="override splits.max_folds")
     ap.add_argument("--results", default=str(ROOT / "results" / "results.parquet"))
+    ap.add_argument("--predictions-dir", default=str(ROOT / "results" / "predictions"),
+                    help="where per-timestamp predictions are written (one parquet per run)")
+    ap.add_argument("--no-predictions", action="store_true", help="do not save predictions")
     args = ap.parse_args()
 
     setup_logging()
     cfg = load_config(args.config)
-    # CLI overrides flow into cfg["data"], so they are captured in the config hash
-    # (oracle vs nwp and per-site runs become distinct, traceable result rows).
+    # CLI overrides flow into cfg, so they are captured in the config hash
+    # (weather settings, per-site runs and fold caps become distinct, traceable rows).
     if args.weather_mode is not None:
         cfg["data"]["weather_mode"] = args.weather_mode
     if args.site is not None:
         cfg["data"]["site_id"] = args.site
+    if args.max_folds is not None:
+        cfg["splits"]["max_folds"] = args.max_folds
     set_seed(cfg.get("seed", 0))
 
     # --- data ---
+    sp = dict(cfg["splits"])
     if args.synthetic:
         series = datamod.synthetic_station(days=cfg["data"].get("synthetic_days", 540))
+        sp["first_test_day"] = None  # calendar anchoring is for the real stations
     else:
         d = cfg["data"]
         series = datamod.load_station(
             d["site_id"],
-            weather_mode=d.get("weather_mode", "oracle"),
+            weather_mode=d.get("weather_mode", "nwp"),
             capacity=d.get("capacity_kw"),
         )
 
     # --- splitter ---
-    sp = cfg["splits"]
     splitter = ExpandingWindowSplitter(
         initial_train_days=sp["initial_train_days"],
         test_days=sp["test_days"],
@@ -72,6 +93,7 @@ def main() -> None:
         step_days=sp.get("step_days"),
         max_folds=sp.get("max_folds"),
         day_tz=sp.get("day_tz"),
+        first_test_day=sp.get("first_test_day"),
     )
 
     # --- models -> harness ---
@@ -82,24 +104,38 @@ def main() -> None:
     # The synthetic path is the fast, dependency-light harness check (`make smoke`):
     # run baselines only unless --all-models is given, so it needs no darts/torch.
     models = cfg["models"]
+    if args.models:
+        wanted = [m.strip() for m in args.models.split(",") if m.strip()]
+        unknown = sorted(set(wanted) - {m["name"] for m in models})
+        if unknown:
+            raise SystemExit(f"--models: not in {args.config}: {unknown}")
+        models = [m for m in models if m["name"] in wanted]
     if args.synthetic and not args.all_models:
         _BASELINES = {"persistence", "smart_persistence", "seasonal_naive"}
         models = [m for m in models if m["name"] in _BASELINES]
 
     daytime_modes = (True, False) if cfg.get("evaluation", {}).get("daytime_only", True) \
         else (False,)
-    all_rows: list[dict] = []
+    pred_dir = None if args.no_predictions else args.predictions_dir
+    n_rows = 0
     for m in models:
         model = build(m["name"], **m.get("params", {}))
         run_cfg = {"data": cfg["data"], "splits": sp, "model": m, "seed": cfg.get("seed", 0)}
-        all_rows.extend(run_model(model, series, splitter,
-                                  daytime_modes=daytime_modes, config=run_cfg))
+        rows = run_model(model, series, splitter, daytime_modes=daytime_modes,
+                         config=run_cfg, predictions_dir=pred_dir)
+        append_results(rows, args.results)  # after EACH model: a crash loses one model only
+        n_rows += len(rows)
+        logger.info("saved %d rows for %s -> %s", len(rows), m["name"], args.results)
 
-    df = append_results(all_rows, args.results)
+    df = append_results([], args.results)
     cols = [c for c in ("model", "fold", "daytime_only", "nrmse", "nmae", "skill_rmse",
                         "fit_s", "predict_s", "peak_rss_mb") if c in df.columns]
-    print(df[cols].to_string(index=False))
-    print(f"\nWrote {len(all_rows)} rows to {args.results}")
+    names = {m["name"] for m in models}
+    shown = df[df["model"].str.startswith(tuple(names))] if "model" in df.columns else df
+    if "site" in shown.columns:
+        shown = shown[shown["site"] == series.site_id]
+    print(shown[cols].to_string(index=False))
+    print(f"\nWrote {n_rows} rows to {args.results}")
 
 
 if __name__ == "__main__":

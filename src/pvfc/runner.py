@@ -15,7 +15,10 @@ Protocol guards (see CRITICAL_REVIEW.md):
 - the model is fit ONCE per fold and its predictions are scored under both the
   daytime-only and all-hours masks (predictions don't depend on the mask);
 - ``fit_s`` and ``predict_s`` are timed separately, for the model only (the
-  reference's predictions are not billed to the model under test).
+  reference's predictions are not billed to the model under test);
+- with ``predictions_dir`` set, every scored prediction (truth, forecast,
+  quantiles, the reference forecast) is kept, one parquet per run, for the
+  forecast-trace figures, error-by-hour profiles and significance tests.
 
 This guarantees identical splits / masking / metrics across all models by
 construction (plan §Software-architecture).
@@ -23,7 +26,9 @@ construction (plan §Software-architecture).
 from __future__ import annotations
 
 import logging
+import re
 import time
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -62,6 +67,14 @@ def _day_ahead_predictions(model: Forecaster, full: pd.DataFrame,
     return pd.concat(preds) if preds else pd.DataFrame()
 
 
+def predictions_path(predictions_dir: str | Path, site: str, weather_mode: str | None,
+                     model: str, chash: str | None) -> Path:
+    """One file per run, named like the results-row key (site x weather x model x hash)."""
+    stem = "__".join(re.sub(r"[^A-Za-z0-9.-]+", "_", str(part)).strip("_")
+                     for part in (site, weather_mode or "na", model, chash or "nohash"))
+    return Path(predictions_dir) / f"{stem}.parquet"
+
+
 def run_model(
     model: Forecaster,
     series: StationSeries,
@@ -69,16 +82,20 @@ def run_model(
     reference: Forecaster | None = None,
     daytime_modes: tuple[bool, ...] = (True, False),
     config: dict | None = None,
+    predictions_dir: str | Path | None = None,
 ) -> list[dict]:
     """Run one model over all folds; return one results row per (fold, mask).
 
     The model is fit and predicted once per fold; each mask in ``daytime_modes``
     re-scores the same predictions (one results row each, flagged ``daytime_only``).
+    With ``predictions_dir``, the per-timestamp predictions of all folds are also
+    written to ``predictions_path(...)`` (overwritten when the same config reruns).
     """
     full = series.frame
     reference = reference if reference is not None else SmartPersistence()
     day_tz = splitter.day_tz
     rows: list[dict] = []
+    kept: list[pd.DataFrame] = []
     for fold in splitter.split(full.index):
         train = full.loc[fold.train_idx]
 
@@ -105,6 +122,15 @@ def run_model(
         truth = full.loc[common, "power"].to_numpy()
         day = full.loc[common, "is_day"].to_numpy().astype(bool)
         finite = np.isfinite(truth)  # drop data gaps so NaNs can't poison the metrics
+        if predictions_dir is not None:
+            keep = pred.loc[common, [c for c in pred.columns
+                                     if c == "y_hat" or c.startswith("q")]].copy()
+            keep.insert(0, "y_true", truth)
+            keep["ref_hat"] = ref_pred.loc[common, "y_hat"].to_numpy()
+            keep["p_clear"] = full.loc[common, "p_clear"].to_numpy()
+            keep["is_day"] = day
+            keep["fold"] = fold.index
+            kept.append(keep)
 
         for daytime_only in daytime_modes:
             mask = (day if daytime_only else np.ones(len(common), dtype=bool)) & finite
@@ -146,6 +172,15 @@ def run_model(
                             fold.test_idx.min().date(), fold.test_idx.max().date(),
                             row["nrmse"], skill if skill is not None else float("nan"),
                             fit_s, predict_s)
+    if predictions_dir is not None and kept:
+        chash = config_hash(config) if config else None
+        weather_mode = (config.get("data") or {}).get("weather_mode") if config else None
+        out = pd.concat(kept).rename_axis("time")
+        out["site"], out["model"] = series.site_id, model.name
+        out["weather_mode"], out["config_hash"] = weather_mode, chash
+        path = predictions_path(predictions_dir, series.site_id, weather_mode, model.name, chash)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        out.to_parquet(path)
     return rows
 
 

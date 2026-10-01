@@ -8,6 +8,7 @@ data/external/*
 # results & model artifacts
 results/*.parquet
 results/*.log
+results/predictions/
 mlruns/
 *.ckpt
 *.pt
