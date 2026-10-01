@@ -1,14 +1,23 @@
 """Data loading & ETL for the HKUST rooftop PV dataset (primary).
 
-Dryad doi:10.5061/dryad.m37pvmd99 — 60 stations, 2021-2023, 5-min PV power +
-1-min weather from one shared campus tower (CC0). The streams are NOT
-pre-aligned (plan correction #2): we resample 5-min power -> hourly means,
-align 1-min weather to the same hourly grid, keep everything tz-aware in UTC.
+Dryad doi:10.5061/dryad.m37pvmd99 — 60 stations, 2021-2023, site-level PV power
+(37 stations at 15-min, 23 at 1-h resolution) + 1-min weather from one shared
+campus tower (CC0). The streams are NOT pre-aligned (plan correction #2): we
+resample power -> hourly means, align 1-min weather to the same hourly grid, and
+keep everything tz-aware in UTC.
 
-This module is the only place that knows the raw file layout. Until the data
-is downloaded (Week 3), ``load_station`` raises a clear instruction, and
-``synthetic_station`` provides a physically-plausible series so the harness and
-tests run end-to-end without the download.
+Timestamp convention (ETL v2). Every hourly frame uses interval-START labels: the
+value stamped HH:00 is the mean over [HH:00, HH+1:00). The 15-min files already
+label the start of each interval, but the 23 hourly files label the END of the
+hour: each of them correlates best with interval-start references (15-min
+stations, 1-min tower irradiance) at a -1 h shift (e.g. CYT (Station 2): 0.985 at
+-1 h vs 0.858 unshifted). ``_read_power`` therefore shifts hourly files back by
+one hour. ``power(W)`` equals ``generation(kWh)`` per interval in every file, so
+it is a true interval mean, not an instantaneous reading.
+
+This module is the only place that knows the raw file layout. Without the
+download, ``load_station`` raises a clear instruction, and ``synthetic_station``
+provides a physically-plausible series so the harness and tests run end-to-end.
 
 HKUST site constants (Sai Kung):
 """
@@ -32,6 +41,38 @@ HKUST_TZ = "Asia/Hong_Kong"  # UTC+8, no DST
 RAW_DIR = Path(__file__).resolve().parents[2] / "data" / "raw"
 PROCESSED_DIR = Path(__file__).resolve().parents[2] / "data" / "processed"
 METADATA_TTL = RAW_DIR / "Dataset" / "Metadata" / "PV generation system metadata.ttl"
+QC_LOG = PROCESSED_DIR / "qc_log.csv"
+
+#: Bump whenever the ETL changes what a processed frame contains: it is part of the
+#: cache file name, so frames built by an older ETL are never silently reused.
+#: v2 (Oct 2026): hourly files relabelled to interval start, clear-sky quantities
+#: evaluated per interval, sun-position template, capacity QC, weather mode "none".
+ETL_VERSION = 2
+
+#: weather feeds: measured campus tower (oracle), archived forecast (nwp), or no
+#: weather covariates at all (none: p_clear + calendar only).
+WEATHER_MODES = ("oracle", "nwp", "none")
+
+#: QC: raw power above this multiple of nameplate is a meter error (Tower A reads
+#: 31,755 kW against 40 kW) and is set to NaN before resampling.
+QC_MAX_CAPACITY_RATIO = 1.1
+
+#: Stations kept out of the benchmark, with the reason (Data chapter material).
+EXCLUDED_STATIONS = {
+    "CYT (Station 1)": (
+        "its timestamps sit 30-45 min off every other station (best match to an "
+        "interval-start reference: corr 0.92 for a window shifted 30-45 min, vs 0.985 "
+        "for CYT (Station 2) at -1 h), so no hourly relabel aligns it; it also has "
+        "the second-worst coverage of the 60 (8.8% of daytime hours missing)"
+    ),
+    "Zone A2": (
+        "its output changes regime in May 2023 (99th-percentile power 0.25 x nameplate "
+        "through April 2023, 0.66 x after; part of the 249.5 kW array apparently came "
+        "online then), so a clear-sky template fit on the first year pins k at its "
+        "1.3 ceiling in 43% of 2023's daytime hours (every other eligible station: "
+        "<= 2.9% in any year)"
+    ),
+}
 
 # Canonical weather columns present in BOTH oracle and nwp modes, so a model's
 # covariate config is identical regardless of weather source (only the values
@@ -131,14 +172,45 @@ def list_stations(raw_dir: Path = RAW_DIR) -> dict[str, Path]:
     return sites
 
 
-def _read_power(path: Path) -> pd.Series:
-    """Site-level active power (W) -> hourly-mean kW, tz-aware UTC."""
+def _read_power(path: Path) -> tuple[pd.Series, pd.Timedelta]:
+    """Site-level active power (W) -> kW at native resolution, tz-aware UTC, with
+    interval-START labels; also returns the native step.
+
+    Hourly files label the END of each hour (see module docstring), so they are
+    shifted back by one step; 15-min files already label the start.
+    """
     df = _read_ts_csv(path)
     col = next((c for c in df.columns if _base(c) in ("power", "totalactivepower")), None)
     if col is None:
         raise ValueError(f"No power column in {path.name}; columns={list(df.columns)}")
     p_kw = (pd.to_numeric(df[col], errors="coerce") / 1000.0).clip(lower=0.0)  # W -> kW
-    return p_kw.resample("1h").mean()
+    step = pd.Series(p_kw.index.unique()).diff().median()
+    if step >= pd.Timedelta(minutes=59):  # hourly meter: stamp HH covers (HH-1, HH]
+        p_kw.index = p_kw.index - step
+    return p_kw, step
+
+
+def _qc_power(raw_kw: pd.Series, capacity: float) -> tuple[pd.Series, int]:
+    """NaN out raw readings above ``QC_MAX_CAPACITY_RATIO`` x nameplate (meter spikes).
+
+    Applied at native resolution, before resampling, so one spike cannot
+    contaminate an hourly mean. Returns the cleaned series and the number of
+    readings removed.
+    """
+    over = raw_kw > QC_MAX_CAPACITY_RATIO * capacity
+    return raw_kw.mask(over), int(over.sum())
+
+
+def _write_qc_row(row: dict, path: Path = QC_LOG) -> None:
+    """Upsert one station's QC counts into the QC log (one row per site_id)."""
+    new = pd.DataFrame([row])
+    if path.exists():
+        old = pd.read_csv(path)
+        old = old[old["site_id"] != row["site_id"]]
+        if not old.empty:
+            new = pd.concat([old, new], ignore_index=True)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    new.sort_values("site_id").to_csv(path, index=False)
 
 
 def _read_weather(raw_dir: Path) -> pd.DataFrame:
@@ -243,22 +315,32 @@ def _derive_capacity(power: pd.Series, override: float | None, site_id: str | No
     return cap
 
 
-def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "oracle",
-                 capacity: float | None = None, cache: bool = True) -> StationSeries:
+def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp",
+                 capacity: float | None = None, cache: bool = True,
+                 allow_excluded: bool = False) -> StationSeries:
     """Load + ETL one HKUST station into an hourly, tz-aware (UTC) StationSeries.
 
     weather_mode:
-      - "oracle": measured campus-tower weather (perfect-foresight upper bound).
       - "nwp":    archived day-ahead forecast weather (pvfc.weather / Open-Meteo).
+      - "none":   no weather columns; models get p_clear + calendar only.
+      - "oracle": measured campus-tower weather. NOT a perfect-foresight bound: the
+                  tower pyranometer drifts (midday means 404/422/632 W/m^2 in
+                  2021/22/23 vs a flat ~590 in the archive). Diagnostics only.
 
-    Steps: read site-level power (W) -> hourly kW; read 1-min weather -> hourly;
-    join on the hourly UTC index; derive capacity; attach clear-sky power/index/
-    daytime mask. The resulting frame schema matches synthetic_station().
+    Steps: read site-level power (W) -> kW with interval-start labels; NaN out
+    readings above ``QC_MAX_CAPACITY_RATIO`` x nameplate; resample to hourly
+    means; attach clear-sky power/index/daytime mask; attach the weather feed.
+    Frames are cached under a name that carries ``ETL_VERSION``; building one
+    also upserts the station's QC counts into ``data/processed/qc_log.csv``.
+    The frame schema matches synthetic_station().
     """
-    if weather_mode not in ("oracle", "nwp"):
-        raise ValueError(f"weather_mode must be 'oracle' or 'nwp', got {weather_mode!r}")
+    if weather_mode not in WEATHER_MODES:
+        raise ValueError(f"weather_mode must be one of {WEATHER_MODES}, got {weather_mode!r}")
+    if site_id in EXCLUDED_STATIONS and not allow_excluded:
+        raise ValueError(f"{site_id!r} is excluded from the benchmark: "
+                         f"{EXCLUDED_STATIONS[site_id]}. Pass allow_excluded=True for diagnostics.")
 
-    cache_path = PROCESSED_DIR / f"{site_id}__{weather_mode}.parquet"
+    cache_path = PROCESSED_DIR / f"{site_id}__{weather_mode}__etl{ETL_VERSION}.parquet"
     cap_sidecar = cache_path.with_suffix(".cap.json")
     if cache and cache_path.exists() and cap_sidecar.exists():
         frame = pd.read_parquet(cache_path)
@@ -270,14 +352,19 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "ora
         preview = ", ".join(sorted(sites)[:10]) + (" ..." if len(sites) > 10 else "")
         raise KeyError(f"Unknown site_id {site_id!r}. Available ({len(sites)}): {preview}")
 
-    power = _read_power(sites[site_id])
-    weather = _read_weather(raw_dir)
-    frame = power.to_frame("power").join(weather, how="left") if not weather.empty \
-        else power.to_frame("power")
+    raw, step = _read_power(sites[site_id])
+    cap = _derive_capacity(raw, capacity, site_id=site_id)
+    raw, n_over = _qc_power(raw, cap)
+    if n_over:
+        logger.warning("QC %r: %d raw readings > %.1f x nameplate (%.1f kW) set to NaN",
+                       site_id, n_over, QC_MAX_CAPACITY_RATIO, cap)
+    frame = raw.resample("1h").mean().to_frame("power")
+    if weather_mode == "oracle":
+        weather = _read_weather(raw_dir)
+        if not weather.empty:
+            frame = frame.join(weather, how="left")
     # short daytime gaps: interpolate; longer gaps stay NaN (guarded in the runner)
     frame["power"] = frame["power"].interpolate(limit=2).clip(lower=0.0)
-
-    cap = _derive_capacity(frame["power"], capacity, site_id=site_id)
     frame = attach_clearsky(frame, capacity=cap)
 
     if weather_mode == "nwp":
@@ -288,19 +375,35 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "ora
         PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
         frame.to_parquet(cache_path)
         cap_sidecar.write_text(json.dumps({"capacity": cap}))
+        day = frame["is_day"].to_numpy(dtype=bool)
+        _write_qc_row({
+            "site_id": site_id, "etl_version": ETL_VERSION,
+            "resolution_min": int(step / pd.Timedelta(minutes=1)),
+            "relabelled_minus_1h": bool(step >= pd.Timedelta(minutes=59)),
+            "capacity_kw": cap, "raw_readings": int(raw.size),
+            "over_capacity_removed": n_over,
+            "first_hour_utc": frame.index.min(), "last_hour_utc": frame.index.max(),
+            "daytime_hours": int(day.sum()),
+            "daytime_missing_pct": round(100 * float(frame.loc[day, "power"].isna().mean()), 2),
+            "daytime_k_above_1_pct": round(100 * float((frame.loc[day, "k"] > 1).mean()), 2),
+        })
     return StationSeries(site_id=site_id, frame=frame, capacity=cap)
 
 
 def attach_clearsky(frame: pd.DataFrame, capacity: float, lat: float = HKUST_LAT,
                     lon: float = HKUST_LON, altitude: float = HKUST_ALT,
-                    fit_days: int | None = 365) -> pd.DataFrame:
-    """Add p_clear, k and is_day columns to an hourly power frame.
+                    fit_days: int | None = 365, interval: str = "1h") -> pd.DataFrame:
+    """Add p_clear, k and is_day columns to an interval-start power frame.
 
-    The empirical performance-ratio table behind ``p_clear`` is FIT on the first
-    ``fit_days`` calendar days only (default 365 = the splitter's initial train
-    window, which is inside every fold's training set by construction) and then
-    applied to the whole index — so the clear-sky template, and therefore the
-    target ``k``, never embeds test-period information. Residual drift
+    Clear-sky GHI is the mean over each interval and the sun position (template
+    coordinates, daytime mask) is taken at the interval midpoint, matching the
+    interval-mean power labels.
+
+    The sun-position performance-ratio grid behind ``p_clear`` is FIT on the
+    first ``fit_days`` calendar days only (default 365 = the splitter's initial
+    train window, which is inside every fold's training set by construction) and
+    then applied to the whole index — so the clear-sky template, and therefore
+    the target ``k``, never embeds test-period information. Residual drift
     (degradation/soiling after year 1) is a documented simplification.
     ``fit_days=None`` fits on everything (synthetic/diagnostic use only).
     """
@@ -308,16 +411,18 @@ def attach_clearsky(frame: pd.DataFrame, capacity: float, lat: float = HKUST_LAT
     from .normalize import clearsky_index
 
     idx = frame.index
-    ghi_clear = cs.clearsky_ghi(idx, lat, lon, altitude)
+    mid = idx + pd.Timedelta(interval) / 2
+    ghi_clear = cs.clearsky_ghi_interval(idx, lat, lon, altitude, interval=interval)
+    decl, ha = cs.sun_coordinates(mid, lon)
     fit_mask = None
     if fit_days is not None:
         fit_mask = pd.Series(idx < idx.min() + pd.Timedelta(days=fit_days), index=idx)
-    p_clear = cs.empirical_clearsky_power(frame["power"], ghi_clear, capacity=capacity,
-                                          fit_mask=fit_mask)
+    p_clear = cs.empirical_clearsky_power(frame["power"], ghi_clear, decl, ha,
+                                          capacity=capacity, fit_mask=fit_mask)
     out = frame.copy()
     out["p_clear"] = p_clear
     out["k"] = clearsky_index(out["power"], out["p_clear"])
-    out["is_day"] = cs.daytime_mask(idx, lat, lon).values
+    out["is_day"] = cs.daytime_mask(mid, lat, lon).to_numpy()
     return out
 
 
@@ -336,10 +441,12 @@ def synthetic_station(
 
     rng = np.random.default_rng(seed)
     idx = pd.date_range("2021-01-01", periods=days * 24, freq="1h", tz="UTC")
-    ghi_clear = cs.clearsky_ghi(idx, lat, lon, altitude)
+    mid = idx + pd.Timedelta(minutes=30)
+    ghi_clear = cs.clearsky_ghi_interval(idx, lat, lon, altitude)
+    decl, ha = cs.sun_coordinates(mid, lon)
     p_clear = cs.empirical_clearsky_power(
         pd.Series(np.maximum(ghi_clear.values, 0) * capacity / max(ghi_clear.max(), 1), index=idx),
-        ghi_clear, capacity=capacity,
+        ghi_clear, decl, ha, capacity=capacity,
     )
     # AR(1) cloudiness in clear-sky-index space, bounded to [0, 1]
     k_true = np.empty(len(idx))
@@ -350,7 +457,7 @@ def synthetic_station(
     power = pd.Series(np.maximum(k_true * p_clear.values, 0.0), index=idx, name="power")
     frame = pd.DataFrame({"power": power, "p_clear": p_clear})
     frame["k"] = clearsky_index(frame["power"], frame["p_clear"])
-    frame["is_day"] = cs.daytime_mask(idx, lat, lon).values
+    frame["is_day"] = cs.daytime_mask(mid, lat, lon).to_numpy()
     # simple weather proxy correlated with cloudiness (stand-in for real columns)
     frame["temp_air"] = 20 + 8 * np.sin(2 * np.pi * idx.dayofyear / 365) + rng.normal(0, 1, len(idx))
     return StationSeries(site_id=site_id, frame=frame, capacity=capacity, lat=lat, lon=lon, altitude=altitude)
