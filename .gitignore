@@ -9,7 +9,8 @@ data/external/*
 results/*.parquet
 results/*.log
 results/predictions/
-results/logs/
+results/logs/*
+!results/logs/.gitkeep
 mlruns/
 *.ckpt
 *.pt
