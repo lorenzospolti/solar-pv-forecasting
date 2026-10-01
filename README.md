@@ -62,45 +62,73 @@ the Brick `.ttl` metadata) + **NWP weather feed** (Open-Meteo) + **SARIMA (AutoA
 LightGBM, and LSTM** wrappers are implemented. **Foundation-model wrappers (Chronos-2,
 TimesFM-2.5, TiRex) are now wired** in `darts_wrapper.py` — zero-shot and fine-tuned
 (via an `arch`/label split; `make report` builds tables + figures from results).
-Zero-shot Chronos-2/TimesFM-2.5 run on darts 0.41; **fine-tuning needs darts>=0.42**
-(pin is `u8darts[torch]>=0.43`).
+The forecast extra pins **`darts[torch]>=0.44`** (fine-tuning needs >=0.42, TiRex
+>=0.44) plus `tirex-ts`. The old PyPI name `u8darts` stopped at 0.41.0 (Feb 2026):
+never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
 
-**v0.5 (`v0.5-extended-foundation-roster`):** Moirai-2 (Salesforce, via `uni2ts`)
-and TTM / TinyTimeMixer (IBM, via `granite-tsfm`) are now wired through a separate
-*external-foundation* wrapper (`src/pvfc/models/external_foundation.py`). The
-arch/label split scores zero-shot and fine-tuned as distinct result rows
-(`moirai2`/`moirai2_ft`, `ttm`/`ttm_ft`). Both libraries are **optional**: the
-darts-native roster (Chronos-2, TimesFM-2.5, TiRex) keeps working without them.
-Each wrapper lazy-imports its dep and raises a clear install message if missing.
+**ETL v2 + protocol fixes (Oct 2026, see the 28 Sep review in `~/Thesis/thesis-review-2026-09-28`):**
+- hourly station files label the *end* of each hour; they are relabelled to interval
+  start (15-min files already are), and clear-sky GHI / sun position are evaluated per
+  interval (hour mean, midpoint) instead of at the instant HH:00;
+- the clear-sky template is binned by **sun position** (declination x hour angle), not
+  calendar month: no holes when a month is missing, no month-boundary steps;
+- raw power above 1.1 x nameplate is removed before resampling (`data/processed/qc_log.csv`);
+- processed caches carry `ETL_VERSION` in their name; `CYT (Station 1)` (timestamps
+  offset 30-45 min) and `Zone A2` (output regime change in May 2023) are excluded
+  (`pvfc.data.EXCLUDED_STATIONS`); the development station is `CYT (Station 2)`;
+- weather modes `nwp` | `none` (no weather covariates) | `oracle` (tower; its
+  pyranometer drifts, so diagnostics only);
+- folds are calendar-anchored (`first_test_day: 2022-07-05`, 9 x 30-day windows), so
+  every station is scored on the same days;
+- LightGBM sees the forecast covariates of the hour it predicts (future lags 0..23)
+  and yesterday's whole profile (lags 1..24) — v0.5 only saw midnight values;
+- persistence baselines fall back to the same hour of an earlier day after a gap;
+- Chronos-2 fine-tuning: lr 1e-5 (AutoGluon's default; darts' 1e-3 destroys the
+  pretrained weights), 5 epochs on one training window per day (`fit_stride: 24`);
+- TiRex is licence-gated (NXAI Community License): set `accept_license: true` in its
+  config entry once you have reviewed the terms;
+- `run.py` saves rows after each model, writes per-timestamp predictions to
+  `results/predictions/`, and takes `--models` / `--max-folds`.
 
-### Foundation-model roster (v0.5)
+### Foundation-model roster
 
 | Arch | Library | Zero-shot label | Fine-tuned label | Dep |
 |---|---|---|---|---|
-| chronos2 | darts | `chronos2` | `chronos2_ft` | `u8darts[torch]>=0.43` |
-| timesfm | darts | `timesfm` | `timesfm_ft` | `u8darts[torch]>=0.43` |
-| tirex | darts | `tirex` | `tirex_ft` | `u8darts[torch]>=0.44` |
-| moirai2 | **uni2ts** (optional) | `moirai2` | `moirai2_ft` | `uni2ts>=1.2` |
-| ttm | **granite-tsfm** (optional) | `ttm` | `ttm_ft` | `granite-tsfm[notebooks]>=0.2.16` |
+| chronos2 | darts | `chronos2` | `chronos2_ft` | `darts[torch]>=0.44` |
+| timesfm | darts | `timesfm` | — (out of scope) | `darts[torch]>=0.44` |
+| tirex | darts | `tirex` | — | `darts[torch]>=0.44`, `tirex-ts` |
+| ttm | **granite-tsfm** (optional stretch) | `ttm` | — | `granite-tsfm[notebooks]>=0.2.16` |
+| moirai2 | **uni2ts** (out of scope) | `moirai2` | — | `uni2ts>=1.2` |
 
-To opt into Moirai-2 / TTM on the Mac:
-
-```bash
-pip install 'uni2ts>=1.2'                      # for moirai2 / moirai2_ft
-pip install 'granite-tsfm[notebooks]>=0.2.16'  # for ttm / ttm_ft
-```
-
-Then uncomment the corresponding entries in `configs/experiment.yaml` (search
-for "external-library foundation models"). The first run downloads the HF
-checkpoint(s); subsequent runs reuse the cache.
+The external wrappers (TTM, Moirai-2) have no fine-tuning loop: `finetune: true`
+raises instead of producing a zero-shot forecast under an `_ft` label. To try TTM
+zero-shot: `python -m pip install 'granite-tsfm[notebooks]>=0.2.16'`, then uncomment
+its entry in `configs/experiment.yaml` (keep `quantile: false`: TTM is deterministic).
 
 To run on real data: download `Dataset.zip` from
 [Dryad](https://datadryad.org/dataset/doi:10.5061/dryad.m37pvmd99) into `data/raw/`
 (the page guards automated downloads, so use a browser), then `make data` to
-extract + inspect, then run the model ladder on a station, e.g.:
+extract + inspect, check a station's ETL, and run the model ladder on it, e.g.:
 
 ```bash
-python experiments/run.py --config configs/experiment.yaml --site "CYT (Station 1)" --weather-mode oracle
-python experiments/run.py --config configs/experiment.yaml --site "CYT (Station 1)" --weather-mode nwp
+python experiments/check_data.py --site "CYT (Station 2)"
+python experiments/run.py --site "CYT (Station 2)" --weather-mode nwp
+python experiments/run.py --site "CYT (Station 2)" --weather-mode none --models lightgbm,chronos2
+python experiments/run.py --max-folds 1 --results results/smoke.parquet   # quick one-fold check
 make report   # -> thesis/tables/ + thesis/figures/
 ```
+
+## Third-party models and licences
+
+The benchmark downloads pre-trained checkpoints at run time; none are redistributed
+in this repository.
+
+- **Chronos-2** (`autogluon/chronos-2-small`, Amazon) and **TimesFM-2.5**
+  (`google/timesfm-2.5-200m-pytorch`): Apache-2.0.
+- **TiRex** (`NX-AI/TiRex`): NXAI Community License, accepted in
+  `configs/experiment.yaml` (`accept_license: true`).
+  Built with technology from NXAI. This product includes materials developed at NXAI
+  that are licensed under the NXAI Community License, Copyright © NXAI GmbH, All Rights
+  Reserved. Licence text: <https://github.com/NX-AI/tirex/blob/main/LICENSE>.
+- **HKUST rooftop PV dataset** (Lin et al., *Scientific Data* 12:63, 2025;
+  doi:10.5061/dryad.m37pvmd99): CC0.
