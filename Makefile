@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock
+.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -40,8 +40,11 @@ lint: # ruff
 clean: # remove caches and the results store
 	rm -rf .pytest_cache **/__pycache__ results/results.parquet
 
-reproduce: # regenerate all results from raw (filled in as the project grows)
-	python experiments/run.py --config configs/experiment.yaml
+panel: # overnight batch: every panel station x weather setting x model (resumable)
+	python experiments/run_panel.py
+
+reproduce: # regenerate every result from raw data: checkpoints -> panel -> tables/figures
+	python experiments/fetch_checkpoints.py && python experiments/run_panel.py && python experiments/report.py
 
 report: # build thesis tables + figures from results/results.parquet
 	python experiments/report.py

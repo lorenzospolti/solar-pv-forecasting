@@ -9,6 +9,7 @@ data/external/*
 results/*.parquet
 results/*.log
 results/predictions/
+results/logs/
 mlruns/
 *.ckpt
 *.pt

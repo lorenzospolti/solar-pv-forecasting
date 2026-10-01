@@ -118,6 +118,22 @@ python experiments/run.py --max-folds 1 --results results/smoke.parquet   # quic
 make report   # -> thesis/tables/ + thesis/figures/
 ```
 
+### Overnight panel runs
+
+`experiments/run_panel.py` (`make panel`) runs every panel station x weather setting
+x model as a separate `run.py` process, model-major (references and zero-shot models
+first, then LightGBM, SARIMA, LSTM, Chronos-2 fine-tuning), after a `check_data.py`
+pre-flight per station. Each run logs to `results/logs/`, a ledger records status and
+wall time, and `--skip-done` makes the batch resumable: start the same command again
+and finished runs are skipped. It keeps the Mac awake with `caffeinate` (stay on power,
+lid open). The full panel is roughly 32 h on the M4, so it spans several nights.
+
+```bash
+python experiments/run_panel.py --dry-run                         # plan + rough hours
+nohup python experiments/run_panel.py > results/logs/panel.out 2>&1 &   # survives closing the terminal
+python experiments/run_panel.py --models lightgbm --weather-modes nwp   # a subset
+```
+
 ## Third-party models and licences
 
 The benchmark downloads pre-trained checkpoints at run time; none are redistributed

@@ -9,6 +9,7 @@ Usage:
     python experiments/run.py --config configs/experiment.yaml
     python experiments/run.py --site "LSK North" --weather-mode none --models lightgbm,lstm
     python experiments/run.py --max-folds 1 --results results/smoke.parquet    # quick check
+    python experiments/run.py --skip-done      # skip models whose config is already stored
     python experiments/run.py --config configs/experiment.yaml --synthetic     # no download
 """
 from __future__ import annotations
@@ -23,13 +24,14 @@ import argparse  # noqa: E402
 import logging  # noqa: E402
 from pathlib import Path  # noqa: E402
 
+import pandas as pd  # noqa: E402
 import yaml  # noqa: E402
 
 from pvfc import data as datamod  # noqa: E402
 from pvfc.models import build  # noqa: E402
 from pvfc.runner import append_results, run_model  # noqa: E402
 from pvfc.splits import ExpandingWindowSplitter  # noqa: E402
-from pvfc.utils import set_seed, setup_logging  # noqa: E402
+from pvfc.utils import config_hash, set_seed, setup_logging  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 logger = logging.getLogger("pvfc.run")
@@ -38,6 +40,15 @@ logger = logging.getLogger("pvfc.run")
 def load_config(path: str) -> dict:
     with open(path) as fh:
         return yaml.safe_load(fh)
+
+
+def stored_hashes(results_path: str) -> set[str]:
+    """Config hashes already in the results store (rows are written only after a
+    model finishes all its folds, so a stored hash means a complete run)."""
+    try:
+        return set(pd.read_parquet(results_path, columns=["config_hash"])["config_hash"].dropna())
+    except (FileNotFoundError, KeyError, ValueError):
+        return set()
 
 
 def main() -> None:
@@ -58,6 +69,9 @@ def main() -> None:
     ap.add_argument("--predictions-dir", default=str(ROOT / "results" / "predictions"),
                     help="where per-timestamp predictions are written (one parquet per run)")
     ap.add_argument("--no-predictions", action="store_true", help="do not save predictions")
+    ap.add_argument("--skip-done", action="store_true",
+                    help="skip models whose exact config is already in the results store "
+                         "(makes long batches resumable)")
     args = ap.parse_args()
 
     setup_logging()
@@ -117,10 +131,14 @@ def main() -> None:
     daytime_modes = (True, False) if cfg.get("evaluation", {}).get("daytime_only", True) \
         else (False,)
     pred_dir = None if args.no_predictions else args.predictions_dir
+    done = stored_hashes(args.results) if args.skip_done else set()
     n_rows = 0
     for m in models:
-        model = build(m["name"], **m.get("params", {}))
         run_cfg = {"data": cfg["data"], "splits": sp, "model": m, "seed": cfg.get("seed", 0)}
+        if config_hash(run_cfg) in done:
+            print(f"SKIP {m['name']}: config {config_hash(run_cfg)} already in {args.results}")
+            continue
+        model = build(m["name"], **m.get("params", {}))
         rows = run_model(model, series, splitter, daytime_modes=daytime_modes,
                          config=run_cfg, predictions_dir=pred_dir)
         append_results(rows, args.results)  # after EACH model: a crash loses one model only
