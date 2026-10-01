@@ -8,14 +8,18 @@ without these deps installed.
 
 Architecture vs. label (mirror of `darts_wrapper.py`)
 ----------------------------------------------------
-A model spec has a config ``name`` (the results-row label, e.g. ``ttm_ft``)
-and an ``arch`` (which external class to build, e.g. ``ttm``). ``arch``
-defaults to ``name``. So ``moirai2`` / ``moirai2_ft`` and ``ttm`` / ``ttm_ft``
-score as four distinct rows.
+A model spec has a config ``name`` (the results-row label) and an ``arch``
+(which external class to build, e.g. ``ttm``). ``arch`` defaults to ``name``,
+so two configurations of one arch score as distinct rows.
 
-Runner contract: ``fit(train)`` once per fold (no-op for zero-shot, fine-tunes
-when ``finetune`` is truthy); ``predict(history, future)`` rolls a fresh,
-growing ``history`` per test day, as for the darts foundation models.
+Zero-shot only. Neither wrapper has a fine-tuning loop, so ``finetune: true``
+raises at ``fit`` instead of producing a zero-shot forecast under a fine-tuned
+label (v0.5 shipped ``moirai2_ft`` / ``ttm_ft`` entries that did exactly that).
+Moirai-2 is out of the thesis scope; TTM is an optional zero-shot stretch.
+
+Runner contract: ``fit(train)`` once per fold (loads the checkpoint);
+``predict(history, future)`` rolls a fresh, growing ``history`` per test day,
+as for the darts foundation models.
 
 Test mocking
 ------------
@@ -43,19 +47,17 @@ _INSTALL: dict[str, str] = {
         "Moirai-2 (Salesforce) is not a darts class. It needs the optional "
         "`uni2ts` library. Install with:\n"
         "    pip install 'uni2ts>=1.2'\n"
-        "then re-run the entry with `name: moirai2` (zero-shot) or "
-        "`name: moirai2_ft, arch: moirai2, params: {finetune: true}` "
-        "(fine-tuned). HF checkpoint defaults to `Salesforce/moirai-2.0-R-small` "
-        "and is downloaded on first use."
+        "then re-run the entry with `name: moirai2` (zero-shot only). HF "
+        "checkpoint defaults to `Salesforce/moirai-2.0-R-small` and is "
+        "downloaded on first use."
     ),
     "ttm": (
         "TTM / TinyTimeMixer (IBM) is not a darts class. It needs the optional "
         "`granite-tsfm` library. Install with:\n"
         "    pip install 'granite-tsfm[notebooks]>=0.2.16'\n"
-        "then re-run the entry with `name: ttm` (zero-shot) or "
-        "`name: ttm_ft, arch: ttm, params: {finetune: true}` (fine-tuned). "
-        "HF checkpoint defaults to `ibm-granite/granite-timeseries-ttm-r2` "
-        "and is downloaded on first use."
+        "then re-run the entry with `name: ttm` (zero-shot only). HF checkpoint "
+        "defaults to `ibm-granite/granite-timeseries-ttm-r2` and is downloaded "
+        "on first use."
     ),
 }
 
@@ -68,8 +70,8 @@ class _ExternalFoundationForecaster(Forecaster):
 
     Both Moirai-2 and TTM follow the same shape:
       1. lazy-import their dep in ``_load_model`` (raise with install hint on miss);
-      2. zero-shot ``fit`` is a no-op (model already trained); ``finetune=True``
-         routes through ``_finetune``;
+      2. ``fit`` only loads the checkpoint (zero-shot); ``finetune=True`` raises
+         through ``_finetune`` until a subclass implements a real loop;
       3. ``predict`` builds a clear-sky-index context window and asks
          ``_forecast`` for (point, quantiles).
 
@@ -103,11 +105,15 @@ class _ExternalFoundationForecaster(Forecaster):
         raise NotImplementedError
 
     def _finetune(self, train: pd.DataFrame) -> None:
-        """Default: no-op stub. Subclasses implementing FT should override."""
-        logger.warning(
-            "%s: fine-tuning is configured but no FT loop is wired for arch '%s'; "
-            "running zero-shot. Implement %s._finetune() once the dep is installed.",
-            self.name, self.arch, type(self).__name__,
+        """No fine-tuning loop is implemented: refuse rather than mislabel.
+
+        A results row labelled ``*_ft`` must come from a fine-tuned model; silently
+        running zero-shot under that label would corrupt the comparison.
+        """
+        raise NotImplementedError(
+            f"{self.name}: fine-tuning is not implemented for arch '{self.arch}'. "
+            f"Run it zero-shot (drop `finetune: true`) or implement "
+            f"{type(self).__name__}._finetune()."
         )
 
     # ------------------------------------------------------------------ #
@@ -184,7 +190,7 @@ class _ExternalFoundationForecaster(Forecaster):
 # Moirai-2 (Salesforce, via uni2ts)                                     #
 # --------------------------------------------------------------------- #
 class Moirai2Forecaster(_ExternalFoundationForecaster):
-    """Salesforce Moirai-2 zero-shot / fine-tuned (uni2ts >= 1.2).
+    """Salesforce Moirai-2, zero-shot (uni2ts >= 1.2). Out of the thesis scope.
 
     Notes
     -----
@@ -253,7 +259,7 @@ class Moirai2Forecaster(_ExternalFoundationForecaster):
 # TTM / TinyTimeMixer (IBM, via granite-tsfm)                           #
 # --------------------------------------------------------------------- #
 class TTMForecaster(_ExternalFoundationForecaster):
-    """IBM TinyTimeMixer (TTM-R2) zero-shot / fine-tuned via granite-tsfm.
+    """IBM TinyTimeMixer (TTM-R2), zero-shot via granite-tsfm (optional stretch).
 
     TTM is tiny (1-5 M params) and CPU-friendly, which is the whole reason it
     earns a slot in a consumer-hardware comparison: it slots in next to the
@@ -262,11 +268,9 @@ class TTMForecaster(_ExternalFoundationForecaster):
     ``ibm-granite/granite-timeseries-ttm-r2``.
 
     TTM is a *deterministic* model. When ``quantile=True`` is requested we
-    return a Gaussian-bracketed band around the point forecast, with width
-    proportional to in-sample residual std on the training fold (set during
-    ``fit`` if available, otherwise a small constant). This is enough for the
-    reliability diagram to register TTM; it is NOT a calibrated probabilistic
-    forecast and the manuscript notes the caveat.
+    return a Gaussian-bracketed band of constant width ``residual_std`` around
+    the point forecast. It is NOT a calibrated probabilistic forecast, so keep
+    ``quantile: false`` for TTM in the thesis runs (point metrics only).
     """
 
     arch = "ttm"
@@ -321,24 +325,6 @@ class TTMForecaster(_ExternalFoundationForecaster):
             prediction_length=self.output_chunk_length,
         )
 
-    def _finetune(self, train: pd.DataFrame) -> None:
-        """TTM fine-tuning hook.
-
-        The full FT loop (HF Trainer + dataset adapters) is best driven from
-        ``granite-tsfm``'s example notebooks; wiring it here would couple this
-        repo to their Trainer config. We expose the hook so subclasses /
-        downstream scripts can override, and we record train-residual std so
-        the ``quantile=True`` band widens to the realised noise.
-        """
-        try:
-            k_train = train["k"].astype("float32").dropna().to_numpy()
-            if k_train.size:
-                self._residual_std = float(np.nanstd(np.diff(k_train)))
-        except Exception:  # pragma: no cover - defensive
-            pass
-        logger.info("%s: fine-tuning stub (set residual_std=%.4f from train k)",
-                    self.name, self._residual_std)
-
     def _forecast(
         self, context: np.ndarray, n: int,
     ) -> tuple[np.ndarray, dict[float, np.ndarray] | None]:
@@ -387,8 +373,8 @@ def build_external_foundation(name: str, **kwargs: Any) -> Forecaster:
     """Build a Moirai-2 or TTM wrapper from a config entry.
 
     ``name`` is the results-row label; ``arch`` (kwarg, default ``name``)
-    selects the wrapper class — so a fine-tuned variant can use
-    ``name: ttm_ft, arch: ttm``.
+    selects the wrapper class — so two configurations of one arch can coexist
+    as separately-scored rows (e.g. ``name: ttm_ctx1024, arch: ttm``).
     """
     arch = kwargs.pop("arch", name)
     if arch not in _EXTERNAL_FACTORIES:

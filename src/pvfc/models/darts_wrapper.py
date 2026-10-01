@@ -93,11 +93,20 @@ def _quantile_regression(quantiles):
     return QuantileRegression(list(quantiles))
 
 
+def _naive_utc(obj):
+    """darts drops tz info (with a warning per call): hand it naive UTC directly.
+    Predictions are mapped back to the caller's index by position, not by label."""
+    if getattr(obj.index, "tz", None) is not None:
+        obj = obj.copy()
+        obj.index = obj.index.tz_convert("UTC").tz_localize(None)
+    return obj
+
+
 def _target_series(df: pd.DataFrame, target_col: str = "k"):
     """Clear-sky index history -> a regular-hourly float32 darts TimeSeries."""
     from darts import TimeSeries
 
-    s = df[target_col].astype("float32").asfreq("h")
+    s = _naive_utc(df[target_col].astype("float32")).asfreq("h")
     return TimeSeries.from_series(s.ffill().fillna(0.0))
 
 
@@ -113,7 +122,7 @@ def _covariate_series(history: pd.DataFrame, future: pd.DataFrame, weather_cols:
     span = pd.concat([history[cols], future[cols]])
     span = span[~span.index.duplicated(keep="first")].sort_index().asfreq("h")
     cov = pd.concat([span, calendar_features(span.index)], axis=1)
-    cov = cov.astype("float32").ffill().bfill()
+    cov = _naive_utc(cov.astype("float32").ffill().bfill())
     return TimeSeries.from_dataframe(cov)
 
 
@@ -165,12 +174,22 @@ class DartsForecaster(Forecaster):
         if self.arch == "lightgbm":
             from darts.models import LightGBMModel
 
+            # darts takes EVERY lag relative to the first step of the output chunk, and
+            # the runner issues at local midnight with a 24-step chunk. So the horizon-h
+            # model needs future-covariate lags 0..23 (lag h = the hour it predicts) and
+            # target lags -1..-24 (yesterday's whole profile). The v0.5 setting
+            # (lags_future_covariates=[0], lags 24/48/168) showed every horizon only the
+            # midnight covariates (ghi = 0) and night-time target lags (k = 0): skill
+            # -0.08 vs +0.26 on a real CYT fold. tests/test_models_darts.py guards this.
+            ocl = int(self.params.get("output_chunk_length", 24))
             self._mode, self._likelihood = "global", ("quantile" if self.supports_quantiles else None)
-            lags = [-abs(int(h)) for h in self.params.get("lags", [24, 48, 168])]
+            lags = self.params.get("lags", ocl)
+            lags = (list(range(-int(lags), 0)) if isinstance(lags, int)
+                    else [-abs(int(h)) for h in lags])
             self._model = LightGBMModel(
                 lags=lags,
-                lags_future_covariates=self.params.get("lags_future_covariates", [0]),
-                output_chunk_length=self.params.get("output_chunk_length", 24),
+                lags_future_covariates=self.params.get("lags_future_covariates", list(range(ocl))),
+                output_chunk_length=ocl,
                 likelihood=self._likelihood,
                 quantiles=self.quantiles,
                 random_state=seed,
@@ -244,16 +263,23 @@ class DartsForecaster(Forecaster):
             kwargs["hub_model_name"] = self.params["hub_model_name"]
         if self.params.get("use_longer_projection_head") and self.arch == "timesfm":
             kwargs["use_longer_projection_head"] = True
+        if self.params.get("accept_license"):
+            # licence-gated checkpoints (TiRex: NXAI Community License). The user
+            # accepts the terms by setting this in the config, never the code.
+            kwargs["accept_license"] = True
         if self.finetune:
             if not _darts_at_least("0.42"):
                 import darts
                 raise RuntimeError(
                     f"fine-tuning foundation models needs darts>=0.42; installed "
-                    f"{getattr(darts, '__version__', '?')}. Upgrade (pip install -U u8darts) "
+                    f"{getattr(darts, '__version__', '?')}. Upgrade (python -m pip install -U "
+                    "'darts[torch]>=0.44'; the u8darts name stopped at 0.41) "
                     "or run this model zero-shot (drop `finetune: true`)."
                 )
             kwargs["enable_finetuning"] = self.finetune  # True (full) or {"unfreeze"|"freeze": [...]}
             kwargs["n_epochs"] = int(self.params.get("n_epochs", 5))
+            if self.params.get("optimizer_kwargs"):  # darts default Adam lr=1e-3 is high for FT
+                kwargs["optimizer_kwargs"] = dict(self.params["optimizer_kwargs"])
             if self.params.get("batch_size"):
                 kwargs["batch_size"] = int(self.params["batch_size"])
         try:
@@ -268,6 +294,9 @@ class DartsForecaster(Forecaster):
     # ------------------------------------------------------------------ #
     def fit(self, train: pd.DataFrame) -> "DartsForecaster":
         self._build()
+        fit_days = self.params.get("fit_days")
+        if fit_days:  # cap the fit window (e.g. SARIMA, a local model, needs recent data only)
+            train = train.loc[train.index >= train.index.max() - pd.Timedelta(days=int(fit_days))]
         self._fit_cols = self._resolve_weather_cols(train) if self._use_cov else []
         target = _target_series(train, "k")
         cov = _covariate_series(train, train.iloc[0:0], self._fit_cols) if self._use_cov else None
@@ -283,17 +312,24 @@ class DartsForecaster(Forecaster):
         return self
 
     def _fit_model(self, target, cov) -> None:
-        """Fit, tolerating foundation checkpoints that reject future covariates."""
+        """Fit, tolerating foundation checkpoints that reject future covariates.
+
+        ``fit_stride`` (params) samples every n-th training window. darts applies the
+        stride from the END of the series, and fold training data ends at 23:00 local,
+        so ``fit_stride: 24`` trains only on windows whose forecast origin is local
+        midnight — the day-ahead task itself — at 1/24 of the cost.
+        """
+        kw = {"stride": int(self.params["fit_stride"])} if self.params.get("fit_stride") else {}
         try:
             if cov is not None:
-                self._model.fit(target, future_covariates=cov)
+                self._model.fit(target, future_covariates=cov, **kw)
             else:
-                self._model.fit(target)
+                self._model.fit(target, **kw)
         except (TypeError, ValueError) as exc:
             if cov is not None and self._is_foundation:
                 logger.warning("%s: fitting without future covariates (%s)", self.name, exc)
                 self._use_cov = False
-                self._model.fit(target)
+                self._model.fit(target, **kw)
             else:
                 raise
 

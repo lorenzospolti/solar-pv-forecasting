@@ -5,14 +5,16 @@ the dep at the wrapper boundary (`_load_model` / `_forecast`) so CI stays
 dependency-light, mirroring how `test_smoke.py` runs without darts/torch.
 
 What we verify:
-- (a) `models.build()` returns the right wrapper class for `moirai2`, `moirai2_ft`,
-  `ttm`, `ttm_ft` — and the arch/label split is respected
-  (`moirai2_ft` uses `arch=moirai2` and is a separate object than `moirai2`).
+- (a) `models.build()` returns the right wrapper class for `moirai2` and `ttm` —
+  and the arch/label split is respected (a second label with `arch=moirai2` is
+  a separate object scored as its own row).
 - (b) Calling `fit()` without the optional dep raises ImportError with the
   install instructions in the message (no traceback at predict time later).
 - (c) An end-to-end Runner pass that mocks the model produces *distinct* result
-  rows for the zero-shot label and the fine-tuned label — proving the
-  arch/label split flows all the way through to the results table.
+  rows for two labels of one arch — proving the arch/label split flows all the
+  way through to the results table.
+- (e) `finetune: true` raises instead of running zero-shot under an `_ft` label
+  (neither wrapper has a fine-tuning loop).
 - (d) Mocked predict() output is reconstructed back to power via `p_clear` and
   populates quantile columns when `quantile=True`.
 """
@@ -52,18 +54,18 @@ def test_build_returns_correct_wrapper_class():
 
 
 def test_arch_label_split_keeps_classes_but_different_labels():
-    """`moirai2_ft` with arch=moirai2 must be a Moirai2Forecaster with the FT
-    label preserved — i.e. the same arch can back two different results rows."""
-    zs = build("moirai2", input_chunk_length=512)
-    ft = build("moirai2_ft", arch="moirai2", input_chunk_length=512, finetune=True)
-    assert isinstance(zs, Moirai2Forecaster) and isinstance(ft, Moirai2Forecaster)
-    assert zs.name == "moirai2" and ft.name == "moirai2_ft"
-    assert zs is not ft and zs.finetune is False and ft.finetune is True
+    """A second label with arch=moirai2 must be a Moirai2Forecaster with its own
+    label — i.e. the same arch can back two different results rows."""
+    a = build("moirai2", input_chunk_length=512)
+    b = build("moirai2_ctx256", arch="moirai2", input_chunk_length=256)
+    assert isinstance(a, Moirai2Forecaster) and isinstance(b, Moirai2Forecaster)
+    assert a.name == "moirai2" and b.name == "moirai2_ctx256"
+    assert a is not b and b.input_chunk_length == 256
 
-    zs_t = build("ttm", input_chunk_length=512)
-    ft_t = build("ttm_ft", arch="ttm", input_chunk_length=512, finetune=True)
-    assert isinstance(zs_t, TTMForecaster) and isinstance(ft_t, TTMForecaster)
-    assert zs_t.name == "ttm" and ft_t.name == "ttm_ft"
+    a_t = build("ttm", input_chunk_length=512)
+    b_t = build("ttm_ctx1024", arch="ttm", input_chunk_length=1024)
+    assert isinstance(a_t, TTMForecaster) and isinstance(b_t, TTMForecaster)
+    assert a_t.name == "ttm" and b_t.name == "ttm_ctx1024"
 
 
 # --------------------------------------------------------------------- (b) ---
@@ -110,34 +112,44 @@ def _mock_forecast(self, context, n):
     return point, None
 
 
-def _run_two_models(zs_name, ft_name, arch):
+def _run_two_models(name_a, name_b, arch):
     series = synthetic_station(days=360, seed=11)
     sp = _splitter()
-    zs = build(zs_name, input_chunk_length=128, quantile=True)
-    ft = build(ft_name, arch=arch, input_chunk_length=128, quantile=True, finetune=True)
+    a = build(name_a, input_chunk_length=128, quantile=True)
+    b = build(name_b, arch=arch, input_chunk_length=64, quantile=True)
     cls = Moirai2Forecaster if arch == "moirai2" else TTMForecaster
     with patch.object(cls, "_load_model", new=_mock_load), \
             patch.object(cls, "_forecast", new=_mock_forecast):
-        rows_zs = run_model(zs, series, sp)
-        rows_ft = run_model(ft, series, sp)
-    return rows_zs, rows_ft
+        rows_a = run_model(a, series, sp)
+        rows_b = run_model(b, series, sp)
+    return rows_a, rows_b
 
 
 def test_moirai2_arch_label_split_produces_distinct_rows():
-    rows_zs, rows_ft = _run_two_models("moirai2", "moirai2_ft", "moirai2")
-    assert rows_zs and rows_ft
-    assert {r["model"] for r in rows_zs} == {"moirai2"}
-    assert {r["model"] for r in rows_ft} == {"moirai2_ft"}
+    rows_a, rows_b = _run_two_models("moirai2", "moirai2_ctx64", "moirai2")
+    assert rows_a and rows_b
+    assert {r["model"] for r in rows_a} == {"moirai2"}
+    assert {r["model"] for r in rows_b} == {"moirai2_ctx64"}
     # quantile columns from the mock should populate cov_q*
-    head = rows_zs[0]
+    head = rows_a[0]
     assert any(k.startswith("cov_q") for k in head)
 
 
 def test_ttm_arch_label_split_produces_distinct_rows():
-    rows_zs, rows_ft = _run_two_models("ttm", "ttm_ft", "ttm")
-    assert rows_zs and rows_ft
-    assert {r["model"] for r in rows_zs} == {"ttm"}
-    assert {r["model"] for r in rows_ft} == {"ttm_ft"}
+    rows_a, rows_b = _run_two_models("ttm", "ttm_ctx64", "ttm")
+    assert rows_a and rows_b
+    assert {r["model"] for r in rows_a} == {"ttm"}
+    assert {r["model"] for r in rows_b} == {"ttm_ctx64"}
+
+
+# --------------------------------------------------------------------- (e) ---
+@pytest.mark.parametrize("arch, cls", [("moirai2", Moirai2Forecaster), ("ttm", TTMForecaster)])
+def test_finetune_request_raises_instead_of_mislabelling(arch, cls):
+    model = build(f"{arch}_ft", arch=arch, input_chunk_length=64, finetune=True)
+    train = synthetic_station(days=30, seed=5).frame
+    with patch.object(cls, "_load_model", new=_mock_load), \
+            pytest.raises(NotImplementedError, match="fine-tuning is not implemented"):
+        model.fit(train)
 
 
 # --------------------------------------------------------------------- (d) ---
