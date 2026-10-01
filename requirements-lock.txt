@@ -15,7 +15,7 @@ cloudpickle @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-buil
 contourpy @ file:///Users/runner/miniforge3/conda-bld/bld/rattler-build_contourpy_1769156157/work
 coreforecast @ file:///Users/runner/miniforge3/conda-bld/coreforecast_1772477832794/work
 cycler @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_cycler_1764466758/work
-darts==0.41.0
+darts==0.47.0
 einops==0.8.2
 ephem @ file:///Users/runner/miniforge3/conda-bld/ephem_1772283644666/work
 filelock @ file:///home/conda/feedstock_root/build_artifacts/filelock_1776621385265/work
@@ -23,7 +23,6 @@ fonttools @ file:///Users/runner/miniforge3/conda-bld/fonttools_1778770514795/wo
 frozenlist==1.8.0
 fsspec @ file:///home/conda/feedstock_root/build_artifacts/fsspec_1777547723461/work
 fugue @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_fugue_1771626418/work
-gluonts @ file:///home/conda/feedstock_root/build_artifacts/gluonts_1751052010464/work
 gmpy2 @ file:///Users/runner/miniforge3/conda-bld/gmpy2_1773245168083/work
 h2 @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_h2_1756364871/work
 h5py @ file:///Users/runner/miniforge3/conda-bld/h5py_1775581868536/work
@@ -60,8 +59,6 @@ pluggy==1.6.0
 propcache==0.5.2
 protobuf @ file:///Users/runner/miniforge3/conda-bld/protobuf_1773265094910/work/bazel-bin/python/dist/protobuf-6.33.5-cp312-abi3-macosx_11_0_arm64.whl#sha256=7c23c323e5b4062c01f7b6805e7c67add85836e18f80ddbe6ca0ddcb1f99d7b9
 psutil==7.2.2
-# Editable Git install with no remote (pvfc==0.0.1)
--e /Users/lorenzospolti/Thesis/solar-pv-forecasting
 pvlib @ file:///home/conda/feedstock_root/build_artifacts/pvlib_1776862928813/work
 pyarrow @ file:///Users/runner/miniforge3/conda-bld/apache-arrow_1776927767917/work/python
 pybind11 @ file:///D:/bld/bld/rattler-build_pybind11_1755953378/work
@@ -92,6 +89,7 @@ statsmodels @ file:///Users/runner/miniforge3/conda-bld/statsmodels_176498320072
 sympy @ file:///home/conda/feedstock_root/build_artifacts/sympy_1771952240620/work
 tensorboardX==2.6.5
 threadpoolctl @ file:///home/conda/feedstock_root/build_artifacts/threadpoolctl_1741878222898/work
+tirex-ts==1.4.2
 tokenizers==0.22.2
 toolz @ file:///home/conda/feedstock_root/build_artifacts/toolz_1706112571092/work
 torch @ file:///Users/runner/miniforge3/conda-bld/libtorch_1780240406875/work
@@ -103,7 +101,6 @@ triad @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_tria
 typing-inspection @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_typing-inspection_1777105465/work
 typing_extensions @ file:///home/conda/feedstock_root/build_artifacts/bld/rattler-build_typing_extensions_1756220668/work
 tzdata @ file:///home/conda/feedstock_root/build_artifacts/python-tzdata_1777068919240/work
-u8darts==0.41.0
 unicodedata2 @ file:///Users/runner/miniforge3/conda-bld/unicodedata2_1770909247161/work
 urllib3 @ file:///home/conda/feedstock_root/build_artifacts/urllib3_1778188571305/work
 utilsforecast @ file:///home/conda/feedstock_root/build_artifacts/utilsforecast_1777333815763/work

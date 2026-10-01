@@ -108,15 +108,22 @@ def config_hash(config: dict[str, Any], length: int = 12) -> str:
 
 
 def env_fingerprint() -> dict[str, str]:
-    """Record library versions for each run's metadata."""
+    """Record library versions for each run's metadata.
+
+    Read from installed-distribution metadata, so nothing heavy (torch) is
+    imported just to fingerprint, and packages without ``__version__`` (tirex)
+    are still recorded.
+    """
     import platform
+    from importlib import metadata
 
     fp = {"python": platform.python_version(), "platform": platform.platform()}
-    for mod in ("numpy", "pandas", "sklearn", "lightgbm", "statsmodels",
-                "statsforecast", "torch", "pvlib", "darts"):
+    for key, dist in (("numpy", "numpy"), ("pandas", "pandas"), ("sklearn", "scikit-learn"),
+                      ("lightgbm", "lightgbm"), ("statsmodels", "statsmodels"),
+                      ("statsforecast", "statsforecast"), ("torch", "torch"),
+                      ("pvlib", "pvlib"), ("darts", "darts"), ("tirex", "tirex-ts")):
         try:
-            m = __import__(mod)
-            fp[mod] = getattr(m, "__version__", "?")
-        except Exception:  # noqa: BLE001
-            fp[mod] = "missing"
+            fp[key] = metadata.version(dist)
+        except metadata.PackageNotFoundError:
+            fp[key] = "missing"
     return fp

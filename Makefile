@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install check test smoke lint clean reproduce data nwp-cache check-data report
+.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -7,14 +7,20 @@ help:
 env: # create the conda env from environment.yml
 	mamba env create -f environment.yml || conda env create -f environment.yml
 
-install: # editable install of the pvfc package + extras
-	pip install -e ".[forecast,dev]"
+install: # editable install of the pvfc package + extras (python -m pip: bare pip may be another Python)
+	python -m pip install -e ".[forecast,dev]"
+
+checkpoints: # pre-download the foundation-model weights (Chronos-2-small, TimesFM-2.5, TiRex)
+	python experiments/fetch_checkpoints.py
+
+lock: # snapshot the exact environment after any install/upgrade
+	python -m pip freeze --exclude-editable > requirements-lock.txt
 
 check: # toolchain smoke test (versions, MPS, pvlib, lightgbm)
 	python experiments/check_toolchain.py
 
 test: # run the pytest harness smoke tests
-	pytest -q
+	python -m pytest -q
 
 smoke: # end-to-end harness run on a synthetic station (no data download)
 	python experiments/run.py --config configs/experiment.yaml --synthetic
