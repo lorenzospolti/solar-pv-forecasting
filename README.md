@@ -91,7 +91,7 @@ never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
 - `run.py` saves rows after each model, writes per-timestamp predictions to
   `results/predictions/`, and takes `--models` / `--max-folds`.
 
-**Scoring and ETL v3 (2 Oct 2026, panel v2):**
+**Scoring and ETL v3/v4 (2 Oct 2026, panel v2):**
 - point metrics of probabilistic models use the **mean of the nine quantiles** (scoring
   v2, `pvfc.evaluation.point_forecast`: squared error is minimised by the mean, not the
   median); every results row records `scoring_version`;
@@ -105,14 +105,23 @@ never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
   named comparisons with Holm adjustment;
 - every fit starts from a **fresh model** (panel v1's LSTM and fine-tuned Chronos-2
   kept training across folds); zero-shot checkpoints are loaded once;
-- **ETL v3** (`data.etl_version: 3`, hashed into every run): mean power from the energy
-  column (`generation(kWh)` / interval; the 15-min power column held 2.9% less energy);
-  negative meter errors (< -0.05 x nameplate) and impossible night readings are missing;
-  only genuine gaps of <= 2 h are bridged; **outage hours** (runs of >= 3 h of zero
-  output under a high sun, `pvfc.qc`) are missing data and the clear-sky template is
-  refit without them; the template's hour angle is wrapped to [-180, 180); Open-Meteo
-  cache years are always complete (SQ15 lacked weather before 4 May 2021);
-- panel v1 (ETL v2, warm-started models) is archived in `results/archive/panel_v1/`.
+- **ETL v3** (hashed into every run): negative meter errors (< -0.05 x nameplate) and
+  impossible night readings are missing; only genuine gaps of <= 2 h are bridged;
+  **outage hours** (runs of >= 3 h of zero output under a high sun, `pvfc.qc`) are
+  missing data and the clear-sky template is refit without them; the template's hour
+  angle is wrapped to [-180, 180); Open-Meteo cache years are always complete (SQ15
+  lacked weather before 4 May 2021);
+- **ETL v4** (`data.etl_version: 4`): mean power from the `power(W)` column, as in v2.
+  v3 had moved to the energy column, but at the 15-min stations that column sits about
+  3% above the inverters' AC records (the power column matches them to within 0.3%)
+  and reports zero for 28% of the quarter hours with output below 1 kW: that is how
+  three very dark storm spells (May, June, Sep 2023) passed for campus-wide outages;
+- missing hours in a darts model's input are filled like the references fill theirs,
+  from the same hour of an earlier day (`pvfc.normalize.fill_index_gaps`), not with a
+  forward fill that turned every outage day into a day without output;
+- panel v1 (ETL v2, warm-started models) is archived in `results/archive/panel_v1/`,
+  the stopped first attempt at panel v2 (ETL v3, forward fill) in
+  `results/archive/panel_v2_etl3_stopped/`.
 
 ### Foundation-model roster
 

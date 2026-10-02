@@ -1,6 +1,7 @@
-"""ETL v3 fixes (pvfc.data, pvfc.clearsky, pvfc.weather), one test per defect found in
-the ETL v2 audit: the hour angle wrap, short-gap-only interpolation, negative meter
-errors, power from the energy column, and complete Open-Meteo cache years."""
+"""ETL v3/v4 fixes (pvfc.data, pvfc.clearsky, pvfc.weather), one test per defect found
+in the ETL v2 audit: the hour angle wrap, short-gap-only interpolation, negative meter
+errors and complete Open-Meteo cache years; plus the power column (v4) and the hourly
+relabelling."""
 from __future__ import annotations
 
 import numpy as np
@@ -50,15 +51,26 @@ def test_negative_meter_errors_are_missing_standby_is_zero():
     assert counts == {"over_capacity_removed": 0, "negative_removed": 2, "negative_zeroed": 1}
 
 
-def test_power_comes_from_the_energy_column(tmp_path):
-    """15-min files: power(W) is not the interval mean (2.8-2.9% low on the panel);
-    mean power must be generation(kWh) / 0.25 h."""
+def test_power_comes_from_the_power_column(tmp_path):
+    """15-min files: the energy column sits ~3% above the inverters' AC records, the
+    power column matches them (ETL v4), so mean power is power(W) in kW."""
     f = tmp_path / "q15.csv"
     f.write_text("Time,generation(kWh),power(W)\n2022-06-15 07:00:00,0.25,900\n"
                  "2022-06-15 07:15:00,0.5,1900\n2022-06-15 07:30:00,0.75,2900\n")
     p, step = datamod._read_power(f)
     assert step == pd.Timedelta(minutes=15)
-    np.testing.assert_allclose(p.to_numpy(), [1.0, 2.0, 3.0])
+    np.testing.assert_allclose(p.to_numpy(), [0.9, 1.9, 2.9])
+    assert p.index[0] == pd.Timestamp("2022-06-15 07:00", tz=HKT)  # start labels kept
+
+
+def test_hourly_files_are_relabelled_to_the_interval_start(tmp_path):
+    f = tmp_path / "h1.csv"
+    f.write_text("Time,generation(kWh),power(W)\n2022-06-15 08:00:00,2.0,2000\n"
+                 "2022-06-15 09:00:00,3.0,3000\n2022-06-15 10:00:00,4.0,4000\n")
+    p, step = datamod._read_power(f)
+    assert step == pd.Timedelta(hours=1)
+    np.testing.assert_allclose(p.to_numpy(), [2.0, 3.0, 4.0])
+    assert p.index[0] == pd.Timestamp("2022-06-15 07:00", tz=HKT)  # stamp 08:00 covers 07-08
 
 
 def test_open_meteo_cache_years_are_complete(tmp_path, monkeypatch):

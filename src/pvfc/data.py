@@ -14,12 +14,15 @@ stations, 1-min tower irradiance) at a -1 h shift (e.g. CYT (Station 2): 0.985 a
 -1 h vs 0.837 unshifted). ``_read_power`` therefore shifts hourly files back by
 one hour.
 
-Power source (ETL v3). Mean power is the ENERGY of each interval over its length,
-``generation(kWh) / interval (h)``. In the hourly files that equals ``power(W)``
-exactly; in the 15-min files the power column holds 2.8-2.9% less daytime energy
-than generation and is not the interval mean, while generation correlates best
-with interval-start tower irradiance (SQ1, 2021: 0.940 at zero lag vs 0.928 for
-power) and is the site-level variable the dataset paper lists.
+Power source (ETL v4). Mean power is the ``power(W)`` column. In the hourly files it
+equals ``generation(kWh)`` per hour exactly. In the 15-min files the two columns
+disagree by about 3%: ``power`` integrates to within 0.3% of the AC power the
+inverters log every 5 minutes (pooled ratio 1.002-1.003 at the four 15-min panel
+stations) and is the column the dataset paper integrates to validate the site level
+against the inverters (Library, 31 Aug 2022: 642.09 vs 641.55 kWh), while
+``generation`` sits 3.1-3.3% above the inverters (2.8-3.0% above ``power``). Both
+columns follow the quarter hour they label. ETL v3 used ``generation``, on a
+misreading of the paper's variable tables.
 
 This module is the only place that knows the raw file layout. Without the
 download, ``load_station`` raises a clear instruction, and ``synthetic_station``
@@ -57,7 +60,9 @@ QC_LOG = PROCESSED_DIR / "qc_log.csv"
 #: only gaps of <= 2 h bridged; outage hours (pvfc.qc) set missing before the
 #: clear-sky template fit; hour angle wrapped to [-180, 180) (pvfc.clearsky);
 #: Open-Meteo cache years always complete (SQ15 lacked weather before 4 May 2021).
-ETL_VERSION = 3
+#: v4 (Oct 2026): power from the power column again: v3's energy column sits about 3%
+#: above the inverters' AC records at the 15-min stations (module docstring).
+ETL_VERSION = 4
 
 #: weather feeds: measured campus tower (oracle), archived forecast (nwp), or no
 #: weather covariates at all (none: p_clear + calendar only).
@@ -198,17 +203,17 @@ def _read_power(path: Path) -> tuple[pd.Series, pd.Timedelta]:
     """Site-level mean power (kW) per native interval, tz-aware UTC, with
     interval-START labels; also returns the native step.
 
-    Mean power is the interval's energy over its length, ``generation(kWh) / step(h)``
-    (see the module docstring for why not ``power(W)``). Hourly files label the END
-    of each hour, so they are shifted back by one step; 15-min files already label
-    the start. Negative readings are kept: ``_qc_power`` decides what they are.
+    Mean power is the ``power(W)`` column in kW (see the module docstring for why not
+    ``generation(kWh)``). Hourly files label the END of each hour, so they are shifted
+    back by one step; 15-min files already label the start. Negative readings are
+    kept: ``_qc_power`` decides what they are.
     """
     df = _read_ts_csv(path)
-    col = next((c for c in df.columns if _base(c) == "generation"), None)
+    col = next((c for c in df.columns if _base(c) in ("power", "totalactivepower")), None)
     if col is None:
-        raise ValueError(f"No generation column in {path.name}; columns={list(df.columns)}")
+        raise ValueError(f"No power column in {path.name}; columns={list(df.columns)}")
     step = pd.Series(df.index.unique()).diff().median()
-    p_kw = pd.to_numeric(df[col], errors="coerce") / (step / pd.Timedelta(hours=1))
+    p_kw = pd.to_numeric(df[col], errors="coerce") / 1000.0  # W -> kW
     if step >= pd.Timedelta(minutes=59):  # hourly meter: stamp HH covers (HH-1, HH]
         p_kw.index = p_kw.index - step
     return p_kw.rename("power"), step
@@ -383,7 +388,7 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp
                   tower pyranometer drifts (midday means 404/422/632 W/m^2 in
                   2021/22/23 vs a flat ~590 in the archive). Diagnostics only.
 
-    Steps: read site-level mean power (kW, from the energy column) with interval-start
+    Steps: read site-level mean power (kW, from the power column) with interval-start
     labels; meter-error QC (``_qc_power``); resample to hourly means; bridge gaps of
     at most ``MAX_BRIDGED_GAP_HOURS``; attach clear-sky power/index/daytime mask; set
     outage hours (``pvfc.qc.outage_mask``) missing and refit the clear-sky template
@@ -451,7 +456,7 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp
             "resolution_min": int(step / pd.Timedelta(minutes=1)),
             "relabelled_minus_1h": bool(step >= pd.Timedelta(minutes=59)),
             "capacity_kw": cap, "raw_readings": int(raw.size),
-            "source_column": "generation", **qc,
+            "source_column": "power", **qc,
             "first_hour_utc": frame.index.min(), "last_hour_utc": frame.index.max(),
             "daytime_hours": int(day.sum()),
             "daytime_missing_pct": round(100 * float(frame.loc[day, "power"].isna().mean()), 2),

@@ -4,7 +4,7 @@ seed: 0
 
 data:
   dataset: hkust_rooftop_pv          # primary (Dryad doi:10.5061/dryad.m37pvmd99)
-  etl_version: 3                     # the pvfc.data.ETL_VERSION these runs use. It is hashed,
+  etl_version: 4                     # the pvfc.data.ETL_VERSION these runs use. It is hashed,
                                      #   so runs on rebuilt data never share a config hash with
                                      #   runs on older data; run.py refuses a mismatch.
   site_id: "CYT (Station 2)"         # development station (best-covered hourly station);

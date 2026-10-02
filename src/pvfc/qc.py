@@ -26,7 +26,7 @@ therefore a state of the system (an inverter outage, a site-wide shutdown, a log
 writing zeros), not weather. The run length keeps the rule conservative: it removes
 sustained zero output, not isolated readings.
 
-Use (ETL v3, ``pvfc.data``). The ETL flags outage hours on each station's whole hourly
+Use (ETL v3 and later, ``pvfc.data``). The ETL flags outage hours on each station's whole hourly
 series and sets their power to missing, like any other data gap, before it refits the
 clear-sky template and computes the clear-sky index: the template fit never sees the
 outage zeros, no model sees them as hours without output (a model that needs a series
