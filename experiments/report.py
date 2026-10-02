@@ -17,7 +17,7 @@ Definitions (the Method chapter cites them; each function's docstring has its ow
   quantiles for a probabilistic model (an estimate of the predictive mean, which
   minimises squared error; Gneiting 2011), ``y_hat`` for a deterministic one.
 * Capacity C. The station nameplate in the ETL sidecar
-  ``data/processed/<site>__<weather>__etl2.cap.json``: the number the runner used.
+  ``data/processed/<site>__<weather>__etl<ETL_VERSION>.cap.json``: the number the runner used.
 * Pooled per-station metrics. Per model x weather setting x station, over the scored
   hours of all test windows. Headline = mean over stations, with [min, max].
 * No-covariate models. A model whose NWP and no-weather forecasts are identical at

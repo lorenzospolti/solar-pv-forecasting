@@ -29,7 +29,9 @@ sustained zero output, not isolated readings.
 Use (ETL v3, ``pvfc.data``). The ETL flags outage hours on each station's whole hourly
 series and sets their power to missing, like any other data gap, before it refits the
 clear-sky template and computes the clear-sky index: the template fit never sees the
-outage zeros, the models never train on them and no outage hour is scored as truth.
+outage zeros, no model sees them as hours without output (a model that needs a series
+without gaps fills them from the same hour of an earlier day,
+``pvfc.normalize.fill_index_gaps``) and no outage hour is scored as truth.
 ``outage_mask_frame`` applies the same rule to a saved predictions file test window by
 test window (``window``); it serves audits of forecasts made before ETL v3 (panel v1).
 """

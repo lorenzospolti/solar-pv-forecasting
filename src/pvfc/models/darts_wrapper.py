@@ -36,7 +36,7 @@ import pandas as pd
 from ..data import WEATHER_COLS
 from ..evaluation import DEFAULT_QUANTILES, enforce_monotone_quantiles
 from ..features import calendar_features
-from ..normalize import reconstruct_power
+from ..normalize import fill_index_gaps, reconstruct_power
 from .base import Forecaster
 
 logger = logging.getLogger("pvfc.models")
@@ -103,11 +103,16 @@ def _naive_utc(obj):
 
 
 def _target_series(df: pd.DataFrame, target_col: str = "k"):
-    """Clear-sky index history -> a regular-hourly float32 darts TimeSeries."""
+    """Clear-sky index history -> a regular-hourly float32 darts TimeSeries.
+
+    darts needs a series without gaps: missing hours are filled as the references
+    fill theirs, from the same hour of an earlier day (``fill_index_gaps``).
+    """
     from darts import TimeSeries
 
     s = _naive_utc(df[target_col].astype("float32")).asfreq("h")
-    return TimeSeries.from_series(s.ffill().fillna(0.0))
+    day = _naive_utc(df["is_day"].astype(bool)) if "is_day" in df else None
+    return TimeSeries.from_series(fill_index_gaps(s, day).astype("float32"))
 
 
 def _covariate_series(history: pd.DataFrame, future: pd.DataFrame, weather_cols: list[str]):

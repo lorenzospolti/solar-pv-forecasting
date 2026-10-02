@@ -36,7 +36,7 @@ import numpy as np
 import pandas as pd
 
 from ..evaluation import DEFAULT_QUANTILES, enforce_monotone_quantiles
-from ..normalize import reconstruct_power
+from ..normalize import fill_index_gaps, reconstruct_power
 from .base import Forecaster
 
 logger = logging.getLogger("pvfc.models.external")
@@ -130,13 +130,14 @@ class _ExternalFoundationForecaster(Forecaster):
 
     def _context_window(self, history: pd.DataFrame) -> np.ndarray:
         """Last ``context_days`` of clear-sky-index history as a float32 array,
-        right-padded by ``ffill`` and clipped to ``input_chunk_length``."""
+        gaps filled by ``fill_index_gaps`` and clipped to ``input_chunk_length``."""
         hist = history
         if self.context_days:
             cutoff = history.index.max() - pd.Timedelta(days=self.context_days)
             hist = history.loc[history.index >= cutoff]
-        s = hist["k"].astype("float32").asfreq("h").ffill().fillna(0.0)
-        arr = s.to_numpy()
+        s = hist["k"].astype("float32").asfreq("h")
+        day = hist["is_day"].astype(bool) if "is_day" in hist else None
+        arr = fill_index_gaps(s, day).to_numpy(dtype="float32")
         if self.input_chunk_length and len(arr) > self.input_chunk_length:
             arr = arr[-self.input_chunk_length:]
         return arr
