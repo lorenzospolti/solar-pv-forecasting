@@ -28,3 +28,6 @@ dist/
 # os / editor
 .DS_Store
 .vscode/
+
+# thesis build output (make manuscript)
+thesis/build/

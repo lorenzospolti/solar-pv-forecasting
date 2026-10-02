@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel rescore
+.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel manuscript rescore
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -51,3 +51,8 @@ rescore: # rebuild every metric row of results/results.parquet from results/pred
 
 report: # build thesis tables + figures from results/predictions (timing and memory from results/results.parquet)
 	python experiments/report.py
+
+manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc + tectonic)
+	mkdir -p thesis/build && cd thesis && pandoc chapters/*.md --filter pandoc-crossref --citeproc \
+		--top-level-division=chapter --number-sections -V documentclass=report -V geometry:margin=2.5cm \
+		-V fontsize=11pt -V linkcolor=blue --pdf-engine=tectonic -o build/thesis.pdf
