@@ -43,3 +43,6 @@ target-version = "py312"
 [tool.pytest.ini_options]
 pythonpath = ["src"]
 testpaths = ["tests"]
+# pytest resets warning filters per test, so repeat the one pvfc.utils.quiet_known_warnings
+# filter that the darts LightGBM tests trigger (sklearn feature-name check, harmless)
+filterwarnings = ["ignore:X does not have valid feature names:UserWarning:sklearn.utils.validation"]

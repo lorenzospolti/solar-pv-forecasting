@@ -16,9 +16,17 @@ Protocol guards (see CRITICAL_REVIEW.md):
   daytime-only and all-hours masks (predictions don't depend on the mask);
 - ``fit_s`` and ``predict_s`` are timed separately, for the model only (the
   reference's predictions are not billed to the model under test);
+- the point metrics (RMSE, MAE, MBE, R², skill) score
+  ``pvfc.evaluation.point_forecast``: the mean of the quantile grid for a
+  probabilistic model (squared error is minimised by the predictive mean, not the
+  median), the model's own ``y_hat`` for a deterministic one. Every row records
+  the rules it was scored under (``scoring_version``);
 - with ``predictions_dir`` set, every scored prediction (truth, forecast,
   quantiles, the reference forecast) is kept, one parquet per run, for the
-  forecast-trace figures, error-by-hour profiles and significance tests.
+  forecast-trace figures, error-by-hour profiles and significance tests. The
+  files keep the model's RAW output (``y_hat`` = its native point forecast, plus
+  the quantiles), so ``experiments/rescore.py`` can rebuild every row from them
+  under any scoring version without re-running a model.
 
 This guarantees identical splits / masking / metrics across all models by
 construction (plan §Software-architecture).
@@ -34,7 +42,7 @@ import numpy as np
 import pandas as pd
 
 from .data import StationSeries
-from .evaluation import evaluate
+from .evaluation import METRIC_COLUMNS, SCORING_VERSION, evaluate, point_forecast
 from .models.base import Forecaster
 from .models.baselines import SmartPersistence
 from .splits import ExpandingWindowSplitter
@@ -88,8 +96,12 @@ def run_model(
 
     The model is fit and predicted once per fold; each mask in ``daytime_modes``
     re-scores the same predictions (one results row each, flagged ``daytime_only``).
+    The point metrics score ``point_forecast(y_hat, q_pred)`` on the masked hours
+    (the quantile-grid mean for probabilistic models, ``y_hat`` otherwise); the
+    probabilistic metrics score the quantiles; each row carries ``scoring_version``.
     With ``predictions_dir``, the per-timestamp predictions of all folds are also
-    written to ``predictions_path(...)`` (overwritten when the same config reruns).
+    written to ``predictions_path(...)`` (overwritten when the same config reruns),
+    as the model's raw output: ``y_hat`` and the quantiles, never the scored mean.
     """
     full = series.frame
     reference = reference if reference is not None else SmartPersistence()
@@ -143,7 +155,7 @@ def run_model(
 
             scores = evaluate(
                 y_true=truth[mask],
-                y_pred=pred.loc[common, "y_hat"].to_numpy()[mask],
+                y_pred=point_forecast(pred.loc[common, "y_hat"].to_numpy()[mask], q_pred),
                 capacity=series.capacity,
                 reference_pred=ref_pred.loc[common, "y_hat"].to_numpy()[mask],
                 q_pred=q_pred,
@@ -158,6 +170,7 @@ def run_model(
                 "predict_s": round(predict_s, 3),
                 "fit_predict_s": round(fit_s + predict_s, 3),
                 "peak_rss_mb": peak_rss_mb(),
+                "scoring_version": SCORING_VERSION,
                 **scores.as_row(),
             }
             if config:
@@ -199,6 +212,11 @@ def append_results(rows: list[dict], path: str) -> pd.DataFrame:
         return pd.read_parquet(path) if os.path.exists(path) else pd.DataFrame()
 
     df_new = pd.DataFrame(rows)
+    # a deterministic model leaves pinball/crps/picp_80/width_80 as None, i.e. all-None
+    # object columns; as float NaN the store's metric columns stay float64 (pandas 3 stops
+    # ignoring all-NA columns when concat picks the result dtype)
+    for col in df_new.columns.intersection(METRIC_COLUMNS):
+        df_new[col] = df_new[col].astype(float)
     df_new["env"] = [env_fingerprint()] * len(df_new)
     if os.path.exists(path):
         df_old = pd.read_parquet(path)

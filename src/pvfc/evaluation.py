@@ -7,11 +7,47 @@ plan §Evaluation). The skill score is defined against a *reference* forecast
 """
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 
 import numpy as np
+import pandas as pd
 
 DEFAULT_QUANTILES: tuple[float, ...] = tuple(round(0.1 * i, 2) for i in range(1, 10))  # 0.1..0.9
+
+#: Version of the scoring rules, stored with every results row. 1 = probabilistic
+#: models scored on their median (y_hat); 2 = on the mean of their quantile grid.
+SCORING_VERSION = 2
+
+
+# --------------------------------------------------------------------------- #
+# Point forecast
+# --------------------------------------------------------------------------- #
+def point_forecast(y_hat: np.ndarray, q_pred: dict[float, np.ndarray] | None = None) -> np.ndarray:
+    """The point forecast the point metrics (RMSE, MAE, MBE, R², skill) score.
+
+    Squared error, the headline metric, is minimised by the mean of the predictive
+    distribution, not its median (Gneiting 2011), so scoring a probabilistic model
+    on its median would handicap it against MSE-trained point models (LSTM). With
+    the full quantile grid (tau = 0.1..0.9) the point forecast is therefore the
+    average of the nine quantiles: an estimate of the mean that ignores the tails
+    beyond the 10th and 90th percentiles. Wherever a quantile is missing or
+    non-finite, and for deterministic models, it is the model's own ``y_hat``.
+    """
+    y_hat = np.asarray(y_hat, dtype=float)
+    if not q_pred or not all(tau in q_pred for tau in DEFAULT_QUANTILES):
+        return y_hat
+    grid = np.stack([np.asarray(q_pred[tau], dtype=float) for tau in DEFAULT_QUANTILES])
+    ok = np.isfinite(grid).all(axis=0)
+    return np.where(ok, grid.mean(axis=0), y_hat)
+
+
+def point_forecast_frame(pred: pd.DataFrame) -> np.ndarray:
+    """``point_forecast`` for a predictions frame as the runner saves it (``y_hat``
+    plus optional ``q0.1`` .. ``q0.9`` columns). The one definition shared by the
+    runner, ``experiments/rescore.py`` and ``experiments/report.py``."""
+    q_pred = {float(c[1:]): pred[c].to_numpy(dtype=float)
+              for c in pred.columns if c.startswith("q") and c[1:].replace(".", "", 1).isdigit()}
+    return point_forecast(pred["y_hat"].to_numpy(dtype=float), q_pred or None)
 
 
 # --------------------------------------------------------------------------- #
@@ -105,6 +141,11 @@ class Scores:
         row = {k: v for k, v in self.__dict__.items() if k != "extra"}
         row.update(self.extra)
         return row
+
+
+#: the metric columns every results row has (``Scores`` fields; quantile models add the
+#: ``cov_q*`` reliability columns on top). Float in the store, NaN where not applicable.
+METRIC_COLUMNS: tuple[str, ...] = tuple(f.name for f in fields(Scores) if f.name != "extra")
 
 
 def evaluate(

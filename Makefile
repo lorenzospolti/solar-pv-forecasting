@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel
+.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel rescore
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -43,8 +43,11 @@ clean: # remove caches and the results store
 panel: # overnight batch: every panel station x weather setting x model (resumable)
 	python experiments/run_panel.py
 
-reproduce: # regenerate every result from raw data: checkpoints -> panel -> tables/figures
-	python experiments/fetch_checkpoints.py && python experiments/run_panel.py && python experiments/report.py
+reproduce: # regenerate every result from raw data: checkpoints -> panel -> rescore -> tables/figures
+	python experiments/fetch_checkpoints.py && python experiments/run_panel.py && python experiments/rescore.py && python experiments/report.py
 
-report: # build thesis tables + figures from results/results.parquet
+rescore: # rebuild every metric row of results/results.parquet from results/predictions (current scoring rules); preview: python experiments/rescore.py --dry-run
+	python experiments/rescore.py
+
+report: # build thesis tables + figures from results/predictions (timing and memory from results/results.parquet)
 	python experiments/report.py

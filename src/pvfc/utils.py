@@ -11,17 +11,57 @@ import json
 import logging
 import os
 import random
+import warnings
 from typing import Any
 
 logger = logging.getLogger("pvfc")
 
+#: Library warnings known to be harmless in this harness, as
+#: (message regex, category, module regex). ``warnings.filterwarnings`` matches the
+#: message from its start and the module it is attributed to (``stacklevel``), so each
+#: filter hits one message from one place and every other warning still prints.
+#: They repeat per prediction, per issued day or per fit, so overnight logs drown in them.
+KNOWN_HARMLESS_WARNINGS: tuple[tuple[str, type[Warning], str], ...] = (
+    # darts fits LightGBM on a DataFrame and predicts from a numpy array, so sklearn's
+    # feature-name check warns on every (day x horizon x quantile) predict call:
+    # 58,320 warnings, 12.7 MB of log, per 9-fold run
+    ("X does not have valid feature names, but LGBMRegressor was fitted with feature names",
+     UserWarning, r"sklearn\.utils\.validation\Z"),
+    # torch disables pinned memory on MPS by itself; one warning per DataLoader (per day)
+    ("'pin_memory' argument is set as true but not supported on MPS",
+     UserWarning, r"torch\.utils\.data\.dataloader\Z"),
+    # pytorch_lightning 2.5 still builds torch's deprecated LeafSpec; once per trainer call
+    (r"`isinstance\(treespec, LeafSpec\)` is deprecated",
+     FutureWarning, r"pytorch_lightning\.utilities\._pytree\Z"),
+    # darts trains without a validation set: its data module hands lightning `[]` as the
+    # validation loader. Only the `list` variant: the same check warns for an empty
+    # training loader (`DataLoader`, `CombinedLoader`), and that must stay visible
+    (r"Total length of `list` across ranks is zero\.",
+     UserWarning, r"pytorch_lightning\.utilities\.data\Z"),
+)
+
+
+def quiet_known_warnings() -> None:
+    """Silence exactly the ``KNOWN_HARMLESS_WARNINGS`` (idempotent).
+
+    All four are emitted through the ``warnings`` module (lightning prints its own
+    without the category name), so ``logging`` filters would not catch them.
+    Deliberately NOT silenced: statsforecast's "possible convergence problem"
+    (it flags the SARIMA folds whose AutoARIMA fit is worth a look).
+    """
+    for message, category, module in KNOWN_HARMLESS_WARNINGS:
+        warnings.filterwarnings("ignore", message=message, category=category, module=module)
+
 
 def setup_logging(level: int = logging.INFO) -> None:
+    """Log format for every experiment script; also silences the known-harmless
+    library warnings (``quiet_known_warnings``), which would otherwise bloat the logs."""
     logging.basicConfig(
         level=level,
         format="%(asctime)s %(levelname)-7s %(name)s | %(message)s",
         datefmt="%H:%M:%S",
     )
+    quiet_known_warnings()
 
 
 def set_seed(seed: int) -> None:
