@@ -293,6 +293,15 @@ class DartsForecaster(Forecaster):
 
     # ------------------------------------------------------------------ #
     def fit(self, train: pd.DataFrame) -> "DartsForecaster":
+        # A fresh model every fold. The runner fits the same forecaster once per fold, and
+        # darts' torch models continue from their current weights when fit() is called
+        # again, so reusing the object carried each fold's training into the next (panel
+        # v1: the LSTM had 270 cumulative epochs by the last fold, fine-tuned Chronos-2 45).
+        # Rebuilding restarts the LSTM from its seeded initialisation and fine-tuning from
+        # the pretrained checkpoint (its reload is part of fit_s). Zero-shot foundation
+        # models never train, so their loaded checkpoint is kept.
+        if not (self._is_foundation and not self.finetune):
+            self._model = None
         self._build()
         fit_days = self.params.get("fit_days")
         if fit_days:  # cap the fit window (e.g. SARIMA, a local model, needs recent data only)
