@@ -1,8 +1,9 @@
 """Figures for the Data chapter: thesis/figures/data_*.{pdf,png}.
 
   data_coverage  share of daytime hours with missing power, per panel station and
-                 local day (2021-2023), with the nine test windows and the first
-                 test day
+                 local day (2021-2023), with the nine test windows, the first test
+                 day and a marker on each day with outage hours (pvfc.qc) that the
+                 ETL set missing
   data_clearsky  one week of measured power against the clear-sky template P^cs,
                  and the clear-sky index k, for LSK North (5-11 Jul 2022, the
                  first week of the first test window)
@@ -13,7 +14,8 @@
                  (mean capacity factor per kW/m2 of each irradiance series)
 
 Inputs (read-only): the processed station frames (``pvfc.data.load_station``,
-weather mode "none", cached under data/processed/), the raw 1-min tower
+weather mode "none", cached under data/processed/ for the current ETL_VERSION), the
+raw site-level PV files (only to locate the outage hours), the raw 1-min tower
 irradiance files and the cached Open-Meteo archive
 (``pvfc.weather.fetch_open_meteo``). The panel and the fold calendar come from
 configs/experiment.yaml. Writes only thesis/figures/data_*.
@@ -36,6 +38,7 @@ import numpy as np  # noqa: E402
 import pandas as pd  # noqa: E402
 import yaml  # noqa: E402
 from matplotlib.colors import LinearSegmentedColormap  # noqa: E402
+from matplotlib.lines import Line2D  # noqa: E402
 from matplotlib.patches import Patch, Rectangle  # noqa: E402
 
 from pvfc import data as D  # noqa: E402
@@ -113,12 +116,31 @@ def _label(site: str) -> str:
     return f"{site} · {'1 h' if minutes >= 60 else f'{minutes} min'}"
 
 
+def _outage_days(site: str, frame: pd.DataFrame) -> pd.DatetimeIndex:
+    """Local days (naive midnights) holding outage hours that the ETL set missing.
+
+    Replays the ETL steps that precede the outage rule (``pvfc.data.load_station``:
+    energy-column power, meter-error QC, hourly means, night QC, short-gap bridging)
+    and returns the days of the hours that have a value there but are missing in the
+    processed ``frame`` (local time): only the outage rule (``pvfc.qc``) removes
+    values after the bridging step.
+    """
+    raw, _ = D._read_power(D.list_stations()[site])
+    cap = D.station_capacity(site)
+    raw, _ = D._qc_power(raw, cap)
+    hourly, _ = D._qc_night(raw.resample("1h").mean(), cap)
+    hourly, _ = D._bridge_short_gaps(hourly)
+    before = hourly.tz_convert(TZ).reindex(frame.index)
+    flagged = before.notna() & frame["power"].isna()
+    return pd.DatetimeIndex(frame.index[flagged].normalize().tz_localize(None).unique())
+
+
 # ---------------------------------------------------------------- (a) coverage
 def fig_coverage() -> None:
     panel = _panel()
     days = pd.date_range("2021-03-01", "2023-12-31", freq="D")
     grid = np.full((len(panel), len(days)), np.nan)
-    labels = []
+    labels, outages = [], []
     for r, site in enumerate(panel):
         f, _ = _frame(site)
         day = f["is_day"].astype(bool)
@@ -128,6 +150,7 @@ def fig_coverage() -> None:
         share = (g["miss"].sum() / n_day.where(n_day > 0)).reindex(days)
         grid[r] = share.to_numpy()
         labels.append(_label(site))
+        outages.append(_outage_days(site, f))
 
     cmap = LinearSegmentedColormap.from_list("blue", BLUE_RAMP)
     cmap.set_bad((0, 0, 0, 0))
@@ -147,6 +170,11 @@ def fig_coverage() -> None:
         valid = np.where(np.isfinite(grid[r]))[0]
         ax.add_patch(Rectangle((x[valid[0]], r + pad), x[valid[-1] + 1] - x[valid[0]],
                                1 - 2 * pad, fill=False, edgecolor=AXIS, linewidth=0.5))
+        # outage days: a small ink triangle in the gap above the strip, at mid-day
+        if len(outages[r]):
+            xo = mdates.date2num((outages[r] + pd.Timedelta(hours=12)).to_pydatetime())
+            ax.plot(xo, np.full(len(xo), r + 0.5 * pad), linestyle="none", marker="v",
+                    markersize=3.2, color=INK, markeredgewidth=0, zorder=6, clip_on=False)
     ax.set_ylim(n, 0)
     ax.set_yticks(np.arange(n) + 0.5, labels)
     ax.tick_params(axis="y", length=0)
@@ -188,9 +216,11 @@ def fig_coverage() -> None:
     cb.ax.tick_params(length=2)
     cax.set_title("daytime hours missing, per day", fontsize=7.5, color=INK2, pad=3)
     handles = [Patch(facecolor=SURFACE, edgecolor=AXIS, linewidth=0.5, label="no record"),
-               Patch(facecolor=CAT[1], label="test window (30 days)")]
-    fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.165, 0.045), ncol=2,
-               handlelength=1.4, columnspacing=1.6)
+               Patch(facecolor=CAT[1], label="test window (30 days)"),
+               Line2D([], [], linestyle="none", marker="v", markersize=4, color=INK,
+                      markeredgewidth=0, label="day with outage hours set missing")]
+    fig.legend(handles=handles, loc="lower left", bbox_to_anchor=(0.165, 0.0), ncol=1,
+               handlelength=1.4, labelspacing=0.35)
     _save(fig, "data_coverage")
 
 
