@@ -114,8 +114,10 @@ never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
 - **ETL v4** (`data.etl_version: 4`): mean power from the `power(W)` column, as in v2.
   v3 had moved to the energy column, but at the 15-min stations that column sits about
   3% above the inverters' AC records (the power column matches them to within 0.3%)
-  and reports zero for 28% of the quarter hours with output below 1 kW: that is how
-  three very dark storm spells (May, June, Sep 2023) passed for campus-wide outages;
+  and reads zero in 2-23% of the quarter hours with 20 W-1 kW of output: that is how
+  three very dark storm spells (May, June, Sep 2023) passed for outages at LSK North,
+  SQ567 and UG Hall6 (SQ1 and the hourly stations read about zero in those storms, so
+  the outage rule still removes 18 of those hours there);
 - missing hours in a darts model's input are filled like the references fill theirs,
   from the same hour of an earlier day (`pvfc.normalize.fill_index_gaps`), not with a
   forward fill that turned every outage day into a day without output;
