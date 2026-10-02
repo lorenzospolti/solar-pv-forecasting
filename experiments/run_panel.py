@@ -42,14 +42,14 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 
 #: model-major run order; models not listed run last, in config order
-RUN_ORDER = ["persistence", "smart_persistence", "seasonal_naive", "chronos2", "timesfm",
-             "tirex", "lightgbm", "sarima", "lstm", "chronos2_ft"]
+RUN_ORDER = ["persistence", "smart_persistence", "seasonal_naive", "climatology", "cliper",
+             "chronos2", "timesfm", "tirex", "lightgbm", "sarima", "lstm", "chronos2_ft"]
 
 #: rough wall-clock seconds per fold on the M4, from the 1 Oct smoke test (CYT (Station 2),
 #: first fold, ~400 training days); later folds train on up to ~2.5 years, hence GROWTH
 SECONDS_PER_FOLD = {"persistence": 1, "smart_persistence": 1, "seasonal_naive": 1,
-                    "chronos2": 12, "timesfm": 18, "tirex": 16, "lstm": 127, "sarima": 170,
-                    "chronos2_ft": 126, "lightgbm": 250}
+                    "climatology": 1, "cliper": 1, "chronos2": 12, "timesfm": 18, "tirex": 16,
+                    "lstm": 127, "sarima": 170, "chronos2_ft": 126, "lightgbm": 250}
 GROWTH = 1.5
 
 

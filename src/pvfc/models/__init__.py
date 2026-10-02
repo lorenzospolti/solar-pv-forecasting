@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 from .base import Forecaster
-from .baselines import Persistence, SeasonalNaive, SmartPersistence
+from .baselines import CLIPER, Climatology, Persistence, SeasonalNaive, SmartPersistence
 
 #: name -> factory. Heavier models (darts/foundation) are registered lazily in
 #: build() to avoid importing torch/darts when only baselines are needed.
@@ -10,6 +10,8 @@ _BASE_REGISTRY: dict[str, type[Forecaster]] = {
     "persistence": Persistence,
     "smart_persistence": SmartPersistence,
     "seasonal_naive": SeasonalNaive,
+    "climatology": Climatology,
+    "cliper": CLIPER,
 }
 
 
@@ -37,4 +39,5 @@ def build(name: str, **kwargs) -> Forecaster:
     return build_darts_model(name, **kwargs)
 
 
-__all__ = ["Forecaster", "Persistence", "SmartPersistence", "SeasonalNaive", "build"]
+__all__ = ["Forecaster", "Persistence", "SmartPersistence", "SeasonalNaive", "Climatology",
+           "CLIPER", "build"]

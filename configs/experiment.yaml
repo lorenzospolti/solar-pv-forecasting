@@ -48,6 +48,8 @@ models:
   - name: smart_persistence
   - name: seasonal_naive           # weekly lag — 24 h would duplicate `persistence`
     params: {season_hours: 168}
+  - name: climatology              # training-window mean daytime clear-sky index x p_clear
+  - name: cliper                   # CLIPER: rho-weighted climatology + persistence (Yang 2019)
   # --- classical / ML / deep (implemented & enabled for real runs) ---
   - name: sarima              # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
     params: {seasonal_m: 24, context_days: 60, quantile: true}

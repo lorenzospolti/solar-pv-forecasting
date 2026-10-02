@@ -125,7 +125,8 @@ def main() -> None:
             raise SystemExit(f"--models: not in {args.config}: {unknown}")
         models = [m for m in models if m["name"] in wanted]
     if args.synthetic and not args.all_models:
-        _BASELINES = {"persistence", "smart_persistence", "seasonal_naive"}
+        _BASELINES = {"persistence", "smart_persistence", "seasonal_naive", "climatology",
+                      "cliper"}
         models = [m for m in models if m["name"] in _BASELINES]
 
     daytime_modes = (True, False) if cfg.get("evaluation", {}).get("daytime_only", True) \

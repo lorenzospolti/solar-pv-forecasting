@@ -35,5 +35,6 @@ def test_skip_done_makes_a_rerun_free(tmp_path):
     n_rows = len(pd.read_parquet(store))
     second = subprocess.run(cmd, capture_output=True, text=True, cwd=ROOT, check=True)
     assert "SKIP" not in first.stdout and n_rows > 0
-    assert second.stdout.count("SKIP") == 3          # the three synthetic baselines
+    # one SKIP per synthetic baseline, however many there are
+    assert second.stdout.count("SKIP") == pd.read_parquet(store)["model"].nunique()
     assert len(pd.read_parquet(store)) == n_rows
