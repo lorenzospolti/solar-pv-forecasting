@@ -162,8 +162,9 @@ def test_power_spikes_above_nameplate_are_removed():
     from pvfc.data import _qc_power
 
     raw = pd.Series([5.0, 10.9, 11.1, 3000.0, np.nan])
-    clean, n = _qc_power(raw, capacity=10.0)
-    assert n == 2 and clean.isna().sum() == 3 and clean.iloc[1] == 10.9
+    clean, counts = _qc_power(raw, capacity=10.0)
+    assert counts["over_capacity_removed"] == 2 and clean.isna().sum() == 3
+    assert clean.iloc[1] == 10.9
 
 
 # --------------------------------------------------------------------- B6 ---

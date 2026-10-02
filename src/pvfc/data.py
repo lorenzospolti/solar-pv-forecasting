@@ -6,14 +6,20 @@ campus tower (CC0). The streams are NOT pre-aligned (plan correction #2): we
 resample power -> hourly means, align 1-min weather to the same hourly grid, and
 keep everything tz-aware in UTC.
 
-Timestamp convention (ETL v2). Every hourly frame uses interval-START labels: the
+Timestamp convention (ETL v2+). Every hourly frame uses interval-START labels: the
 value stamped HH:00 is the mean over [HH:00, HH+1:00). The 15-min files already
 label the start of each interval, but the 23 hourly files label the END of the
 hour: each of them correlates best with interval-start references (15-min
 stations, 1-min tower irradiance) at a -1 h shift (e.g. CYT (Station 2): 0.985 at
--1 h vs 0.858 unshifted). ``_read_power`` therefore shifts hourly files back by
-one hour. ``power(W)`` equals ``generation(kWh)`` per interval in every file, so
-it is a true interval mean, not an instantaneous reading.
+-1 h vs 0.837 unshifted). ``_read_power`` therefore shifts hourly files back by
+one hour.
+
+Power source (ETL v3). Mean power is the ENERGY of each interval over its length,
+``generation(kWh) / interval (h)``. In the hourly files that equals ``power(W)``
+exactly; in the 15-min files the power column holds 2.8-2.9% less daytime energy
+than generation and is not the interval mean, while generation correlates best
+with interval-start tower irradiance (SQ1, 2021: 0.940 at zero lag vs 0.928 for
+power) and is the site-level variable the dataset paper lists.
 
 This module is the only place that knows the raw file layout. Without the
 download, ``load_station`` raises a clear instruction, and ``synthetic_station``
@@ -47,7 +53,11 @@ QC_LOG = PROCESSED_DIR / "qc_log.csv"
 #: cache file name, so frames built by an older ETL are never silently reused.
 #: v2 (Oct 2026): hourly files relabelled to interval start, clear-sky quantities
 #: evaluated per interval, sun-position template, capacity QC, weather mode "none".
-ETL_VERSION = 2
+#: v3 (Oct 2026): power from the energy column; negative meter errors set missing;
+#: only gaps of <= 2 h bridged; outage hours (pvfc.qc) set missing before the
+#: clear-sky template fit; hour angle wrapped to [-180, 180) (pvfc.clearsky);
+#: Open-Meteo cache years always complete (SQ15 lacked weather before 4 May 2021).
+ETL_VERSION = 3
 
 #: weather feeds: measured campus tower (oracle), archived forecast (nwp), or no
 #: weather covariates at all (none: p_clear + calendar only).
@@ -56,6 +66,18 @@ WEATHER_MODES = ("oracle", "nwp", "none")
 #: QC: raw power above this multiple of nameplate is a meter error (Tower A reads
 #: 31,755 kW against 40 kW) and is set to NaN before resampling.
 QC_MAX_CAPACITY_RATIO = 1.1
+#: QC: raw power below this multiple of nameplate is a meter error too (SQ15 reads
+#: -111 x and -148 x nameplate) and is set to NaN; smaller negatives (standby
+#: consumption at night) become 0.
+QC_MIN_CAPACITY_RATIO = -0.05
+#: gaps of at most this many hours, with a measured hour on both sides, are bridged
+#: by linear interpolation; longer gaps stay missing in full
+MAX_BRIDGED_GAP_HOURS = 2
+#: QC: an hour whose midpoint has the sun more than 5 deg below the horizon cannot
+#: generate; a reading above this share of nameplate then is a meter error (SQ15:
+#: 8.9 kW of 33.3 kW at 02:00 on 29 Aug 2022, the only one in the panel)
+QC_NIGHT_MAX_RATIO = 0.01
+QC_NIGHT_ZENITH_DEG = 95.0
 
 #: Stations kept out of the benchmark, with the reason (Data chapter material).
 EXCLUDED_STATIONS = {
@@ -173,32 +195,66 @@ def list_stations(raw_dir: Path = RAW_DIR) -> dict[str, Path]:
 
 
 def _read_power(path: Path) -> tuple[pd.Series, pd.Timedelta]:
-    """Site-level active power (W) -> kW at native resolution, tz-aware UTC, with
+    """Site-level mean power (kW) per native interval, tz-aware UTC, with
     interval-START labels; also returns the native step.
 
-    Hourly files label the END of each hour (see module docstring), so they are
-    shifted back by one step; 15-min files already label the start.
+    Mean power is the interval's energy over its length, ``generation(kWh) / step(h)``
+    (see the module docstring for why not ``power(W)``). Hourly files label the END
+    of each hour, so they are shifted back by one step; 15-min files already label
+    the start. Negative readings are kept: ``_qc_power`` decides what they are.
     """
     df = _read_ts_csv(path)
-    col = next((c for c in df.columns if _base(c) in ("power", "totalactivepower")), None)
+    col = next((c for c in df.columns if _base(c) == "generation"), None)
     if col is None:
-        raise ValueError(f"No power column in {path.name}; columns={list(df.columns)}")
-    p_kw = (pd.to_numeric(df[col], errors="coerce") / 1000.0).clip(lower=0.0)  # W -> kW
-    step = pd.Series(p_kw.index.unique()).diff().median()
+        raise ValueError(f"No generation column in {path.name}; columns={list(df.columns)}")
+    step = pd.Series(df.index.unique()).diff().median()
+    p_kw = pd.to_numeric(df[col], errors="coerce") / (step / pd.Timedelta(hours=1))
     if step >= pd.Timedelta(minutes=59):  # hourly meter: stamp HH covers (HH-1, HH]
         p_kw.index = p_kw.index - step
-    return p_kw, step
+    return p_kw.rename("power"), step
 
 
-def _qc_power(raw_kw: pd.Series, capacity: float) -> tuple[pd.Series, int]:
-    """NaN out raw readings above ``QC_MAX_CAPACITY_RATIO`` x nameplate (meter spikes).
-
-    Applied at native resolution, before resampling, so one spike cannot
-    contaminate an hourly mean. Returns the cleaned series and the number of
-    readings removed.
+def _qc_power(raw_kw: pd.Series, capacity: float) -> tuple[pd.Series, dict[str, int]]:
+    """Meter errors at native resolution, before resampling (one bad reading cannot
+    contaminate an hourly mean): readings above ``QC_MAX_CAPACITY_RATIO`` x nameplate
+    and below ``QC_MIN_CAPACITY_RATIO`` x nameplate become NaN; the remaining negative
+    readings (standby consumption) become 0. Returns the cleaned series and the counts.
     """
     over = raw_kw > QC_MAX_CAPACITY_RATIO * capacity
-    return raw_kw.mask(over), int(over.sum())
+    under = raw_kw < QC_MIN_CAPACITY_RATIO * capacity
+    standby = (raw_kw < 0) & ~under
+    clean = raw_kw.mask(over | under).mask(standby, 0.0)
+    return clean, {"over_capacity_removed": int(over.sum()),
+                   "negative_removed": int(under.sum()), "negative_zeroed": int(standby.sum())}
+
+
+def _qc_night(power: pd.Series, capacity: float) -> tuple[pd.Series, int]:
+    """NaN out hourly readings above ``QC_NIGHT_MAX_RATIO`` x nameplate whose interval
+    midpoint has the sun more than 5 deg below the horizon (``QC_NIGHT_ZENITH_DEG``):
+    such an hour cannot generate. Returns the series and the number removed."""
+    from . import clearsky as cs
+
+    zenith = cs.solar_zenith(power.index + pd.Timedelta(minutes=30), HKUST_LAT, HKUST_LON,
+                             HKUST_ALT).to_numpy()
+    bad = (zenith > QC_NIGHT_ZENITH_DEG) & (power.to_numpy() > QC_NIGHT_MAX_RATIO * capacity)
+    return power.mask(bad), int(bad.sum())
+
+
+def _bridge_short_gaps(power: pd.Series,
+                       max_hours: int = MAX_BRIDGED_GAP_HOURS) -> tuple[pd.Series, int]:
+    """Linearly interpolate runs of at most ``max_hours`` missing hours that have a
+    measured hour on both sides; longer gaps stay missing in full. Returns the series
+    and the number of hours filled. Expects a regular hourly index.
+
+    (pandas' ``interpolate(limit=2)``, used up to ETL v2, also fills the first two
+    hours of every longer gap: it wrote interpolated zeros into the first two hours
+    of the 10-hour outage days of CYT (Station 2) and SQ15.)
+    """
+    missing = power.isna()
+    run_len = missing.groupby((~missing).cumsum()).transform("sum")
+    bridge = missing & (run_len <= max_hours)
+    out = power.where(~bridge, power.interpolate(limit_area="inside"))
+    return out, int((bridge & out.notna()).sum())
 
 
 def _write_qc_row(row: dict, path: Path = QC_LOG) -> None:
@@ -327,9 +383,11 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp
                   tower pyranometer drifts (midday means 404/422/632 W/m^2 in
                   2021/22/23 vs a flat ~590 in the archive). Diagnostics only.
 
-    Steps: read site-level power (W) -> kW with interval-start labels; NaN out
-    readings above ``QC_MAX_CAPACITY_RATIO`` x nameplate; resample to hourly
-    means; attach clear-sky power/index/daytime mask; attach the weather feed.
+    Steps: read site-level mean power (kW, from the energy column) with interval-start
+    labels; meter-error QC (``_qc_power``); resample to hourly means; bridge gaps of
+    at most ``MAX_BRIDGED_GAP_HOURS``; attach clear-sky power/index/daytime mask; set
+    outage hours (``pvfc.qc.outage_mask``) missing and refit the clear-sky template
+    without them; attach the weather feed.
     Frames are cached under a name that carries ``ETL_VERSION``; building one
     also upserts the station's QC counts into ``data/processed/qc_log.csv``.
     The frame schema matches synthetic_station().
@@ -352,20 +410,32 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp
         preview = ", ".join(sorted(sites)[:10]) + (" ..." if len(sites) > 10 else "")
         raise KeyError(f"Unknown site_id {site_id!r}. Available ({len(sites)}): {preview}")
 
+    from .qc import outage_mask
+
     raw, step = _read_power(sites[site_id])
     cap = _derive_capacity(raw, capacity, site_id=site_id)
-    raw, n_over = _qc_power(raw, cap)
-    if n_over:
-        logger.warning("QC %r: %d raw readings > %.1f x nameplate (%.1f kW) set to NaN",
-                       site_id, n_over, QC_MAX_CAPACITY_RATIO, cap)
+    raw, qc = _qc_power(raw, cap)
+    if qc["over_capacity_removed"] or qc["negative_removed"]:
+        logger.warning("QC %r: %d raw readings > %.1f x and %d < %.2f x nameplate (%.1f kW) "
+                       "set to NaN", site_id, qc["over_capacity_removed"], QC_MAX_CAPACITY_RATIO,
+                       qc["negative_removed"], QC_MIN_CAPACITY_RATIO, cap)
     frame = raw.resample("1h").mean().to_frame("power")
     if weather_mode == "oracle":
         weather = _read_weather(raw_dir)
         if not weather.empty:
             frame = frame.join(weather, how="left")
-    # short daytime gaps: interpolate; longer gaps stay NaN (guarded in the runner)
-    frame["power"] = frame["power"].interpolate(limit=2).clip(lower=0.0)
+    frame["power"], qc["night_removed"] = _qc_night(frame["power"], cap)
+    # gaps of <= 2 h with data on both sides are bridged; longer gaps stay NaN
+    frame["power"], qc["interpolated_hours"] = _bridge_short_gaps(frame["power"])
     frame = attach_clearsky(frame, capacity=cap)
+    # outage hours (runs of zero output under a high sun) are missing data, not
+    # measurements: drop them, then refit the template so its fit never sees them
+    outage = outage_mask(frame.index, frame["power"], frame["p_clear"], frame["is_day"], cap)
+    qc["outage_hours_removed"] = int(outage.sum())
+    if outage.any():
+        logger.warning("QC %r: %d outage hours set to NaN", site_id, int(outage.sum()))
+        frame.loc[outage, "power"] = np.nan
+        frame = attach_clearsky(frame.drop(columns=["p_clear", "k", "is_day"]), capacity=cap)
 
     if weather_mode == "nwp":
         from . import weather as wx
@@ -381,7 +451,7 @@ def load_station(site_id: str, raw_dir: Path = RAW_DIR, weather_mode: str = "nwp
             "resolution_min": int(step / pd.Timedelta(minutes=1)),
             "relabelled_minus_1h": bool(step >= pd.Timedelta(minutes=59)),
             "capacity_kw": cap, "raw_readings": int(raw.size),
-            "over_capacity_removed": n_over,
+            "source_column": "generation", **qc,
             "first_hour_utc": frame.index.min(), "last_hour_utc": frame.index.max(),
             "daytime_hours": int(day.sum()),
             "daytime_missing_pct": round(100 * float(frame.loc[day, "power"].isna().mean()), 2),

@@ -4,6 +4,9 @@ seed: 0
 
 data:
   dataset: hkust_rooftop_pv          # primary (Dryad doi:10.5061/dryad.m37pvmd99)
+  etl_version: 3                     # the pvfc.data.ETL_VERSION these runs use. It is hashed,
+                                     #   so runs on rebuilt data never share a config hash with
+                                     #   runs on older data; run.py refuses a mismatch.
   site_id: "CYT (Station 2)"         # development station (best-covered hourly station);
                                      #   override per run with --site. CYT (Station 1) is
                                      #   excluded: pvfc.data.EXCLUDED_STATIONS says why.
@@ -70,8 +73,10 @@ models:
              accept_license: true}  # NXAI Community License, reviewed and accepted by
                                     #   Lorenzo on 1 Oct 2026 (attribution in README.md)
   # --- foundation models: FINE-TUNED (`arch` selects the class, `name` is the label) ---
-  # Recipe fixed a priori: lr 1e-5 = AutoGluon's Chronos/Chronos-2 `fine_tune_lr` default
-  # (darts' Adam default 1e-3 wrecks the pretrained weights); one training window per day,
+  # Recipe fixed a priori: lr 1e-5 = AutoGluon's Chronos-2 `fine_tune_lr` default (AutoGluon
+  # applies it with LoRA; this is full fine-tuning, for which its docs suggest 1e-6 - a
+  # sensitivity check; darts' Adam default 1e-3 wrecks the pretrained weights). A fresh
+  # copy of the pretrained checkpoint is fine-tuned in every fold. One training window per day,
   # ending at local midnight (fit_stride 24 = the day-ahead task itself, 1/24 of the cost).
   # Smoke, CYT (Station 2) fold 0: zero-shot +0.24 skill; FT lr 1e-3 all hourly windows,
   # 1 epoch: +0.25 in 574 s; lr 1e-3 strided 5 ep: +0.08; this recipe: +0.35 in 122 s.

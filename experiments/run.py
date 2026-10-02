@@ -84,6 +84,11 @@ def main() -> None:
         cfg["data"]["site_id"] = args.site
     if args.max_folds is not None:
         cfg["splits"]["max_folds"] = args.max_folds
+    etl = cfg["data"].get("etl_version")
+    if etl != datamod.ETL_VERSION:
+        raise SystemExit(f"{args.config}: data.etl_version is {etl!r} but pvfc.data builds ETL "
+                         f"v{datamod.ETL_VERSION} frames; update the config (the version is "
+                         "part of every run's config hash).")
     set_seed(cfg.get("seed", 0))
 
     # --- data ---

@@ -3,8 +3,9 @@
 We need a clear-sky *power* envelope ``p_clear`` in the same units as measured
 power so we can form the clear-sky index k = power / p_clear. Two routes (plan
 correction #5): an empirical clear-day fit, or a physical pvlib chain. This
-module provides the empirical route (the physical chain needs each array's tilt
-and azimuth, which the HKUST metadata does not give).
+module provides the empirical route: the Brick metadata do list a tilt and azimuth
+per system, but several arrays face two directions or follow curved roofs
+("Mixed"), and the empirical envelope also absorbs shading and losses.
 
 Interval convention (ETL v2): station frames are hourly with interval-START
 labels — the value stamped HH:00 is the mean over [HH:00, HH+1:00). Every solar
@@ -82,8 +83,12 @@ def sun_coordinates(index: pd.DatetimeIndex, lon: float) -> tuple[np.ndarray, np
     doy = index.dayofyear.to_numpy()
     decl = np.degrees(pvlib.solarposition.declination_spencer71(doy))
     eot = pvlib.solarposition.equation_of_time_spencer71(doy)
-    ha = pvlib.solarposition.hour_angle(index, lon, eot)
-    return np.asarray(decl, dtype=float), np.asarray(ha, dtype=float)
+    ha = np.asarray(pvlib.solarposition.hour_angle(index, lon, eot), dtype=float)
+    # pvlib does not wrap: on a UTC index, 05:00-07:59 Hong Kong time came out at
+    # 248-278 deg instead of -112..-82 (ETL v2 put every early-morning sample in the
+    # template's post-sunset bin). Wrap to [-180, 180): morning < 0 < afternoon.
+    ha = (ha + 180.0) % 360.0 - 180.0
+    return np.asarray(decl, dtype=float), ha
 
 
 def _fill_from_neighbours(grid: np.ndarray, max_iter: int = 500) -> np.ndarray:

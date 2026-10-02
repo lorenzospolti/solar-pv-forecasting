@@ -115,6 +115,28 @@ def main() -> None:
         corr = float(f.loc[day, "ghi"].corr(f.loc[day, "p_clear"]))
         results.append(_check("nwp ghi correlates with p_clear", corr > 0.3, f"corr = {corr:.2f}"))
 
+    # ETL v3 rules
+    from pvfc.qc import outage_mask
+
+    results.append(_check("no negative power (meter errors missing, standby 0)",
+                          bool((f["power"].dropna() >= 0).all()),
+                          f"min = {f['power'].min():.3f} kW"))
+    left = int(outage_mask(f.index, f["power"], f["p_clear"], f["is_day"], s.capacity).sum())
+    results.append(_check("no outage hour left with a measured value (pvfc.qc)", left == 0,
+                          f"{left} hours"))
+    am = local.loc[local["is_day"].astype(bool), "p_clear"]
+    by_hour = am.groupby(am.index.hour).mean()
+    results.append(_check("clear-sky template rises through the morning (hour angle wrapped)",
+                          bool(by_hour.loc[6:10].is_monotonic_increasing),
+                          "mean P_cs 06-10 h: " + ", ".join(f"{v:.1f}" for v in by_hour.loc[6:10])))
+    wx_cols = [c for c in datamod.WEATHER_COLS if c in f.columns]
+    if wx_cols:
+        first = max(f[c].first_valid_index() for c in wx_cols)
+        n_nan = int(f[wx_cols].isna().any(axis=1).sum())
+        results.append(_check("nwp weather present from the first hour", first == f.index.min(),
+                              f"first valid {first}, frame starts {f.index.min()}, "
+                              f"{n_nan} hours with a missing weather value"))
+
     print(f"Loading {site!r} (none) for parity ...")
     s0 = datamod.load_station(site, weather_mode="none", capacity=cfg["data"].get("capacity_kw"))
     results.append(_check("none frame shares the nwp index", s0.frame.index.equals(f.index)))

@@ -8,7 +8,7 @@ HKUST coordinates and cache them locally (one parquet per year).
 Honesty caveat (documented in the thesis plan): the Historical Forecast API is
 stitched from the first hours of successive model runs — a best-available
 near-analysis, not a frozen 24-h-lead forecast. The truly frozen feed (Previous
-Runs API) only archives back to Jan 2024, which does not overlap the 2021-2023 PV
+Runs API) only archives back to 2024, which does not overlap the 2021-2023 PV
 window. We therefore use this feed as a "best-available archived forecast" that
 sits between the measured oracle (upper bound) and a true day-ahead forecast, and
 label it as such. Hold it fixed across all models.
@@ -81,19 +81,26 @@ def fetch_open_meteo(lat: float, lon: float, start: str, end: str,
                      cache_dir: Path = EXTERNAL_DIR) -> pd.DataFrame:
     """Hourly archived-forecast weather for [start, end] (YYYY-MM-DD), tz-aware UTC.
 
-    Caches one parquet per calendar year in ``cache_dir``; missing years are
-    fetched and written. Returns the concatenated frame sliced to [start, end].
+    Caches one parquet per calendar year in ``cache_dir``, always holding the WHOLE
+    year: a year file is fetched for 1 Jan-31 Dec and re-fetched if it covers less.
+    (Up to ETL v2 a year file held only the span first requested: the 2021 file began
+    on 4 May 2021, so SQ15, whose data start on 23 March, had no weather for 993
+    hours.) Returns the concatenated frame sliced to [start, end].
     """
     cache_dir.mkdir(parents=True, exist_ok=True)
     y0, y1 = int(start[:4]), int(end[:4])
     parts = []
     for year in range(y0, y1 + 1):
         cp = _cache_path(lat, lon, year, cache_dir)
+        y_start, y_end = f"{year}-01-01", f"{year}-12-31"
         if cp.exists():
-            parts.append(pd.read_parquet(cp))
-            continue
-        y_start = max(start, f"{year}-01-01")
-        y_end = min(end, f"{year}-12-31")
+            cached = pd.read_parquet(cp)
+            if (len(cached) and cached.index.min() <= pd.Timestamp(y_start, tz="UTC")
+                    and cached.index.max() >= pd.Timestamp(f"{y_end} 23:00", tz="UTC")):
+                parts.append(cached)
+                continue
+            logger.info("Open-Meteo cache %s covers %s..%s only: re-fetching the year",
+                        cp.name, cached.index.min(), cached.index.max())
         logger.info("Open-Meteo fetch %s %s..%s", year, y_start, y_end)
         df = _fetch_year(lat, lon, y_start, y_end)
         df.to_parquet(cp)

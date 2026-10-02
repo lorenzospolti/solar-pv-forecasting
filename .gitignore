@@ -31,3 +31,6 @@ dist/
 
 # thesis build output (make manuscript)
 thesis/build/
+
+# archived result sets (large; reproducible from the tagged code)
+results/archive/
