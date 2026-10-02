@@ -120,7 +120,8 @@ def _outage_days(site: str, frame: pd.DataFrame) -> pd.DatetimeIndex:
     """Local days (naive midnights) holding outage hours that the ETL set missing.
 
     Replays the ETL steps that precede the outage rule (``pvfc.data.load_station``:
-    energy-column power, meter-error QC, hourly means, night QC, short-gap bridging)
+    site-level power from ``_read_power``, meter-error QC, hourly means, night QC,
+    short-gap bridging)
     and returns the days of the hours that have a value there but are missing in the
     processed ``frame`` (local time): only the outage rule (``pvfc.qc``) removes
     values after the bridging step.

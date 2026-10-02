@@ -2,10 +2,10 @@
 
 This appendix collects the evidence behind the data decisions of Chapter [-@sec:data]: the
 pre-flight checks run before every batch (@tbl:data-checks), the hours removed by the outage rule
-(@tbl:data-outages), the energy and power columns of the 15-minute files (@tbl:data-energy), the
+(@tbl:data-outages), the power and energy columns of the 15-minute files (@tbl:data-energy), the
 label convention of the hourly files (@tbl:data-labels), the weather covariates (@tbl:data-weather)
-and the campus tower (@fig:data-weather). All numbers refer to the data of the final processing (ETL
-v3).
+and the campus tower (@fig:data-weather). All numbers refer to the data of the final processing
+(ETL v4).
 
 ## Pre-flight checks
 
@@ -18,13 +18,13 @@ The last row is informational. {#tbl:data-checks}
 | Time index                   | time-zone-aware UTC                                                      | pass at all six                      |
 | Peak hour                    | mean power peaks in the 11:00, 12:00 or 13:00 interval (local)           | 12:00 at five stations, 11:00 at SQ1 |
 | Night power                  | mean power at night below 1% of $C$                                      | at most 0.07% of $C$                 |
-| Daytime coverage             | less than 20% of daytime hours missing                                   | 0.08–4.07%                           |
-| Quality bound                | maximum hourly power at most 1.1 $C$                                     | 0.80–1.03 $C$                        |
+| Daytime coverage             | less than 20% of daytime hours missing                                   | 0.00–4.07%                           |
+| Quality bound                | maximum hourly power at most 1.1 $C$                                     | 0.80–1.00 $C$                        |
 | Finite target                | $P^{\mathrm{cs}}_t$ finite in daytime; $k_t$ finite where $P_t$ is measured | pass at all six                      |
-| Template holes               | every daily maximum of $P^{\mathrm{cs}}_t$ above 40% of its peak         | lowest 56–71%                        |
+| Template holes               | every daily maximum of $P^{\mathrm{cs}}_t$ above 40% of its peak         | lowest 56–70%                        |
 | Template steps               | day-to-day change of the daily maximum below 5%                          | at most 1.0%                         |
 | Output stability             | $k_t$ at 1.3 in less than 5% of measured daytime hours, every year       | at most 0.62%                        |
-| Typical index                | daytime median of $k_t$ between 0.2 and 1.0                              | 0.627–0.672                          |
+| Typical index                | daytime median of $k_t$ between 0.2 and 1.0                              | 0.624–0.672                          |
 | Forecast irradiance          | daytime correlation of NWP GHI with $P^{\mathrm{cs}}_t$ above 0.3        | 0.76–0.78                            |
 | No negative power            | no negative value of $P_t$                                               | pass at all six                      |
 | No outage left               | the outage rule flags no measured hour                                   | pass at all six                      |
@@ -32,14 +32,15 @@ The last row is informational. {#tbl:data-checks}
 | Weather from the start       | NWP covariates present from the first hour                               | pass at all six, no missing value    |
 | No-weather index             | same index as the NWP frame                                              | pass at all six                      |
 | No-weather columns           | no weather columns                                                       | pass at all six                      |
-| Hour labels (info)           | ratio of mean power in the first and last daytime hour of a day          | 0.88–1.09; SQ15 0.68                 |
+| Hour labels (info)           | ratio of mean power in the first and last daytime hour of a day          | 0.98–1.26; SQ15 0.68                 |
 
 ## Outage hours
 
-: Hours set missing by the outage rule of @sec:data-qc, per event and station (local days). On 7 May
-(afternoon), 17 June (14:00–17:00) and 8 September 2023 (07:00–10:00) every station of the dataset
-with data read at most 1% of its nameplate capacity. On 8 September two of the three hours at SQ15
-had first been bridged as a short gap. {#tbl:data-outages}
+: Hours set missing by the outage rule of @sec:data-qc, per event and station (local days). The
+three storm spells of 2023 (tower irradiance about 30–50 W/m²) count only where a station read at
+most 0.1% of $C$ for three consecutive hours; ETL v3, which read the energy column, had also removed
+them at LSK North (9 hours), SQ567 (10) and UG Hall6 (9). On 8 September two of the three hours at
+SQ15 had first been bridged as a short gap. {#tbl:data-outages}
 
 | Event                           | LSK North | SQ1 | SQ567 | UG Hall6 | CYT (Station 2) | SQ15 |
 |:--------------------------------|----------:|----:|------:|---------:|----------------:|-----:|
@@ -47,28 +48,30 @@ had first been bridged as a short gap. {#tbl:data-outages}
 | 10 November 2021                |           |     |       |          |                 |    3 |
 | 23–28 March 2022                |           |     |       |          |                 |   45 |
 | 9–10 November 2022              |           |     |       |          |                 |   16 |
-| 7 May 2023 (SQ1: to 16 May)     |         3 | 100 |     4 |        3 |                 |    3 |
-| 17 June 2023                    |         3 |   3 |     3 |        3 |                 |    3 |
-| 8 September 2023                |         3 |   3 |     3 |        3 |               3 |    3 |
-| Total                           |         9 | 106 |    10 |        9 |              17 |   73 |
+| 7–16 May 2023                   |           |  99 |       |          |                 |      |
+| Storm, 7 May 2023               |           |     |       |          |                 |    3 |
+| Storm, 17 June 2023             |           |   3 |       |          |                 |    3 |
+| Storm, 8 September 2023         |           |   3 |       |          |               3 |    3 |
+| Total                           |         0 | 105 |     0 |        0 |              17 |   73 |
 
-## Energy and power columns
+## Power and energy columns
 
-: Energy and power columns of the four 15-minute panel stations. Power / energy: daytime energy of the
-hourly means of the power column relative to the energy column. Irradiance correlation: daytime
-correlation of the energy column, stamped $t$, with the campus tower's one-minute GHI averaged over
-the quarter hour before the stamp, after it, and the one after that ($[t-15, t)$, $[t, t+15)$ and
-$[t+15, t+30)$ minutes), and the same for the power column over $[t, t+15)$; the tower's calibration
-problems do not affect this test of timing. Inverter ratio: energy of each column relative to the AC
-power of the station's inverters (5-minute values), on the 872–895 days with complete site files and
-at least ten hours of inverter data. {#tbl:data-energy}
+: Power and energy columns of the four 15-minute panel stations. Energy / power: daytime energy of the
+energy column relative to the hourly means of the power column. Inverter ratio: energy of each
+column relative to the AC power of the station's inverters (5-minute values), on the 872–895 days
+with complete site files and at least ten hours of inverter data. Energy zeros: share of the quarter
+hours with a power reading of 20 W to 1 kW (5–250 Wh) in which the energy column reads zero; it
+resolves 1 Wh. Correlation: daytime correlation of each column, stamped $t$, with the campus tower's
+one-minute GHI averaged over $[t, t+15)$ minutes, and in brackets the larger of the correlations for
+the two neighbouring quarter hours; the tower's calibration problems do not affect this test of
+timing. {#tbl:data-energy}
 
-| Station          | Power / energy | Energy, $[t-15, t)$ | Energy, $[t, t+15)$ | Energy, $[t+15, t+30)$ | Power, $[t, t+15)$ | Inverter ratio, energy | Inverter ratio, power |
-|:-----------------|--------------:|---------------:|---------------:|---------------:|---------------:|----------------:|----------------:|
-| LSK North        |         0.972 |          0.862 |          0.910 |          0.867 |          0.897 |           1.031 |           1.003 |
-| SQ1              |         0.971 |          0.842 |          0.872 |          0.840 |          0.864 |           1.033 |           1.003 |
-| SQ567            |         0.972 |          0.863 |          0.893 |          0.852 |          0.887 |           1.031 |           1.002 |
-| UG Hall6         |         0.973 |          0.867 |          0.904 |          0.861 |          0.894 |           1.031 |           1.002 |
+| Station        | Energy / power | Inverter ratio, power | Inverter ratio, energy | Energy zeros (%) | Correlation, power | Correlation, energy |
+|:---------------|-----------:|-----------:|-----------:|-----------:|------------------:|------------------:|
+| LSK North      |      1.029 |      1.003 |      1.031 |       22.8 |     0.897 (0.869) |     0.910 (0.867) |
+| SQ1            |      1.030 |      1.003 |      1.033 |        2.2 |     0.864 (0.837) |     0.872 (0.842) |
+| SQ567          |      1.029 |      1.002 |      1.031 |       16.1 |     0.887 (0.853) |     0.893 (0.863) |
+| UG Hall6       |      1.028 |      1.002 |      1.031 |        4.9 |     0.894 (0.862) |     0.904 (0.867) |
 
 ## Labels of the hourly files
 
@@ -80,9 +83,9 @@ one hour, 98% and 68%. {#tbl:data-labels}
 
 | $s$ (min)       |   −90 |   −75 |   −60 |   −45 |   −30 |   −15 |     0 |   +15 |
 |:----------------|------:|------:|------:|------:|------:|------:|------:|------:|
-| CYT (Station 2) | 0.941 | 0.972 | 0.986 | 0.974 | 0.943 | 0.899 | 0.847 | 0.792 |
-| SQ15            | 0.952 | 0.972 | 0.972 | 0.947 | 0.907 | 0.856 | 0.801 | 0.740 |
-| CYT (Station 1) | 0.786 | 0.846 | 0.892 | 0.916 | 0.922 | 0.915 | 0.897 | 0.872 |
+| CYT (Station 2) | 0.946 | 0.975 | 0.985 | 0.969 | 0.936 | 0.890 | 0.837 | 0.781 |
+| SQ15            | 0.956 | 0.973 | 0.969 | 0.941 | 0.898 | 0.847 | 0.790 | 0.728 |
+| CYT (Station 1) | 0.796 | 0.854 | 0.897 | 0.917 | 0.921 | 0.912 | 0.893 | 0.866 |
 
 ## Weather covariates
 
@@ -112,7 +115,7 @@ irradiance at the top of the atmosphere, about 1,361 W/m² [@kopp2011new]. The P
 follow these jumps: from 2022 to 2023 the panel's apparent performance ratio (the PR of
 @sec:data-clearsky with measured or forecast GHI in place of $G^{\mathrm{cs}}_t$, over midday hours
 on which all six stations report) falls by 5% with the archive but by 37% with the tower, and with
-the tower it exceeds 1 in 2021 and 2022 (1.13 and 1.11), as if the arrays delivered more than their
+the tower it exceeds 1 in 2021 and 2022 (1.11 and 1.09), as if the arrays delivered more than their
 nameplate power per 1,000 W/m². The tower data therefore serve only for diagnostics
 (`weather_mode: oracle`).
 
