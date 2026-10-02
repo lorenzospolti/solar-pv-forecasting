@@ -82,14 +82,12 @@ $$ {#eq:reconstruct}
 which is 0 at night, applies no upper clip and preserves the order of the quantiles.
 
 The models built with the darts library [@herzen2022darts], all except the references,
-need a series without gaps, so missing daytime values of the index, mostly outage hours
-(@sec:data-qc), are filled forward from the last valid hour, usually a night hour or a
-low-sun hour without output: the filled value is zero in 828 of the 896 missing daytime
-hours of the six records. These models therefore see most outage hours as hours without
-output, in training and in their context, although such hours are never scored. The
-references fall back to an earlier day instead.
-
-<!-- TODO(Lorenzo): _target_series in pvfc.models.darts_wrapper forward-fills the daytime gaps without limit, so the outage hours that ETL v3 sets missing come back as zeros for every darts model, as training targets and as context (828 of 896 filled values are 0; 41 at SQ15 carry the hour before the gap, up to k = 1.08). The pvfc.qc docstring ("the models never train on them") holds only for the references and the template. Keep this paragraph, or fill daytime gaps like the references (same hour of an earlier day) or with the training-window mean index, and rerun. Counts: scratchpad ch4/ffill_check2.py. -->
+need a series without gaps. A missing hour of the index (a feed gap or an outage hour,
+@sec:data-qc) therefore takes the value of the same hour on the most recent earlier day
+that has one, at most seven days back, the rule of the references (@sec:method-models);
+an hour still missing, on the first day of a series or in a longer gap, takes the
+series' mean daytime index, or 0 outside the daytime mask
+(`pvfc.normalize.fill_index_gaps`). Filled hours are inputs only, never scored.
 
 <!-- TODO(Lorenzo): refer to the raw-power vs clear-sky-index ablation here once it has run (planned for 6-12 Oct). -->
 
@@ -345,13 +343,13 @@ The headline scores use the daytime mask of @sec:data-clearsky, the hours whose 
 solar zenith angle at mid-hour is below 85°, as @yang2020verification recommend. Within
 the mask they use every hour with a valid power value after quality control
 (@sec:data-qc); outage hours and other gaps are missing data and never scored. This
-leaves 2,914 to 3,035 of the 3,041 daytime test hours per station. Outside the mask lie
+leaves between 2,914 and all 3,041 daytime test hours per station. Outside the mask lie
 the night, where all models forecast zero or almost zero, and about 500 low-sun hours per
-station holding about 0.2% of the energy measured in the test windows; scores over all
+station holding 0.2–0.3% of the energy measured in the test windows; scores over all
 hours are kept as a sensitivity check. $\mathcal{H}_s$ denotes the scored hours of
 station $s$, pooled over the nine test windows.
 
-<!-- TODO(Lorenzo): (1) ETL v3 flags outage hours only where P_cs >= 0.1 C, so the low-sun edge hours of outage days keep their zero readings and are scored: 30 hours in the test windows (SQ1 06:00 on 8-16 May 2023; CYT (Station 2) and SQ15 mostly 17:00 beside their 10-h gaps), 0.17% of the 17,899 scored hours. Keep (and say so in sec:data-qc) or extend the outage rule to whole outage days. Evidence: scratchpad ch4/edge_count.py. (2) Five scored hours at SQ15 are values bridged across 1-2 h gaps (the only interpolated hours in the test windows); sec:data-qc should say so. -->
+<!-- TODO(Lorenzo): ETL v4 (like v3) flags outage hours only where P_cs >= 0.1 C, so zero readings at the low-sun edges of outage days and feed gaps escape the rule and are scored: 30 hours in the test windows (SQ1 9, all at 06:00 on 8-16 May 2023; CYT (Station 2) 11 and SQ15 10, mostly the 17:00 hour after their 07:00-17:00 feed gaps), 0.17% of the 17,919 scored hours. sec:data-qc now states this, with its own TODO; decide there whether to extend the outage rule to whole outage days in a later ETL. Evidence: scratchpad ch4/v4_stats.py. -->
 
 For the deterministic models, the references and the LSTM, the point forecast is the
 model's own output; for the probabilistic models it is the mean of the nine quantiles,
@@ -427,7 +425,7 @@ $\tau$), the data of a reliability diagram (@tbl:probabilistic). Crossing quanti
 ## Statistical testing {#sec:method-tests}
 
 The six stations share one campus and one weather regime: their hourly absolute Smart
-persistence errors, divided by capacity, have a mean pairwise correlation of 0.94.
+persistence errors, divided by capacity, have a mean pairwise correlation of 0.93.
 Treating station-hours as independent would overstate the evidence, so the tests use
 daily losses. For a model $A$ and a test day $d$, the daily loss averages the
 capacity-normalised squared error over the scored hours $\mathcal{H}_{s,d}$ of each
@@ -509,14 +507,14 @@ All runs used one fanless laptop, an Apple MacBook Air with an M4 chip and 16 GB
 memory shared by CPU and GPU; timings are not corrected for thermal throttling. The
 neural models ran on the GPU through PyTorch's Metal Performance Shaders (MPS) backend,
 with a fallback to the CPU for unsupported operations, the others on the CPU. The 144
-runs of panel v2 were executed one at a time, from 20:12 on 2 October 2026.
+runs of panel v2 were executed one at a time, from 21:37 on 2 October 2026.
 
 <!-- TODO(Lorenzo): panel v2 wall time from results/logs/panel.out -->
 
 ## Reproducibility {#sec:method-repro}
 
 Every run is identified by a hash of its configuration: the data, including the version
-of the data processing (`data.etl_version`, here 3), the folds, the model and the seed.
+of the data processing (`data.etl_version`, here 4), the folds, the model and the seed.
 The hash keys the rows of the results store and names the file of saved forecasts, so
 runs on differently processed data never share a hash, and `experiments/run.py` refuses
 a configuration whose version differs from the one the code builds

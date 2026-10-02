@@ -7,7 +7,7 @@
 This appendix lists what is needed to rebuild every result of the thesis from the raw
 data; @sec:method-repro summarises the measures that make the runs traceable. All
 reported results come from panel v2, run with the code at tag `v0.7-panel-v2` (commit
-`54d1394`) on frames of data-processing version 3 (ETL v3).
+`55bd778`) on frames of data-processing version 4 (ETL v4).
 
 <!-- TODO(Lorenzo): add the repository URL (and an archived snapshot, e.g. a Zenodo DOI) once the repository is public. -->
 
@@ -62,7 +62,7 @@ a lower bound (@sec:method-compute).
   for the campus coordinate and cached by `pvfc.weather` (`make nwp-cache`), in complete
   calendar years.
 - **Processed frames.** `pvfc.data.load_station` writes one frame per station and
-  weather setting, `data/processed/<station>__<setting>__etl3.parquet`, with the
+  weather setting, `data/processed/<station>__<setting>__etl4.parquet`, with the
   nameplate capacity in a `.cap.json` sidecar and the quality-control counts in
   `data/processed/qc_log.csv`. The ETL version is part of the file name, so frames built
   by an older ETL are never reused.
@@ -111,6 +111,11 @@ so (`accept_license: true`, reviewed by the author on 1 October 2026).
   every run, and `results/logs/panel.out` with the output of the batch.
 - **Panel v1.** The earlier run (ETL v2, with the LSTM and fine-tuned Chronos-2 trained on
   across folds) is archived in `results/archive/panel_v1/` and is not reported.
+- **Stopped first attempt at panel v2.** A first panel v2 run, on ETL v3 (which read the
+  15-minute stations from the energy column) and with a forward fill of the gaps in the
+  model inputs, was stopped after 96 of the 144 runs when these two defects were found; it
+  is archived in `results/archive/panel_v2_etl3_stopped/` (tag
+  `v0.7-panel-v2-etl3-stopped`, commit `54d1394`) and is not reported.
 
 <!-- TODO(Lorenzo): once panel v2 has finished, add a table (or a CSV in the repository) with the 144 configuration hashes behind the Results tables, e.g. from results/results.parquet grouped by model, weather_mode and site. -->
 
@@ -145,7 +150,7 @@ running `make env`, `conda activate pv`, `make install`, `make test`, `make data
 restarted at any point and skips the runs whose configuration hash is already in the
 results store.
 
-<!-- TODO(Lorenzo): panel v2 wall time from results/logs/panel.out (panel v1, 120 runs, took 19.3 h). -->
+<!-- TODO(Lorenzo): panel v2 wall time from results/logs/panel.out (the restarted run began at 21:37 on 2 Oct 2026; panel v1, 120 runs, took 19.3 h). -->
 
 ## Seeds and determinism
 
@@ -159,20 +164,21 @@ not measured.
 
 ## Regression tests
 
-`make test` runs 107 tests (`tests/`). Those that guard the protocol of Chapter
+`make test` runs 120 tests (`tests/`). Those that guard the protocol of Chapter
 [-@sec:method] check:
 
 - the data pipeline (`test_data_smoke.py`, `test_etl.py`, `test_qc.py`): UTC hourly index,
-  interval-start labels, power from the energy column, meter-error rules, bridging of
-  gaps of at most two hours only, the outage rule, the wrapped hour angle and complete
-  weather years;
+  interval-start labels and the relabelling of the hourly files, power from the power
+  column, meter-error rules, bridging of gaps of at most two hours only, the outage rule,
+  the wrapped hour angle and complete weather years;
 - the protocol (`test_protocol.py`): whole local-day folds, the calendar anchor, the
   training-only clear-sky template, the same-hour fallback of the references, the removal
   of the target from the future frame, one fit per fold scored under both hour sets, and
   the coverage guard;
-- the models (`test_models_darts.py`, `test_baselines.py`): the LightGBM lag wiring, a
-  fresh model in every fold, zero-shot checkpoints loaded once, and Climatology and
-  CLIPER;
+- the models (`test_models_darts.py`, `test_gap_fill.py`, `test_baselines.py`): the
+  LightGBM lag wiring, a fresh model in every fold, zero-shot checkpoints loaded once, the
+  filling of gaps in the model inputs from the same hour of an earlier day (no dark day
+  after an outage), and Climatology and CLIPER;
 - scoring and reporting (`test_scoring.py`, `test_report.py`): the quantile-mean point
   forecast, rescoring that reproduces the runner's rows exactly, the DM statistic,
   Newey--West variance, Holm adjustment and block bootstrap, and the exclusion of runs
