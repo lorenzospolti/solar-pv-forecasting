@@ -143,8 +143,10 @@ FIGURE_OMIT = frozenset({"persistence", "smart_persistence", "seasonal_naive"})
 NO_COV_MARK = "†"
 NO_COV_LABEL = "(no covariates)"
 
-#: The pre-specified family of pairwise tests (T6), fixed before the tests were
-#: run: the Holm adjustment covers exactly the comparisons below that can be run.
+#: The family of pairwise tests (T6), tied to the research questions. It was chosen
+#: after an exploratory look at day-level tests on panel v1 (8 of those 10 pairs kept,
+#: 3 added) and fixed on 2 Oct 2026, before panel v2 ran: for the v2 results it is
+#: pre-specified. The Holm adjustment covers exactly the comparisons below that can run.
 #: (id, (model A, setting A), (model B, setting B)); d = loss A - loss B. A side whose
 #: model cannot use weather is tested where T1 reports it (``tested_side``).
 COMPARISONS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (

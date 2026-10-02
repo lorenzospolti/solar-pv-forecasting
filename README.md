@@ -35,7 +35,7 @@ masking, and metrics by construction.
 | Module | Role |
 |---|---|
 | `models/base.py` | `Forecaster` ABC (`fit` / `predict(history, future)`) |
-| `models/baselines.py` | persistence, **smart persistence**, seasonal-naive |
+| `models/baselines.py` | persistence, **smart persistence**, seasonal-naive, climatology, CLIPER (Yang 2019) |
 | `models/darts_wrapper.py` | adapters for SARIMA/LightGBM/LSTM/foundation models (darts) |
 | `splits.py` | expanding-window blocked walk-forward (whole-day blocks, embargo) |
 | `normalize.py` | clear-sky-index transform + train-only scaling |
@@ -83,12 +83,36 @@ never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
 - LightGBM sees the forecast covariates of the hour it predicts (future lags 0..23)
   and yesterday's whole profile (lags 1..24) — v0.5 only saw midnight values;
 - persistence baselines fall back to the same hour of an earlier day after a gap;
-- Chronos-2 fine-tuning: lr 1e-5 (AutoGluon's default; darts' 1e-3 destroys the
-  pretrained weights), 5 epochs on one training window per day (`fit_stride: 24`);
+- Chronos-2 fine-tuning: lr 1e-5 (AutoGluon's default fine-tuning rate, which AutoGluon
+  applies with LoRA; we fine-tune fully; darts' 1e-3 destroys the pretrained weights),
+  5 epochs on one training window per day (`fit_stride: 24`);
 - TiRex is licence-gated (NXAI Community License): set `accept_license: true` in its
   config entry once you have reviewed the terms;
 - `run.py` saves rows after each model, writes per-timestamp predictions to
   `results/predictions/`, and takes `--models` / `--max-folds`.
+
+**Scoring and ETL v3 (2 Oct 2026, panel v2):**
+- point metrics of probabilistic models use the **mean of the nine quantiles** (scoring
+  v2, `pvfc.evaluation.point_forecast`: squared error is minimised by the mean, not the
+  median); every results row records `scoring_version`;
+- `make rescore` (`experiments/rescore.py`) rebuilds every metric row of the store from
+  the saved predictions under the current rules (timing, RSS and env carried over;
+  `skill_cliper` added); `--point native` reproduces scoring v1 exactly;
+- new reference baselines: **climatology** and **CLIPER** (Yang 2019; the standard of
+  reference recommended by Yang et al. 2020), reported next to smart persistence;
+- `make report` builds the thesis tables and figures from the predictions: pooled
+  per-station skill, calibration, compute, and day-level Diebold-Mariano tests for 11
+  named comparisons with Holm adjustment;
+- every fit starts from a **fresh model** (panel v1's LSTM and fine-tuned Chronos-2
+  kept training across folds); zero-shot checkpoints are loaded once;
+- **ETL v3** (`data.etl_version: 3`, hashed into every run): mean power from the energy
+  column (`generation(kWh)` / interval; the 15-min power column held 2.9% less energy);
+  negative meter errors (< -0.05 x nameplate) and impossible night readings are missing;
+  only genuine gaps of <= 2 h are bridged; **outage hours** (runs of >= 3 h of zero
+  output under a high sun, `pvfc.qc`) are missing data and the clear-sky template is
+  refit without them; the template's hour angle is wrapped to [-180, 180); Open-Meteo
+  cache years are always complete (SQ15 lacked weather before 4 May 2021);
+- panel v1 (ETL v2, warm-started models) is archived in `results/archive/panel_v1/`.
 
 ### Foundation-model roster
 
@@ -126,7 +150,7 @@ first, then LightGBM, SARIMA, LSTM, Chronos-2 fine-tuning), after a `check_data.
 pre-flight per station. Each run logs to `results/logs/`, a ledger records status and
 wall time, and `--skip-done` makes the batch resumable: start the same command again
 and finished runs are skipped. It keeps the Mac awake with `caffeinate` (stay on power,
-lid open). The full panel is roughly 32 h on the M4, so it spans several nights.
+lid open). The full 120-run panel took 19.3 h on the M4 (1-2 Oct 2026).
 
 ```bash
 python experiments/run_panel.py --dry-run                         # plan + rough hours
