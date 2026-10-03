@@ -1,0 +1,15 @@
+: Pre-specified pairwise comparisons on daily losses over the same 270 days: each local day's loss is the station average of the mean ((forecast − truth) / C)² over the day's scored daytime hours; Loss A and B are their means over the days, and Rel. diff. is the mean of d = loss A − loss B relative to loss B (negative: A better). DM: Diebold-Mariano statistic with Newey-West variance and the Harvey-Leybourne-Newbold correction, two-sided p from Student's t; Holm p adjusts over the 7 comparisons that could be run; Bootstrap p: moving-block bootstrap (7-day blocks, 10,000 resamples). Newey-West lags and bootstrap blocks run over the days in date order, so they also span the gaps between test windows. Verdict at Holm p < 0.05; n.s.: no significant difference. n/a: not available (a model has no predictions). † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. {#tbl:significance}
+
+| ID  | Comparison (A vs B)                                         | Loss A | Loss B | Rel. diff. (%) |    DM |      p | Holm p | Bootstrap p | Verdict  |
+|:---------|:----------------------------------|----------------:|----------------:|--------------:|--------------:|-----------------:|-----------------:|-------------------------:|:-------------------|
+| P1  | NWP: LightGBM vs Chronos-2 (zero-shot)                      | 0.0122 | 0.0185 |          −34.2 | −5.37 | <0.001 | <0.001 |      <0.001 | A better |
+| P2  | NWP: LightGBM vs Chronos-2 (fine-tuned)                     |      — |      — |              — |     — |      — |      — |           — | n/a      |
+| P3  | NWP: Chronos-2 (fine-tuned) vs SARIMA                       |      — |      — |              — |     — |      — |      — |           — | n/a      |
+| P4  | NWP: Chronos-2 (fine-tuned) vs Chronos-2 (zero-shot)        |      — |      — |              — |     — |      — |      — |           — | n/a      |
+| P5  | No weather: Chronos-2 (fine-tuned) vs Chronos-2 (zero-shot) |      — |      — |              — |     — |      — |      — |           — | n/a      |
+| P6  | No weather: SARIMA vs Chronos-2 (zero-shot)                 | 0.0233 | 0.0239 |           −2.6 | −0.74 |  0.463 |  0.926 |       0.467 | n.s.     |
+| P7  | No weather: Chronos-2 (zero-shot) vs TiRex †                | 0.0239 | 0.0236 |            1.4 |  0.50 |  0.618 |  0.926 |       0.612 | n.s.     |
+| P8  | No weather: TiRex † vs TimesFM-2.5 †                        | 0.0236 | 0.0262 |           −9.7 | −2.72 |  0.007 |  0.021 |       0.008 | A better |
+| P9  | LightGBM: NWP vs No weather                                 | 0.0122 | 0.0236 |          −48.3 | −6.32 | <0.001 | <0.001 |      <0.001 | A better |
+| P10 | Chronos-2 (zero-shot): NWP vs No weather                    | 0.0185 | 0.0239 |          −22.7 | −5.86 | <0.001 | <0.001 |      <0.001 | A better |
+| P11 | No weather: CLIPER † vs Smart persistence †                 | 0.0237 | 0.0303 |          −21.7 | −4.43 | <0.001 | <0.001 |      <0.001 | A better |
