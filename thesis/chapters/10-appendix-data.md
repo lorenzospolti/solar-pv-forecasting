@@ -1,17 +1,65 @@
 # Data quality checks {#sec:appendix-data}
 
 This appendix collects the evidence behind the data decisions of Chapter [-@sec:data]: the
-pre-flight checks run before every batch (@tbl:data-checks), the hours removed by the outage rule
-(@tbl:data-outages), the power and energy columns of the 15-minute files (@tbl:data-energy), the
-label convention of the hourly files (@tbl:data-labels), the weather covariates (@tbl:data-weather)
-and the campus tower (@fig:data-weather). All numbers refer to the data of the final processing
-(ETL v4).
+nameplate ratings, the choice of the panel and the excluded stations, the pre-flight checks run
+before every batch (@tbl:data-checks), the hours removed by the outage rule (@tbl:data-outages)
+and single events, the power and energy columns of the 15-minute files (@tbl:data-energy), the
+label convention of the hourly files (@tbl:data-labels), the construction of the template, the
+weather covariates (@tbl:data-weather) and the campus tower (@fig:data-weather). All numbers refer
+to the data of the final processing (Appendix [-@sec:appendix-repro]).
+
+## Nameplate capacity
+
+The metadata are a Brick model [@balaji2016brick], a machine-readable description of building
+equipment: a text file of subject–property–value statements that link each station to its inverter
+and module types and their ratings and give its rated power, grid-connection date, tilt and azimuth
+(the compass direction that the modules face). The pipeline reads only the rated power, the
+nameplate capacity $C$; the 60 values sum to the paper's total of 2,230.8 kW. At LSK North, SQ1, UG
+Hall6 and CYT (Station 2), $C$ is the AC rating of the inverter, which caps the output: their
+highest hourly power is 0.99–1.00 $C$, although their modules total 1.21–1.24 $C$ in DC. At SQ567
+and SQ15, $C$ is the modules' total DC rating, and their power peaks at 0.85 $C$ and 0.80 $C$.
+Across all 60 stations, $C$ equals the modules' DC total (to within 0.02 kW) in 26, the inverters'
+AC rating in 28 and neither in 6.
+
+## Station selection
+
+The coverage sweep counted, in each of the 60 station files, the daytime hours (labelled 07:00 to
+17:00 local) without a power value. The median share of missing daytime hours is 0.2% at the
+15-minute stations and 4.3% at the hourly ones, with a worst case of 23.2%; ten stations, all
+reporting every 15 minutes, have no missing daytime hour and at least two years of data. Nine
+15-minute stations meet criteria (i) and (ii) of @sec:data-panel with at most one missing daytime
+hour. The panel takes the largest of them (LSK North, 55 kW), a second size class (SQ567, 48 kW),
+one of four similar staff-quarter towers (SQ1) and UG Hall6, whose only missing hour in the sweep was
+bridged (@sec:data-qc). CYT (Station 2) and SQ15 are the hourly stations that meet (i) with the
+smallest shares of missing daytime hours in the sweep (2.7% and 3.8%).
+<!-- TODO(Lorenzo): the 28 Sep sweep left only its output (station_gap_report.csv, in
+~/Thesis/thesis-review-2026-09-28/), not its script. A re-implementation that reproduces every
+number of this paragraph is in the scratchpad of 5 Oct (revise-data/coverage_counts.py, which
+reads the power column like ETL v4); add it to the repository (e.g.
+experiments/coverage_sweep.py, output under results/) so that the selection can be reproduced. -->
+<!-- TODO(Lorenzo): confirm the within-criteria choices: SQ1 rather than its 33.3 kW siblings
+SQ2-SQ4, and UG Hall7 and UG Hall4 not taken (they peak at 77-79% of nameplate). Evidence (Brick
+model; raw 15-minute site files, power column): their C is the modules' DC total (UG Hall4
+32.76 kW = 84 x 390 W; UG Hall7 31.98 kW = 82 x 390 W), but each has a single 25 kW SolarEdge
+SE25K inverter, and their 15-minute power caps at 25.25 kW = 0.771 C and 25.15 kW = 0.787 C. The
+77-79% is therefore the inverter limit, not a fault; SQ567 and SQ15, also rated in DC, peak at
+0.85 C and 0.80 C. -->
+
+Two candidates were excluded. CYT (Station 1) ranks 59th of 60 for coverage (8.8% of daytime hours
+missing), and its stamps are offset by about half an hour (@tbl:data-labels). Zone A2 (249.5 kW),
+the only larger station with a year of data before the first test day, changes regime in May 2023:
+the daily maximum of its hourly power rises from below 0.27 $C$ before 18 May to 0.66–0.73 $C$ on
+every day from 27 May to 4 June, and the Brick model dates its grid connection to 31 May 2023. With
+a template fitted on its first year, its clear-sky index sits at the 1.3 ceiling in 43% of the
+measured daytime hours of 2023, against at most 0.62% for any panel station in any year, so UG Hall6
+took its place.
 
 ## Pre-flight checks
 
 : Pre-flight checks of `experiments/check_data.py` on the six panel stations
 (`results/logs/check_data__*.log`). Night: outside the daytime mask. Measured: with a power value.
-The last row is informational. {#tbl:data-checks}
+Template: the clear-sky power $P^{\mathrm{cs}}_t$ (@sec:data-clearsky). The last row is
+informational. {#tbl:data-checks}
 
 | Check                        | Criterion                                                                | Panel result                         |
 |:-----------------------------|:-------------------------------------------------------------------------|:-------------------------------------|
@@ -54,7 +102,48 @@ SQ15 had first been bridged as a short gap. {#tbl:data-outages}
 | Storm, 8 September 2023         |           |   3 |       |          |               3 |    3 |
 | Total                           |         0 | 105 |     0 |        0 |              17 |   73 |
 
+## Single events and outage days
+
+The meter-error rules of @sec:data-qc removed three values on the panel, all at SQ15. No reading
+exceeds 1.1 $C$; legitimate readings reach 1.005 $C$. Two readings lie below −0.05 $C$, of −111 $C$
+and −148 $C$, in the hours from 09:00 on 3 April and from 14:00 on 29 July 2022; there are no smaller
+negative readings, which would have become zero. One hourly value, 8.9 kW at 02:00 on 29 August 2022,
+exceeds 1% of $C$ with the sun more than 5° below the horizon.
+
+Three very dark storm spells in 2023 (7 May, 17 June and 8 September; tower irradiance about 30–50
+W/m²) cut output to about 0.3% of $C$ or less. They stay as measured at LSK North, SQ567 and UG
+Hall6; the outage rule removes them only where a station read at most 0.1% of $C$ for three hours,
+18 hours at SQ1 and the hourly stations (@tbl:data-outages). ETL v3 had also removed them at the
+other 15-minute stations, because the energy column it read is zero in many such quarter hours.
+
+At the hourly stations the gaps longer than two hours are mostly days on which the feed holds no
+value from 07:00 to 17:00: 28 days at CYT (Station 2) and 37 at SQ15. Counting as outage days the
+days with at least half of the daytime hours missing, there are 9 at SQ1, 29 at CYT (Station 2) and
+46 at SQ15, of which 9, 10 and 13 lie in test windows (@fig:data-coverage).
+
+Short gaps were bridged in 18 hours: 17 at SQ15, including the three values removed above, and one
+at UG Hall6; five of them are daytime hours in test windows and are scored. Zero readings at the
+edges of gaps and outages, where the sun is low or the run short, escape the outage rule: 113
+daytime hours at three stations, 30 of them in test windows (0.17% of the scored hours), where they
+are scored as observations.
+<!-- TODO(Lorenzo): edge zeros remain in ETL v4 (unchanged from v3). Daytime hours that read
+exactly 0 next to a missing hour or on an outage day: SQ1 9 (all 9 in test windows, 06:00 on 8-16
+May 2023), CYT (Station 2) 42 (11), SQ15 62 (10); 30 in test windows = 0.17% of the 17,919 scored
+hours (same count as the TODO in sec:method-metrics). Mostly the 17:00 hour after the 07:00-17:00
+feed gaps, where P_cs reaches 26% of C at CYT (Station 2). They are scored as observations. Decide:
+leave them (this sentence) or extend the outage rule to whole outage days in a later ETL. Evidence:
+scratchpad ch3/v4_edge_defs.py, ch3/v4_edge_zeros_list.py. -->
+
 ## Power and energy columns
+
+In the hourly files the power column equals the energy column, in kWh per hour, to within
+rounding. In the 15-minute files the two columns differ by about 3%, and the power column is the
+better record (@tbl:data-energy): it integrates to within 0.3% of the AC power that the inverters log
+every five minutes, and the dataset paper's validation example, 642.09 kWh at the Library on 31
+August 2022 against 641.55 kWh from its inverters [@lin2025hkust], is its integral. The energy
+column lies 3.1–3.3% above the inverters and reads zero in 2–23% of the quarter hours in which the
+power column reports 20 W to 1 kW, although it resolves 1 Wh. Both columns follow the tower's
+irradiance over the quarter hour after their stamp more closely than over the neighbouring ones.
 
 : Power and energy columns of the four 15-minute panel stations. Energy / power: daytime energy of the
 energy column relative to the hourly means of the power column. Inverter ratio: energy of each
@@ -75,6 +164,12 @@ timing. {#tbl:data-energy}
 
 ## Labels of the hourly files
 
+Each hourly file was correlated in daytime with the mean capacity factor ($P_t/C$) of the four
+15-minute panel stations over the window $[t+s,\ t+s+60\ \mathrm{min})$, where $t$ is the raw
+stamp. CYT (Station 2) peaks at $s = -60$ minutes and SQ15 at $-75$ to $-60$ minutes, so both label
+the end of the hour; CYT (Station 1) peaks between −15 and −45 minutes, which no whole-hour shift can
+align (@tbl:data-labels).
+
 : Daytime correlation of each hourly file, with raw stamps $t$, with the mean capacity factor of the
 four 15-minute panel stations over $[t+s, t+s+60\ \mathrm{min})$. Interval-start labels would peak
 at $s = 0$, end-of-hour labels at $s = -60$ minutes. With the raw stamps, the first daytime hour of
@@ -87,7 +182,53 @@ one hour, 98% and 68%. {#tbl:data-labels}
 | SQ15            | 0.956 | 0.973 | 0.969 | 0.941 | 0.898 | 0.847 | 0.790 | 0.728 |
 | CYT (Station 1) | 0.796 | 0.854 | 0.897 | 0.917 | 0.921 | 0.912 | 0.893 | 0.866 |
 
+## Clear-sky template
+
+The template of @eq:data-pcs was built in four steps:
+
+1. The clear-sky global horizontal irradiance (GHI) $G^{\mathrm{cs}}_t$ comes from the
+   Ineichen–Perez model
+   [@ineichen2002linke] in pvlib for one campus coordinate (22.337° N, 114.263° E, 60 m),
+   averaged over twelve instants in each hour, with the Linke turbidity (the dimming of clear-sky
+   sunlight by water vapour and aerosols) from pvlib's monthly climatology, a table of long-term
+   monthly averages [@remund2003linke].
+2. The sun's position at the interval midpoint is expressed by the solar declination $\delta_t$,
+   the latitude at which the sun stands overhead at noon, and the hour angle $\omega_t$, the sun's
+   angular distance from solar noon, which grows by 15° per hour, is negative in the morning and
+   is kept between −180° and 180°.
+3. The ratio $\mathrm{PR}_t = (P_t / C) / (G^{\mathrm{cs}}_t / G_0)$ is collected over the first 365
+   days of each record (ending between 23 March and 30 June 2022), for hours with measured power and
+   $G^{\mathrm{cs}}_t \ge 50$ W/m², and binned on a grid of 4° of declination by 15° of hour angle
+   (12 × 16 cells). Each cell with at least eight samples takes the 95th percentile of the ratio.
+   The other cells are filled from their neighbours, and the grid is smoothed with a 3 × 3 mean and
+   interpolated bilinearly, giving $\widehat{\mathrm{PR}}(\delta_t, \omega_t)$.
+4. The template is @eq:data-pcs. Its peak lies between 0.75 $C$ (SQ15) and 0.99 $C$ (SQ1), so the
+   cap at $C$ never binds on the panel.
+
+Binning by the sun's position rather than by calendar month lets a month missing from the fit year
+borrow from dates with the same declination on the other side of the solstice; an earlier,
+month-binned version was zero throughout February at CYT (Station 1). The 1.3 ceiling of the
+clear-sky index binds in 0.3–0.5% of daytime hours, 76–96% of them the first or last daytime hour of
+a day. In the twilight hours just outside the daytime mask, $k_t$ is erratic, at the ceiling in
+16–26% of them; they are not scored but remain in the models' inputs.
+
 ## Weather covariates
+
+The request leaves the choice of weather model to Open-Meteo ("best match"); on six sample weeks
+between March 2021 and November 2023 the cached series equal, value for value, those of the
+high-resolution forecast of the ECMWF IFS (checked on 2 October 2026), archived on a 9 km grid
+[@openmeteo] whose cell for the campus lies about 7 km away [@openmeteo_forecast_docs]. Moving the
+radiation columns back by one hour raises the daytime correlation between forecast GHI and the mean
+capacity factor of the four 15-minute stations from 0.73 to 0.85; instantaneous variables keep their
+stamp. The cache holds complete calendar years, so every station has weather values from its first
+hour.
+
+For 2022–2023 the cached series jumps at 00 and 12 UTC. Of the scored hours, 06:00 to 18:00 HKT
+(22:00 to 10:00 UTC), all but the first two therefore come from the 00 UTC run, which starts at 08:00
+HKT; the first two come from the 12 UTC run of the day before (@fig:data-leadtime). At the issue
+time, 00:00 HKT (16:00 UTC), the newest run actually available is that of 06 UTC (14:00 HKT) on the
+previous day [@ecmwf_dissemination]. Open-Meteo's Previous Runs archive held no one-day-ahead
+irradiance for July 2022 (checked on 2 October 2026).
 
 : Weather covariates of the NWP setting (`pvfc.weather`). Archived value: convention of the
 Open-Meteo variable [@openmeteo_forecast_docs]. Alignment: shift to interval-start labels. The last
@@ -116,8 +257,8 @@ follow these jumps: from 2022 to 2023 the panel's apparent performance ratio (th
 @sec:data-clearsky with measured or forecast GHI in place of $G^{\mathrm{cs}}_t$, over midday hours
 on which all six stations report) falls by 5% with the archive but by 37% with the tower, and with
 the tower it exceeds 1 in 2021 and 2022 (1.11 and 1.09), as if the arrays delivered more than their
-nameplate power per 1,000 W/m². The tower data therefore serve only for diagnostics
-(`weather_mode: oracle`).
+nameplate capacity per 1,000 W/m². The tower data are therefore not used; the code keeps them as a
+weather mode (`weather_mode: oracle`) that no reported run uses.
 
 ![Monthly mean of hourly GHI between 10:00 and 14:00 local time from the campus tower and from the
 Open-Meteo archive (top), and the panel's apparent performance ratio for each irradiance series

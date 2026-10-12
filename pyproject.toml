@@ -31,6 +31,10 @@ dependencies = [
 # `darts`: the old `u8darts` name stopped at 0.41.0 (Feb 2026), so never pin u8darts.
 # TiRexModel imports the `tirex` package (PyPI `tirex-ts`; runs on CPU/MPS, no CUDA).
 forecast = ["darts[torch]>=0.44", "tirex-ts>=1.4"]
+# checkpoints that read the weather forecast natively, released after darts 0.47
+# (COVARIATES.md): TimesFM-3 (weights: TimesFM non-commercial licence v1.0) and TiRex-2
+# (Apache-2.0; gated on Hugging Face). Not needed for the xreg variants of TiRex/TimesFM.
+covariates = ["timesfm[torch]>=3.0.2", "tirex-2>=0.3.1"]
 dev = ["pytest", "ruff"]
 
 [tool.setuptools.packages.find]

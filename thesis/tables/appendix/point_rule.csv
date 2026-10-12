@@ -1,0 +1,13 @@
+setting,model,display_name,family,no_covariates,reference,skill_mean_rule,skill_median_rule,difference
+nwp,sarima,SARIMA,trained,False,cliper,0.19957796021203375,0.1997069233386267,-0.0001289631265929403
+nwp,lightgbm,LightGBM,trained,False,cliper,0.280298034831896,0.2719359588261192,0.00836207600577682
+nwp,chronos2,Chronos-S,foundation_zero_shot,False,cliper,0.11830889710804064,0.08590329956004762,0.03240559754799302
+nwp,chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,cliper,0.2736215782867137,0.2690521550347636,0.004569423251950089
+nwp,chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,cliper,0.2572703972829978,0.24165835242201048,0.0156120448609873
+none,sarima,SARIMA,trained,False,cliper,0.005361708043104874,0.005278956339068701,8.275170403617294e-05
+none,lightgbm,LightGBM,trained,False,cliper,0.008421204086329293,-0.030904077343498797,0.03932528142982809
+none,chronos2,Chronos-S,foundation_zero_shot,False,cliper,-0.004442023611791579,-0.030334826338338765,0.025892802726547186
+none,chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,cliper,0.008136721242018566,-0.027998996237366125,0.03613571747938469
+none,chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,cliper,0.006580621915831308,-0.017110486350805736,0.023691108266637045
+none,timesfm,TimesFM,foundation_zero_shot,True,cliper,-0.04886817186554793,-0.07778029003557452,0.02891211817002659
+none,tirex,TiRex,foundation_zero_shot,True,cliper,0.0006437518442630186,-0.026832186971886607,0.027475938816149625

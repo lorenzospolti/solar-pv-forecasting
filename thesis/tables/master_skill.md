@@ -1,15 +1,14 @@
-: Headline accuracy on daytime hours: skill over smart persistence (SP) and over CLIPER as the mean over the 6 stations [min, max across stations], and capacity-normalised RMSE and mean bias error (nMBE > 0: over-forecast), mean over stations. Each station's metrics pool the hours of all test windows; probabilistic models are scored on the mean of their nine quantiles. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. {#tbl:master-skill}
+: Accuracy on daytime hours: skill over CLIPER (1 − RMSE / RMSE of CLIPER), each station pooled over all test days, mean over the 6 stations, with its 95 % interval from a 7-day moving-block bootstrap over the test days (10,000 resamples, the same days for all stations); nRMSE = RMSE / capacity, mean over stations. Probabilistic models are scored on the mean of their nine quantiles. The full table, with skill over Smart persistence and the range across stations, is @tbl:master-skill-full. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. ‡ Post hoc: added after the results of the main run had been seen. {#tbl:master-skill}
 
-| Model                    |    Skill vs SP (NWP) | Skill vs SP (No weather) | Skill vs CLIPER (NWP) | Skill vs CLIPER (No weather) | nRMSE (NWP) | nRMSE (No weather) | nMBE (NWP) | nMBE (No weather) |
-|:----------------------------------|----------------------------------:|-------------------------------------------:|----------------------------------:|-------------------------------------------:|--------------------:|----------------------:|------------------:|----------------------:|
-| Persistence †            |                    — |  −0.001 [−0.001, −0.001] |                     — |      −0.132 [−0.136, −0.125] |           — |              0.175 |          — |             0.001 |
-| Seasonal naive (168 h) † |                    — |  −0.380 [−0.420, −0.362] |                     — |      −0.561 [−0.596, −0.544] |           — |              0.241 |          — |             0.005 |
-| Smart persistence †      |                    — |     0.000 [0.000, 0.000] |                     — |      −0.131 [−0.136, −0.124] |           — |              0.175 |          — |             0.000 |
-| Climatology †            |                    — |  −0.049 [−0.074, −0.037] |                     — |      −0.186 [−0.207, −0.178] |           — |              0.183 |          — |            −0.009 |
-| CLIPER †                 |                    — |     0.116 [0.110, 0.120] |                     — |         0.000 [0.000, 0.000] |           — |              0.155 |          — |            −0.005 |
-| SARIMA                   | 0.292 [0.286, 0.299] |     0.121 [0.114, 0.125] |  0.200 [0.189, 0.206] |        0.005 [−0.002, 0.010] |       0.124 |              0.154 |      0.001 |            −0.003 |
-| LightGBM                 | 0.364 [0.343, 0.377] |     0.123 [0.110, 0.134] |  0.280 [0.254, 0.297] |         0.008 [0.000, 0.022] |       0.111 |              0.153 |      0.013 |             0.006 |
-| LSTM                     | 0.302 [0.276, 0.325] |                        — |  0.211 [0.178, 0.238] |                            — |       0.122 |                  — |      0.017 |                 — |
-| Chronos-2 (zero-shot)    | 0.220 [0.215, 0.227] |     0.112 [0.101, 0.122] |  0.118 [0.110, 0.124] |       −0.004 [−0.014, 0.009] |       0.136 |              0.155 |      0.006 |             0.007 |
-| TimesFM-2.5 †            |                    — |     0.073 [0.053, 0.089] |                     — |      −0.049 [−0.065, −0.033] |           — |              0.162 |          — |             0.005 |
-| TiRex †                  |                    — |     0.116 [0.109, 0.125] |                     — |        0.001 [−0.012, 0.010] |           — |              0.154 |          — |             0.004 |
+| Model               |          Skill (NWP) |      Skill (No weather) | nRMSE (NWP) | nRMSE (No weather) |
+|:----------------------------------------|----------------------------------:|-------------------------------------------:|--------------------:|----------------------:|
+| Smart persistence † |                    — | −0.131 [−0.173, −0.082] |           — |              0.175 |
+| CLIPER †            |                    — |                       0 |           — |              0.155 |
+| SARIMA              | 0.200 [0.160, 0.235] |   0.005 [−0.025, 0.036] |       0.124 |              0.154 |
+| LightGBM            | 0.280 [0.231, 0.326] |   0.008 [−0.050, 0.061] |       0.111 |              0.153 |
+| LSTM                | 0.211 [0.152, 0.267] | −0.094 [−0.187, −0.018] |       0.122 |              0.169 |
+| Chronos-S           | 0.118 [0.073, 0.164] |  −0.004 [−0.045, 0.041] |       0.136 |              0.155 |
+| Chronos-B-long ‡    | 0.274 [0.227, 0.316] |   0.008 [−0.037, 0.059] |       0.112 |              0.153 |
+| Chronos-S-FT        | 0.257 [0.196, 0.315] |   0.007 [−0.030, 0.051] |       0.115 |              0.153 |
+| TimesFM †           |                    — |  −0.049 [−0.099, 0.002] |           — |              0.162 |
+| TiRex †             |                    — |   0.001 [−0.046, 0.055] |           — |              0.154 |

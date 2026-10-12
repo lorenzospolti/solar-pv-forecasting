@@ -34,3 +34,7 @@ thesis/build/
 
 # archived result sets (large; reproducible from the tagged code)
 results/archive/
+# runs added after panel v2 (configs/extras.yaml); same layout as results/, also large
+results/extra/
+# covariate runs (configs/covariates.yaml); same layout as results/extra/
+results/covariates/

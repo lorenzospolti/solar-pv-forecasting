@@ -1,0 +1,80 @@
+# Weather covariates for TiRex and TimesFM, the longest contexts the models accept, and
+# two newer checkpoints that read covariates natively. Written 10 Oct 2026; NONE of these
+# configurations has run on the test days. Declare the runs in DECISIONS.md before starting
+# them (draft entry in COVARIATES.md). Same data, folds and code path as panel v2 and the
+# extras; results go to their own store so the panel and the extras stay untouched:
+#
+#   python experiments/run_panel.py --config configs/covariates.yaml \
+#       --results results/covariates/results.parquet \
+#       --predictions-dir results/covariates/predictions --logs-dir results/covariates/logs
+#   python experiments/covariate_summary.py          # quick look, skill over CLIPER
+#
+# Pick a subset with --models (e.g. --models tirex_xreg,timesfm_xreg). Sections 1-2 need
+# nothing new; section 3 needs `python -m pip install -e ".[covariates]"` (COVARIATES.md).
+seed: 0
+data:
+  dataset: hkust_rooftop_pv
+  etl_version: 4
+  site_id: CYT (Station 2)
+  panel: [LSK North, SQ1, SQ567, UG Hall6, CYT (Station 2), SQ15]
+  synthetic_days: 540
+  target: power
+  weather_mode: nwp
+  capacity_kw: null
+splits:
+  initial_train_days: 365
+  first_test_day: '2022-07-05'
+  test_days: 30
+  embargo_days: 1
+  step_days: 60
+  max_folds: 9
+  day_tz: Asia/Hong_Kong
+evaluation:
+  daytime_only: true
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence
+models:
+# --- 1. Weather covariates for the two univariate models (pvfc.models.xreg) -------------
+# A ridge regression of k on the covariates, fit on the daytime hours of the last 8,192 h,
+# forecasts the weather-driven part; the foundation model forecasts the residual. Features:
+# Chronos-2's covariates plus kc_nwp, the forecast's own clear-sky index (forecast GHI /
+# pvlib clear-sky GHI). Chosen on the pre-test check of 10 Oct 2026 (COVARIATES.md).
+- name: tirex_xreg
+  params:
+    arch: tirex
+    input_chunk_length: 2048           # TiRex's maximum: train_ctx_len = 2048 in the checkpoint
+    output_chunk_length: 24
+    quantile: true
+    accept_license: true               # NXAI Community License, accepted by Lorenzo on 1 Oct 2026
+    context_days: 345                  # the regression reads up to 8,192 h of history
+    xreg: {features: covariates+kc, ridge: 1.0, fit_hours: 8192}
+- name: timesfm_xreg
+  params:
+    arch: timesfm
+    input_chunk_length: [2048, 16360]  # every available hour up to TimesFM-2.5's maximum
+    output_chunk_length: 24            #   (16,384 including the 24-h horizon)
+    quantile: true
+    context_days: 683
+    xreg: {features: covariates+kc, ridge: 1.0, fit_hours: 8192}
+# --- 2. The longest contexts (no covariates for TimesFM; Chronos-2 keeps its own) ----------
+- name: timesfm_ctx16k
+  params: {arch: timesfm, input_chunk_length: [2048, 16360], output_chunk_length: 24,
+           quantile: true, context_days: 683}
+- name: chronos2_base_ctx8192          # Chronos-2's maximum context (8,192), base checkpoint
+  params: {arch: chronos2, hub_model_name: amazon/chronos-2, input_chunk_length: [2048, 8192],
+           output_chunk_length: 24, quantile: true, context_days: 345}
+# --- 3. Newer checkpoints that read the weather forecast natively -------------------------
+# Covariates as for Chronos-2 (p_clear, weather, calendar), known over context + horizon.
+- name: timesfm3                        # Google TimesFM-3 (Aug 2026), ~330M parameters
+  params:
+    arch: timesfm3
+    input_chunk_length: 15360           # its maximum
+    output_chunk_length: 24
+    quantile: true
+    context_days: 641
+    accept_license: false               # TimesFM non-commercial licence v1.0: review it, then true
+    # backend: mlx                      # Apple-silicon native (python -m pip install 'timesfm[mlx]')
+- name: tirex2                          # NXAI TiRex-2 (Jul 2026), 38.4M (+44.1M multivariate)
+  params: {arch: tirex2, input_chunk_length: 2048, output_chunk_length: 24, quantile: true,
+           context_days: 87}            # Apache-2.0; gated repo: accept on HF + `hf auth login`

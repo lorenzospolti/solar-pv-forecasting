@@ -49,10 +49,10 @@ reproduce: # regenerate every result from raw data: checkpoints -> panel -> resc
 rescore: # rebuild every metric row of results/results.parquet from results/predictions (current scoring rules); preview: python experiments/rescore.py --dry-run
 	python experiments/rescore.py
 
-report: # build thesis tables + figures from results/predictions (timing and memory from results/results.parquet)
+report: # build thesis tables + figures from results/predictions and results/extra/predictions (timing and memory from both results stores)
 	python experiments/report.py
 
 manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc + tectonic)
-	mkdir -p thesis/build && cd thesis && pandoc chapters/*.md --filter pandoc-crossref --citeproc \
+	mkdir -p thesis/build && cd thesis && pandoc chapters/*.md --lua-filter filters/include.lua --filter pandoc-crossref --citeproc \
 		--top-level-division=chapter --number-sections -V documentclass=report -V geometry:margin=2.5cm \
 		-V fontsize=11pt -V linkcolor=blue --pdf-engine=tectonic -o build/thesis.pdf

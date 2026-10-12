@@ -6,8 +6,11 @@ load (see the ``hub_model_name`` defaults in darts and configs/experiment.yaml).
 
 Usage:
     python experiments/fetch_checkpoints.py
+    python experiments/fetch_checkpoints.py --all    # + the extras' and covariate runs' checkpoints
 """
 from __future__ import annotations
+
+import argparse
 
 from huggingface_hub import snapshot_download
 
@@ -17,9 +20,20 @@ CHECKPOINTS = {
     "tirex": "NX-AI/TiRex",                        # 35M; zero-shot (needs tirex-ts)
 }
 
+#: configs/extras.yaml and configs/covariates.yaml (COVARIATES.md); fetched with --all
+EXTRA_CHECKPOINTS = {
+    "chronos2_base": "amazon/chronos-2",           # 120M; Chronos-B rows
+    "timesfm3": "google/timesfm-3.0-pytorch",      # ~330M; TimesFM non-commercial licence v1.0
+    "tirex2": "NX-AI/TiRex-2",                     # 38M; gated: accept on the model page and
+}                                                  #   `hf auth login` first
+
 
 def main() -> None:
-    for arch, repo in CHECKPOINTS.items():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--all", action="store_true", help="also the extras' and covariate runs' checkpoints")
+    args = ap.parse_args()
+    wanted = {**CHECKPOINTS, **(EXTRA_CHECKPOINTS if args.all else {})}
+    for arch, repo in wanted.items():
         path = snapshot_download(repo_id=repo)
         print(f"{arch:9s} {repo:34s} -> {path}")
 

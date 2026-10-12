@@ -1,9 +1,11 @@
 """Evaluation: point, skill-score and probabilistic metrics.
 
-All metrics operate on numpy arrays. Point errors are normalized by installed
-AC capacity ``C`` (never by the mean, and never MAPE near night zeros — see
-plan §Evaluation). The skill score is defined against a *reference* forecast
-(smart persistence), following Yang et al.'s verification framework.
+All metrics operate on numpy arrays. Point errors are normalized by the
+nameplate capacity ``C``, the rated power of the Brick metadata: the inverter
+AC rating at some stations, the module DC total at others (never by the mean,
+and never MAPE near night zeros — see plan §Evaluation). The skill score is
+defined against a *reference* forecast (smart persistence), following Yang et
+al.'s verification framework.
 """
 from __future__ import annotations
 

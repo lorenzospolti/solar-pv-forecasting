@@ -1,8 +1,9 @@
 """Tests for experiments/report.py: the significance machinery (Diebold-Mariano with
-Newey-West variance, Holm, block bootstrap), the data-driven no-covariate detection,
-the input checks (coverage, duplicates), the table and figure layout rules, and an
-end-to-end run on a tiny synthetic panel built in a temporary directory, whose daily
-losses, CLIPER skill and P9 test are recomputed here by hand."""
+Newey-West variance, Holm, block bootstrap), the day-block bootstrap intervals, the
+data-driven no-covariate detection, the input checks (coverage, duplicates, several
+input folders), the table and figure layout rules, and an end-to-end run on a tiny
+synthetic panel built in a temporary directory, whose daily losses, CLIPER skill,
+quantile score and P9 test are recomputed here by hand."""
 from __future__ import annotations
 
 import importlib.util
@@ -21,8 +22,10 @@ import pytest
 from pvfc.evaluation import DEFAULT_QUANTILES, point_forecast_frame
 
 ROOT = Path(__file__).resolve().parents[1]
-TABLES = ("master_skill", "probabilistic", "compute", "skill_by_station", "skill_by_fold",
-          "significance", "all_hours", "panel_diagnostics")
+TABLES = ("master_skill", "chronos2_configs", "probabilistic", "compute", "significance")
+APPENDIX_TABLES = ("master_skill_full", "significance_detail", "skill_by_fold",
+                   "skill_by_station", "point_rule", "p2_robustness", "all_hours",
+                   "panel_diagnostics")
 FIGURES = ("skill_by_model", "skill_vs_compute", "reliability", "skill_by_fold",
            "skill_by_station", "weather_gain")
 CAPACITY = {"Alpha": 10.0, "Beta": 20.0}
@@ -370,13 +373,19 @@ def test_end_to_end_writes_every_table_and_figure(report, panel_inputs, tmp_path
     written = _main(report, panel_inputs, tmp_path)
     tables, figures = tmp_path / "tables", tmp_path / "figures"
 
-    for stem in TABLES:
-        assert (tables / f"{stem}.csv").exists()
-        lines = (tables / f"{stem}.md").read_text(encoding="utf-8").splitlines()
-        assert lines[0].startswith(": ") and lines[0].endswith("}") and "{#tbl:" in lines[0]
-        assert lines[1] == "" and lines[2].startswith("| ")
-        # captions are typeset: true minus, times, superscript, never ASCII stand-ins
-        assert "^" not in lines[0] and " - " not in lines[0] and " x " not in lines[0]
+    appendix = tables / "appendix"
+    for folder, stems in ((tables, TABLES), (appendix, APPENDIX_TABLES)):
+        for stem in stems:
+            assert (folder / f"{stem}.csv").exists()
+            lines = (folder / f"{stem}.md").read_text(encoding="utf-8").splitlines()
+            assert lines[0].startswith(": ") and lines[0].endswith("}")
+            assert f"{{#tbl:{stem.replace('_', '-')}}}" in lines[0]
+            assert lines[1] == "" and lines[2].startswith("| ")
+            # captions are typeset: true minus, times, superscript, never ASCII stand-ins
+            assert "^" not in lines[0] and " - " not in lines[0] and " x " not in lines[0]
+            assert "pre-specified" not in lines[0].lower()
+    # the appendix tables are not also in the main folder
+    assert not any((tables / f"{stem}.md").exists() for stem in APPENDIX_TABLES)
     assert (tables / "metrics_long.csv").exists()
     for stem in FIGURES:
         for ext in ("pdf", "png"):
@@ -384,17 +393,34 @@ def test_end_to_end_writes_every_table_and_figure(report, panel_inputs, tmp_path
             assert path.exists() and path.stat().st_size > 0
             assert path in written
     probabilistic = (tables / "probabilistic.md").read_text(encoding="utf-8")
-    assert "2 × mean pinball" in probabilistic and "(1 − CRPS / MAE" in probabilistic
+    assert "| QS / C" in probabilistic and "twice the QS" in probabilistic
+    assert "CRPS /" not in probabilistic and "CRPS skill" not in probabilistic
 
-    master = pd.read_csv(tables / "master_skill.csv").set_index("model")
+    master = pd.read_csv(appendix / "master_skill_full.csv").set_index("model")
     # TiRex, CLIPER and smart persistence never change with the weather: shown once
     assert set(master.index[master["no_covariates"]]) == {"smart_persistence", "tirex", "cliper"}
     assert np.isnan(master.loc["tirex", "skill_sp_nwp_mean"])
     assert np.isfinite(master.loc["tirex", "skill_sp_none_mean"])
     assert (master["n_stations_none"] == 2).all()
-    master_md = (tables / "master_skill.md").read_text(encoding="utf-8")
+    master_md = (appendix / "master_skill_full.md").read_text(encoding="utf-8")
     assert "TiRex †" in master_md and "Skill vs CLIPER (NWP)" in master_md
     assert "fewer than" not in master_md
+    # T1: skill over the headline reference (CLIPER) with a 95 % interval
+    headline = pd.read_csv(tables / "master_skill.csv").set_index("model")
+    assert headline.loc["lightgbm", "skill_nwp"] == pytest.approx(
+        master.loc["lightgbm", "skill_cliper_nwp_mean"], rel=1e-12)
+    assert headline.loc["lightgbm", "skill_nwp_lo"] < headline.loc["lightgbm", "skill_nwp"] \
+        < headline.loc["lightgbm", "skill_nwp_hi"]
+    t1 = (tables / "master_skill.md").read_text(encoding="utf-8")
+    assert "Skill (NWP)" in t1 and "nRMSE (No weather)" in t1 and "Skill vs" not in t1
+    assert "skill over CLIPER" in t1 and "@tbl:master-skill-full" in t1
+    assert "10,000 resamples" in t1 and "7-day moving-block bootstrap" in t1
+    # the reference's own row: 0, no interval; † models: an em dash under NWP
+    cliper_row = next(line for line in t1.splitlines() if line.startswith("| CLIPER"))
+    assert [c.strip() for c in cliper_row.strip("|").split("|")][1:3] == ["—", "0"]
+    tirex_row = next(line for line in t1.splitlines() if line.startswith("| TiRex"))
+    assert tirex_row.split("|")[2].strip() == "—" and "[" in tirex_row.split("|")[3]
+    assert list(headline.index) == [m for m in report.MAIN_MODELS if m in headline.index]
 
     # headline = mean over stations of 1 - RMSE / RMSE_SP pooled over each station's
     # scored daytime hours, scored on the mean of the nine quantiles; likewise vs CLIPER
@@ -414,7 +440,7 @@ def test_end_to_end_writes_every_table_and_figure(report, panel_inputs, tmp_path
         np.mean(skills_cliper))
 
     # P9 by hand: Hong Kong days, losses / C, equal weight per station, quantile mean
-    sig = pd.read_csv(tables / "significance.csv").set_index("id")
+    sig = pd.read_csv(appendix / "significance_detail.csv").set_index("id")
     loss_a, loss_b = _daily_loss(panel_inputs, "lightgbm", "nwp"), _daily_loss(
         panel_inputs, "lightgbm", "none")
     d = (loss_a - loss_b).to_numpy()
@@ -436,13 +462,23 @@ def test_end_to_end_writes_every_table_and_figure(report, panel_inputs, tmp_path
     from statsmodels.stats.multitest import multipletests
     np.testing.assert_allclose(sig.loc[["P9", "P11"], "p_holm"],
                                multipletests(sig.loc[["P9", "P11"], "p_dm"], method="holm")[1])
-    significance = (tables / "significance.md").read_text(encoding="utf-8")
+    significance = (appendix / "significance_detail.md").read_text(encoding="utf-8")
     assert "adjusts over the 2 comparisons" in significance
     assert "over the same 20 days" in significance and "| Days" not in significance
     assert "((forecast − truth) / C)²" in significance and "loss A − loss B" in significance
     assert "| P9  | LightGBM: NWP vs No weather " in significance
     assert "No weather: CLIPER † vs Smart persistence †" in significance
     assert "not available" in significance and "| n/a" in significance
+    # T5: the skill difference A - B over CLIPER, paired, with Holm p and verdict
+    t5 = pd.read_csv(tables / "significance.csv").set_index("id")
+    p9 = t5.loc["P9"]
+    assert p9["skill_diff"] == pytest.approx(
+        master.loc["lightgbm", "skill_cliper_nwp_mean"]
+        - master.loc["lightgbm", "skill_cliper_none_mean"], rel=1e-10)
+    assert p9["skill_diff_lo"] <= p9["skill_diff"] <= p9["skill_diff_hi"]
+    t5_md = (tables / "significance.md").read_text(encoding="utf-8")
+    assert "| ID" in t5_md and "Skill difference (A − B)" in t5_md
+    assert "fixed before the main run" in t5_md and "@tbl:significance-detail" in t5_md
 
 
 def test_an_incomplete_run_is_excluded_and_the_captions_say_so(report, panel_inputs, tmp_path,
@@ -457,12 +493,12 @@ def test_an_incomplete_run_is_excluded_and_the_captions_say_so(report, panel_inp
     assert any("excluded lightgbm/nwp/Beta" in r.getMessage() for r in caplog.records)
 
     master = pd.read_csv(tmp_path / "tables" / "master_skill.csv").set_index("model")
-    by_station = pd.read_csv(tmp_path / "tables" / "skill_by_station.csv")
+    by_station = pd.read_csv(tmp_path / "tables" / "appendix" / "skill_by_station.csv")
     alpha = by_station.query("model == 'lightgbm' and setting == 'nwp'")["Alpha"].item()
     assert master.loc["lightgbm", "n_stations_nwp"] == 1
-    assert master.loc["lightgbm", "skill_sp_nwp_mean"] == pytest.approx(alpha)
-    for stem in ("master_skill", "probabilistic", "skill_by_station", "skill_by_fold",
-                 "all_hours"):
+    assert master.loc["lightgbm", "skill_nwp"] == pytest.approx(alpha)   # over CLIPER
+    for stem in ("master_skill", "probabilistic", "appendix/master_skill_full",
+                 "appendix/skill_by_station", "appendix/skill_by_fold", "appendix/all_hours"):
         caption = (tmp_path / "tables" / f"{stem}.md").read_text(encoding="utf-8")
         assert "fewer than the 2 stations" in caption and "LightGBM, NWP (1)" in caption
 
@@ -480,7 +516,7 @@ def test_per_model_figures_share_one_order(report, panel_inputs, tmp_path, monke
     captured: dict[str, plt.Figure] = {}
     monkeypatch.setattr(report, "_save", lambda fig, _, stem: captured.update({stem: fig}) or [])
     with plt.rc_context(report.STYLE):
-        report.fig_skill_by_model(panel, summary, tmp_path)
+        report.fig_skill_by_model(panel, summary, report.Bootstrap(panel, n_boot=200), tmp_path)
         report.fig_reliability(panel, summary, tmp_path)
         report.fig_skill_by_fold(panel, summary, report.compute_fold_skill(panel),
                                  report.fold_labels(panel), tmp_path)
@@ -498,3 +534,281 @@ def test_per_model_figures_share_one_order(report, panel_inputs, tmp_path, monke
     assert any(len(s) >= 3 for s in sequences)
     for sequence in sequences:
         assert sequence == sorted(sequence, key=order.index)
+
+
+# --------------------------------------------------------------------------- #
+# Several input folders
+# --------------------------------------------------------------------------- #
+def test_several_prediction_folders_and_stores_load_as_one(report, panel_inputs, tmp_path,
+                                                          caplog):
+    first, second, missing = tmp_path / "panel", tmp_path / "extra", tmp_path / "missing"
+    first.mkdir()
+    second.mkdir()
+    for path in panel_inputs["predictions"].glob("*.parquet"):
+        shutil.copy(path, first if path.name.startswith("Alpha") else second)
+    single = report.load_predictions(panel_inputs["predictions"])
+    with caplog.at_level(logging.WARNING, logger="pvfc.report"):
+        split = report.load_predictions([first, second, missing])
+    assert any("no predictions folder" in r.getMessage() and "missing" in r.getMessage()
+               for r in caplog.records)
+    assert set(split) == set(single)
+    for key, frame in single.items():
+        pd.testing.assert_frame_equal(split[key], frame)
+    assert set(report.load_predictions(str(panel_inputs["predictions"]))) == set(single)
+
+    results = panel_inputs["results"]
+    assert report.stored_hashes([results, tmp_path / "none.parquet"]) == \
+        report.stored_hashes(results)
+    pd.testing.assert_frame_equal(
+        report.load_timing([results, tmp_path / "none.parquet"], single),
+        report.load_timing(results, single))
+
+    # the command line takes several folders and stores, and gives the same tables
+    out_one, out_two = tmp_path / "one", tmp_path / "two"
+    _main(report, panel_inputs, out_one)
+    report.main(["--results", str(results), str(tmp_path / "none.parquet"),
+                 "--predictions-dir", str(first), str(second), str(missing),
+                 "--processed-dir", str(panel_inputs["processed"]),
+                 "--tables-dir", str(out_two / "tables"),
+                 "--figures-dir", str(out_two / "figures")])
+    for stem in ("master_skill", "compute", "significance"):
+        pd.testing.assert_frame_equal(pd.read_csv(out_one / "tables" / f"{stem}.csv"),
+                                      pd.read_csv(out_two / "tables" / f"{stem}.csv"))
+
+
+# --------------------------------------------------------------------------- #
+# Day-block bootstrap
+# --------------------------------------------------------------------------- #
+def _panel(report, inputs: dict[str, Path]):
+    runs = report.check_runs(report.load_predictions(inputs["predictions"]))
+    panel = report.Panel(runs=runs, capacity=report.load_capacities(runs, inputs["processed"]))
+    panel.no_covariates = report.detect_no_covariates(runs)
+    return panel, report.Summary(report.compute_station_metrics(panel))
+
+
+def test_day_weights_are_the_block_bootstrap_resamples(report):
+    d = np.random.default_rng(11).normal(size=50)
+    weights = report.day_weights(50, block=7, n_boot=500, seed=3)
+    assert weights.shape == (500, 50) and weights.dtype.kind == "i"
+    assert (weights.sum(axis=1) == 50).all()
+    index = report.block_indices(50, block=7, n_boot=500, seed=3)
+    np.testing.assert_allclose(weights @ d / 50, d[index].mean(axis=1), rtol=1e-12)
+
+
+def test_bootstrap_points_are_the_pooled_estimates(report, panel_inputs):
+    panel, summary = _panel(report, panel_inputs)
+    boot = report.Bootstrap(panel, n_boot=300)
+    checked = 0
+    for model in panel.models:
+        for s in panel.reported_settings(model):
+            for reference, metric in (("cliper", "skill_cliper"),
+                                      ("smart_persistence", "skill_sp")):
+                est = boot.skill(model, s, reference=reference)
+                assert est.point == pytest.approx(summary.stat(model, s, metric),
+                                                  rel=1e-12, abs=1e-12)
+                lo, hi = est.interval
+                assert lo <= est.point <= hi
+                checked += 1
+            if panel.is_quantile(model, s):
+                assert boot.picp(model, s).point == pytest.approx(
+                    summary.stat(model, s, "picp_80"), rel=1e-12)
+    assert checked >= 8
+    # all-ones weights: every resample is the point estimate
+    n_days = len(boot.days)
+    boot._weights[n_days] = np.ones((5, n_days))
+    est = boot.skill("lightgbm", "nwp")
+    np.testing.assert_allclose(est.samples, est.point, rtol=1e-12)
+
+
+def test_bootstrap_is_paired_reproducible_and_zero_for_the_reference(report, panel_inputs):
+    panel, _ = _panel(report, panel_inputs)
+    boot, again = report.Bootstrap(panel, n_boot=300), report.Bootstrap(panel, n_boot=300)
+    np.testing.assert_array_equal(boot.skill("lightgbm", "nwp").samples,
+                                  again.skill("lightgbm", "nwp").samples)
+    other = report.Bootstrap(panel, n_boot=300, seed=1)
+    assert not np.array_equal(boot.skill("lightgbm", "nwp").samples,
+                              other.skill("lightgbm", "nwp").samples)
+    # a model scored against itself: 0 in every resample, so [0, 0]
+    own = boot.skill("cliper", "none", reference="cliper")
+    assert own.point == 0.0 and own.interval == (0.0, 0.0)
+    same = boot.skill_difference(("lightgbm", "nwp"), ("lightgbm", "nwp"))
+    assert same.point == 0.0 and same.interval == (0.0, 0.0)
+    # paired: the difference is taken resample by resample on the same days
+    a, b = boot.skill("lightgbm", "nwp"), boot.skill("lightgbm", "none")
+    np.testing.assert_array_equal(boot.skill_difference(("lightgbm", "nwp"),
+                                                        ("lightgbm", "none")).samples,
+                                  a.samples - b.samples)
+
+
+def test_bootstrap_samples_match_an_explicit_shared_resample(report, panel_inputs):
+    """Rebuilds the resampled skills by hand with one W shared by every station and
+    both sides of a difference: catches unpaired resamples, weights that differ by
+    station, and an interval at the wrong level (none of which the checks above see)."""
+    panel, _ = _panel(report, panel_inputs)
+    n_boot = 200
+    boot = report.Bootstrap(panel, n_boot=n_boot)
+    n_days = len(boot.days)
+    w = report.day_weights(n_days, report.BLOCK_DAYS, n_boot, report.BOOTSTRAP_SEED).astype(float)
+
+    def by_hand(model: str, setting: str) -> np.ndarray:
+        per_station = []
+        for site in panel.sites:
+            frame = panel.runs[(model, setting, site)]
+            mask = report.scored_mask(frame)
+            y = frame["y_true"].to_numpy(float)[mask]
+            point = frame["y_point"].to_numpy(float)[mask]
+            ref = (report.reference_forecast(panel, "cliper", site, setting)
+                   .reindex(frame.index).to_numpy(float)[mask])
+            ok = np.isfinite(ref)
+            days = frame.index[mask].tz_convert(report.HKUST_TZ).tz_localize(None).normalize()
+            pos = boot.days.get_indexer(days)[ok]
+            sse = np.bincount(pos, weights=((point - y) ** 2)[ok], minlength=n_days)
+            sse_ref = np.bincount(pos, weights=((ref - y) ** 2)[ok], minlength=n_days)
+            per_station.append(1.0 - np.sqrt((w @ sse) / (w @ sse_ref)))
+        return np.mean(per_station, axis=0)
+
+    nwp, none = by_hand("lightgbm", "nwp"), by_hand("lightgbm", "none")
+    np.testing.assert_allclose(boot.skill("lightgbm", "nwp", reference="cliper").samples,
+                               nwp, rtol=1e-10)
+    diff = boot.skill_difference(("lightgbm", "nwp"), ("lightgbm", "none"), reference="cliper")
+    np.testing.assert_allclose(diff.samples, nwp - none, rtol=1e-10, atol=1e-12)
+    assert report.INTERVAL == (2.5, 97.5)
+    assert diff.interval == pytest.approx(tuple(np.percentile(nwp - none, [2.5, 97.5])))
+
+
+def test_compute_reports_the_maximum_memory(report, panel_inputs):
+    panel, _ = _panel(report, panel_inputs)
+    panel.timing = pd.DataFrame({
+        "model": "lightgbm", "weather_mode": "nwp", "site": ["Alpha", "Alpha", "Beta", "Beta"],
+        "fold": [0, 1, 0, 1], "fit_s": [10.0, 20.0, 30.0, 40.0], "predict_s": 1.0,
+        "fit_predict_s": [11.0, 21.0, 31.0, 41.0], "peak_rss_mb": [300.0, 2048.0, 500.0, 400.0]})
+    medians = report.compute_medians(panel)
+    row = medians.loc[("lightgbm", "nwp")]
+    assert row["max_peak_rss_mb"] == 2048.0 and row["peak_rss_mb"] == 450.0
+    assert row["window_s"] == 26.0 and row["n"] == 4
+    table = report.table_compute(panel, medians)
+    shown = table.display.iloc[table.numeric.query(
+        "model == 'lightgbm' and setting == 'nwp'").index.item()]
+    assert shown["Max memory (GB)"] == "2.0" and shown["Fit (s)"] == "25.0"
+    assert "GPU (Metal) memory" in table.caption and "maximum" in table.caption
+    # the references are not compute rows
+    assert not {"Smart persistence †", "CLIPER †"} & set(table.display["Model"])
+
+
+def test_quantile_score_is_half_the_store_crps(report, panel_inputs, tmp_path):
+    from pvfc.evaluation import pinball_loss
+
+    _main(report, panel_inputs, tmp_path)
+    t3 = pd.read_csv(tmp_path / "tables" / "probabilistic.csv")
+    qs = t3.query("model == 'lightgbm' and setting == 'nwp'")["qs_c"].item()
+    by_hand = []
+    for site, frame in _frames(panel_inputs, "lightgbm", "nwp").items():
+        mask = frame["is_day"].to_numpy() & np.isfinite(frame["y_true"].to_numpy())
+        q = {tau: frame[f"q{tau}"].to_numpy()[mask] for tau in DEFAULT_QUANTILES}
+        by_hand.append(pinball_loss(frame["y_true"].to_numpy()[mask], q) / CAPACITY[site])
+    assert qs == pytest.approx(np.mean(by_hand), rel=1e-12)
+    long = pd.read_csv(tmp_path / "tables" / "metrics_long.csv")
+    crps = long.query("model == 'lightgbm' and weather_mode == 'nwp' and hours == 'daytime' "
+                      "and metric == 'ncrps'")["value"].mean()
+    assert qs == pytest.approx(crps / 2, rel=1e-12)
+    # deterministic models have no quantile score row
+    assert not {"cliper", "smart_persistence"} & set(t3["model"])
+
+
+def test_headline_reference_switches_every_main_table(report, panel_inputs, tmp_path,
+                                                      monkeypatch):
+    monkeypatch.setattr(report, "HEADLINE_REF", "smart_persistence")
+    _main(report, panel_inputs, tmp_path)
+    tables = tmp_path / "tables"
+    t1 = pd.read_csv(tables / "master_skill.csv").set_index("model")
+    full = pd.read_csv(tables / "appendix" / "master_skill_full.csv").set_index("model")
+    assert t1.loc["smart_persistence", "skill_none"] == 0.0
+    assert t1.loc["cliper", "skill_none"] == pytest.approx(
+        full.loc["cliper", "skill_sp_none_mean"], rel=1e-12)
+    md = (tables / "master_skill.md").read_text(encoding="utf-8")
+    sp_row = next(line for line in md.splitlines() if line.startswith("| Smart persistence"))
+    assert sp_row.split("|")[3].strip() == "0"
+    assert "skill over Smart persistence" in md and "with skill over CLIPER" in md
+    t5 = pd.read_csv(tables / "significance.csv").set_index("id")
+    assert t5.loc["P11", "skill_diff"] == pytest.approx(
+        full.loc["cliper", "skill_sp_none_mean"], rel=1e-12)
+    by_station = (tables / "appendix" / "skill_by_station.md").read_text(encoding="utf-8")
+    assert "Skill over Smart persistence" in by_station and "| Smart persistence" not in \
+        by_station and "| CLIPER" in by_station
+
+
+# --------------------------------------------------------------------------- #
+# Chronos-2 configurations and the post hoc block
+# --------------------------------------------------------------------------- #
+@pytest.fixture(scope="module")
+def chronos_inputs(report, panel_inputs, tmp_path_factory):
+    """The synthetic panel plus Chronos-2-like runs made from LightGBM's by scaling:
+    zero-shot 336 h and 2,048 h and fine-tuned at both stations, 1,024 h at one
+    station only (an incomplete run), and no base checkpoint at all. The zero-shot
+    No-weather run's median differs from y_hat on a few hours."""
+    root = tmp_path_factory.mktemp("chronos")
+    inputs = dict(panel_inputs, predictions=root / "predictions")
+    shutil.copytree(panel_inputs["predictions"], inputs["predictions"])
+    scale = {"chronos2": 1.08, "chronos2_ctx2048": 1.04, "chronos2_ft": 0.99,
+             "chronos2_ctx1024": 1.05}
+    for path in sorted(panel_inputs["predictions"].glob("*__lightgbm__*.parquet")):
+        frame = pd.read_parquet(path)
+        site, setting = frame["site"].iloc[0], frame["weather_mode"].iloc[0]
+        for model, factor in scale.items():
+            if model == "chronos2_ctx1024" and (site != "Alpha" or setting != "nwp"):
+                continue
+            out = frame.copy()
+            columns = ["y_hat", *(f"q{tau}" for tau in DEFAULT_QUANTILES)]
+            out[columns] = out[columns] * factor
+            if model == "chronos2" and setting == "none":
+                out.iloc[12:15, out.columns.get_loc("q0.5")] += 0.5
+            chash = f"{model}{setting}{site}"
+            out["model"], out["config_hash"] = model, chash
+            out.to_parquet(inputs["predictions"] / f"{site}__{setting}__{model}__{chash}.parquet")
+    return inputs
+
+
+def test_post_hoc_comparisons_have_intervals_and_no_tests(report, chronos_inputs, tmp_path):
+    _main(report, chronos_inputs, tmp_path)
+    tables = tmp_path / "tables"
+    t5 = pd.read_csv(tables / "significance.csv").set_index("id")
+    post = t5[t5["block"] == "post hoc"]
+    assert list(post.index) == ["E1", "E2", "E3", "E4", "E5"]
+    for col in ("p_dm", "p_holm", "p_bootstrap", "dm_stat"):
+        assert post[col].isna().all()
+    assert post.loc[["E1", "E2", "E3"], "available"].all()
+    assert not post.loc[["E4", "E5"], "available"].any()      # no base checkpoint run
+    # the Holm family is the tested comparisons only
+    fixed = t5[t5["block"] != "post hoc"]
+    assert t5["p_holm"].notna().sum() == fixed["p_dm"].notna().sum() > 2
+    full = pd.read_csv(tables / "appendix" / "master_skill_full.csv").set_index("model")
+    assert t5.loc["E1", "skill_diff"] == pytest.approx(
+        full.loc["chronos2_ctx2048", "skill_cliper_nwp_mean"]
+        - full.loc["chronos2", "skill_cliper_nwp_mean"], rel=1e-10)
+    md = (tables / "significance.md").read_text(encoding="utf-8")
+    rows = {line.split("|")[1].strip(): [c.strip() for c in line.strip("|").split("|")]
+            for line in md.splitlines()[4:]}
+    assert rows["E1"][3:] == ["—", "post hoc"] and "[" in rows["E1"][2]
+    assert rows["E4"][2:] == ["—", "—", "not available"]
+    assert rows["P2"][4] in ("n.s.", "A better", "B better") and rows["P2"][3] != "—"
+    assert "post hoc" in md.splitlines()[0] and "intervals only" in md.splitlines()[0]
+
+
+def test_chronos2_table_leaves_out_incomplete_runs(report, chronos_inputs, tmp_path, caplog):
+    with caplog.at_level(logging.WARNING, logger="pvfc.report"):
+        _main(report, chronos_inputs, tmp_path)
+    assert any("chronos2_ctx1024 left out" in r.getMessage() for r in caplog.records)
+    t2 = pd.read_csv(tmp_path / "tables" / "chronos2_configs.csv")
+    assert list(t2["model"]) == ["chronos2", "chronos2_ctx2048", "chronos2_ft"]
+    md = (tmp_path / "tables" / "chronos2_configs.md").read_text(encoding="utf-8")
+    assert "Not shown" in md.splitlines()[0] and "Chronos-S-mid" in md
+    assert "| Configuration" in md and "Time per window (s)" in md
+    # the median rule scores y_hat; a run whose y_hat is not its median is named
+    point_rule = (tmp_path / "tables" / "appendix" / "point_rule.md").read_text(
+        encoding="utf-8")
+    assert "y_hat is not the 0.5 quantile: Chronos-S, No weather" \
+        in point_rule
+    p2 = pd.read_csv(tmp_path / "tables" / "appendix" / "p2_robustness.csv")
+    assert p2["variant"].iloc[0] == "All windows (seed 0)"
+    assert p2["variant"].str.startswith("Without").sum() == 2
+    assert list(p2["n_days"]) == [20, 10, 10]

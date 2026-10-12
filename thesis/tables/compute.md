@@ -1,18 +1,18 @@
-: Compute cost per test window: median wall-clock seconds to fit, to issue the window's 30 day-ahead forecasts, and both, and median peak resident memory of the run's process (one process per run, so it includes the data and the framework), over the station-folds of each model and setting. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. {#tbl:compute}
+: Compute cost per test window of 30 days: median wall-clock seconds over the station-folds to fit the model and to issue the window's day-ahead forecasts, and the maximum over the station-folds of the process's peak resident set size (one process per run, so it includes the data and the framework; 1 GB = 1,024³ bytes). Memory does not count GPU (Metal) memory, so it is a lower bound for the neural models. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. ‡ Post hoc: added after the results of the main run had been seen. {#tbl:compute}
 
-| Setting    | Model                    | Fit (s) | Predict (s) | Fit + predict (s) | Peak RSS (MB) | Station-folds |
-|:--------------------|:----------------------------------|-------------:|------------------:|-----------------:|-------------:|--------------------:|
-| NWP        | SARIMA                   |   102.5 |         0.7 |             103.2 |          4148 |            54 |
-|            | LightGBM                 |   170.8 |         2.2 |             172.9 |           865 |            54 |
-|            | LSTM                     |   234.7 |         0.6 |             235.3 |           669 |            54 |
-|            | Chronos-2 (zero-shot)    |     0.0 |         2.5 |               2.5 |           811 |            54 |
-| No weather | Persistence †            |     0.0 |         0.0 |               0.0 |           288 |            54 |
-|            | Seasonal naive (168 h) † |     0.0 |         0.0 |               0.0 |           287 |            54 |
-|            | Smart persistence †      |     0.0 |         0.0 |               0.0 |           288 |            54 |
-|            | Climatology †            |     0.0 |         0.0 |               0.0 |           288 |            54 |
-|            | CLIPER †                 |     0.0 |         0.0 |               0.0 |           289 |            54 |
-|            | SARIMA                   |    95.1 |         0.7 |              95.8 |          4135 |            54 |
-|            | LightGBM                 |   128.6 |         1.9 |             130.6 |           650 |            54 |
-|            | Chronos-2 (zero-shot)    |     0.0 |         2.4 |               2.4 |           757 |            54 |
-|            | TimesFM-2.5 †            |     0.0 |         6.5 |               6.5 |          2266 |            54 |
-|            | TiRex †                  |     0.0 |        11.0 |              11.0 |           950 |            54 |
+| Setting    | Model            | Fit (s) | Predict (s) | Max memory (GB) |
+|:--------------------|:----------------------------------------|-------------:|------------------:|--------------------:|
+| NWP        | SARIMA           |   102.5 |         0.7 |             7.9 |
+|            | LightGBM         |   170.8 |         2.2 |             1.2 |
+|            | LSTM             |   234.7 |         0.6 |             0.7 |
+|            | Chronos-S        |     0.0 |         2.5 |             0.9 |
+|            | Chronos-B-long ‡ |     0.0 |        11.8 |             1.4 |
+|            | Chronos-S-FT     |   183.8 |         2.6 |             1.1 |
+| No weather | SARIMA           |    95.1 |         0.7 |             7.9 |
+|            | LightGBM         |   128.6 |         1.9 |             0.9 |
+|            | LSTM             |   138.2 |         0.6 |             0.6 |
+|            | Chronos-S        |     0.0 |         2.4 |             0.8 |
+|            | Chronos-B-long ‡ |     0.0 |         9.6 |             1.4 |
+|            | Chronos-S-FT     |    87.0 |         2.3 |             2.0 |
+|            | TimesFM †        |     0.0 |         6.5 |             2.2 |
+|            | TiRex †          |     0.0 |        11.0 |             1.1 |

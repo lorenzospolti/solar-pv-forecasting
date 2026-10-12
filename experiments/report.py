@@ -10,7 +10,8 @@ wall-clock time and peak memory of each fold.
 Definitions (the Method chapter cites them; each function's docstring has its own):
 
 * Scored hours. Daytime = ``is_day`` (solar zenith at the interval midpoint below
-  85 deg) and finite truth: the headline. All hours = finite truth: robustness (T7).
+  85 deg) and finite truth: the headline. All hours = finite truth: robustness
+  (appendix/all_hours).
   Every run of a station must cover the same scored hours with a finite forecast
   (``check_runs``); a run that does not is excluded, with a warning naming it.
 * Point forecast. ``pvfc.evaluation.point_forecast_frame``: the mean of the nine
@@ -19,33 +20,50 @@ Definitions (the Method chapter cites them; each function's docstring has its ow
 * Capacity C. The station nameplate in the ETL sidecar
   ``data/processed/<site>__<weather>__etl<ETL_VERSION>.cap.json``: the number the runner used.
 * Pooled per-station metrics. Per model x weather setting x station, over the scored
-  hours of all test windows. Headline = mean over stations, with [min, max].
+  hours of all test windows. Headline = mean over stations.
+* Headline reference. ``HEADLINE_REF`` (CLIPER): every main table and figure gives
+  skill over it; setting it to ``"smart_persistence"`` switches them all. The
+  appendix table ``master_skill_full`` gives both references.
+* Intervals. 95 % percentile intervals from a moving-block bootstrap over the
+  date-ordered local test days (``BLOCK_DAYS``-day blocks, ``BOOTSTRAP_RESAMPLES``
+  resamples, ``BOOTSTRAP_SEED``): one matrix of day multiplicities shared by every
+  station and model, so differences are paired (``Bootstrap``).
 * No-covariate models. A model whose NWP and no-weather forecasts are identical at
   every station cannot use weather, so its forecast is a no-weather forecast. This
   is detected from the data (never from a list of names) and such a model is
   reported once, under "No weather", marked † in tables and "(no covariates)" in
   figures.
-* Significance. The pre-specified comparisons in ``COMPARISONS``, tested on daily
-  losses with Diebold-Mariano (Newey-West variance, Harvey-Leybourne-Newbold
-  correction), Holm-adjusted over the family, checked by a moving-block bootstrap.
-  The daily losses of all test windows form one date-ordered series, so the
-  Newey-West lags and the bootstrap blocks also span the gaps between windows.
+* Significance. The comparisons in ``COMPARISONS`` (fixed before panel v2 ran),
+  tested on daily losses with Diebold-Mariano (Newey-West variance,
+  Harvey-Leybourne-Newbold correction), Holm-adjusted over the family, checked by a
+  moving-block bootstrap. The daily losses of all test windows form one date-ordered
+  series, so the Newey-West lags and the bootstrap blocks also span the gaps between
+  windows. The post hoc comparisons in ``POST_HOC`` get skill differences with
+  intervals only, no tests.
+
+Inputs. ``--predictions-dir`` and ``--results`` take one or more paths (default: the
+panel and the extra runs); a missing path is skipped with a warning.
 
 Outputs. ``--tables-dir`` gets each table as CSV (full-precision numbers) and as a
-pandoc pipe table whose first line is its caption; ``--figures-dir`` gets each
-figure as PDF and as a 200-dpi PNG.
+pandoc pipe table whose first line is its caption, the appendix tables in its
+``appendix/`` folder; ``--figures-dir`` gets each figure as PDF and as a 200-dpi PNG.
 
-  T1 master_skill       headline skill vs SP (and vs CLIPER), nRMSE, nMBE
-  T2 probabilistic      CRPS, CRPS skill, PICP-80, width-80, quantile coverage
-  T3 compute            median fit / predict seconds and peak RSS per fold
-  T4 skill_by_station   skill vs SP per station
-  T5 skill_by_fold      skill vs SP per test window
-  T6 significance       Diebold-Mariano tests of the pre-specified comparisons
-  T7 all_hours          headline skill on all hours (robustness)
-  T8 panel_diagnostics  station sizes, scored days and hours, error correlation
-  metrics_long.csv      every metric per model x setting x station x hour set
-  F1 skill_by_model     F2 skill_vs_compute    F3 reliability
-  F4 skill_by_fold      F5 skill_by_station    F6 weather_gain
+  T1 master_skill         skill over the headline reference (95 % interval), nRMSE
+  T2 chronos2_configs     the Chronos-2 configurations: skill, PICP-80, time
+  T3 probabilistic        quantile score / C, PICP-80 (95 % interval), width-80 / C
+  T4 compute              median fit / predict seconds, maximum peak RSS
+  T5 significance         P1-P11 (skill difference, Holm p) and post hoc E1-E5
+  appendix/master_skill_full    every model, skill over SP and CLIPER [min, max], nRMSE, nMBE
+  appendix/significance_detail  the test statistics of P1-P11
+  appendix/skill_by_fold        skill per test window
+  appendix/skill_by_station     skill per station
+  appendix/point_rule           skill under the mean and the median point rule
+  appendix/p2_robustness        LightGBM - fine-tuned Chronos-2 per seed and window left out
+  appendix/all_hours            skill vs SP on all hours (robustness; not in the thesis)
+  appendix/panel_diagnostics    station sizes, scored days and hours, error correlation
+  metrics_long.csv        every metric per model x setting x station x hour set
+  F1 skill_by_model       F2 skill_vs_compute    F3 reliability
+  F4 skill_by_fold        F5 skill_by_station    F6 weather_gain
 
 Usage:
     python experiments/report.py
@@ -58,6 +76,7 @@ import inspect
 import json
 import logging
 import math
+import re
 from collections import Counter
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
@@ -108,18 +127,54 @@ REFERENCE, TRAINED, FOUNDATION_ZS, FOUNDATION_FT, OTHER = (
 #: under their raw name.
 MODELS: tuple[tuple[str, str, str], ...] = (
     ("persistence", "Persistence", REFERENCE),
-    ("seasonal_naive", "Seasonal naive (168 h)", REFERENCE),
+    ("seasonal_naive", "Seasonal naive", REFERENCE),
     ("smart_persistence", "Smart persistence", REFERENCE),
     ("climatology", "Climatology", REFERENCE),
     ("cliper", "CLIPER", REFERENCE),
     ("sarima", "SARIMA", TRAINED),
     ("lightgbm", "LightGBM", TRAINED),
     ("lstm", "LSTM", TRAINED),
-    ("chronos2", "Chronos-2 (zero-shot)", FOUNDATION_ZS),
-    ("timesfm", "TimesFM-2.5", FOUNDATION_ZS),
+    ("chronos2", "Chronos-S", FOUNDATION_ZS),
+    ("chronos2_ctx1024", "Chronos-S-mid", FOUNDATION_ZS),
+    ("chronos2_ctx2048", "Chronos-S-long", FOUNDATION_ZS),
+    ("chronos2_base", "Chronos-B", FOUNDATION_ZS),
+    ("chronos2_base_ctx2048", "Chronos-B-long", FOUNDATION_ZS),
+    ("chronos2_ft", "Chronos-S-FT", FOUNDATION_FT),
+    ("chronos2_ft_s1", "Chronos-S-FT, seed 1", FOUNDATION_FT),
+    ("chronos2_ft_s2", "Chronos-S-FT, seed 2", FOUNDATION_FT),
+    ("timesfm", "TimesFM", FOUNDATION_ZS),
     ("tirex", "TiRex", FOUNDATION_ZS),
-    ("chronos2_ft", "Chronos-2 (fine-tuned)", FOUNDATION_FT),
+    ("tirex_ctx2048", "TiRex-long", FOUNDATION_ZS),
 )
+
+#: Chronos-2 configuration -> (checkpoint, context in hours, training), for the
+#: configuration table: the short names above carry no numbers, the table does.
+CHRONOS2_SETUP: dict[str, tuple[str, int, str]] = {
+    "chronos2": ("small", 336, "zero-shot"),
+    "chronos2_ctx1024": ("small", 1024, "zero-shot"),
+    "chronos2_ctx2048": ("small", 2048, "zero-shot"),
+    "chronos2_base": ("base", 336, "zero-shot"),
+    "chronos2_base_ctx2048": ("base", 2048, "zero-shot"),
+    "chronos2_ft": ("small", 336, "fine-tuned"),
+    "chronos2_ft_s1": ("small", 336, "fine-tuned, seed 1"),
+    "chronos2_ft_s2": ("small", 336, "fine-tuned, seed 2"),
+}
+#: configurations run after the main run (panel v2) had been seen (configs/extras.yaml;
+#: DECISIONS.md): every table and figure marks them with POST_HOC_MARK
+POST_HOC_MODELS = frozenset({
+    "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base", "chronos2_base_ctx2048",
+    "chronos2_ft_s1", "chronos2_ft_s2", "tirex_ctx2048"})
+
+#: the models of the main tables (T1, T3, T4) and figures, in this order
+MAIN_MODELS: tuple[str, ...] = (
+    "smart_persistence", "cliper", "sarima", "lightgbm", "lstm", "chronos2",
+    "chronos2_base_ctx2048", "chronos2_ft", "timesfm", "tirex")
+#: the Chronos-2 configurations of T2, in this order
+CHRONOS2_MODELS: tuple[str, ...] = (
+    "chronos2", "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base",
+    "chronos2_base_ctx2048", "chronos2_ft", "chronos2_ft_s1", "chronos2_ft_s2")
+#: the reference of every main table and figure ("smart_persistence" switches them all)
+HEADLINE_REF = "cliper"
 
 #: family -> (legend label, colour). The three hues are a colour-blind-safe set
 #: (validated all-pairs); references wear a neutral gray and are always named.
@@ -138,15 +193,14 @@ SETTINGS = {"nwp": "NWP", "none": "No weather"}
 SP, CLIPER, CLIMATOLOGY = "smart_persistence", "cliper", "climatology"
 #: references (besides SP, whose column is in every file) that skill is also measured against
 EXTRA_REFERENCES = (CLIPER, CLIMATOLOGY)
-#: references already in T1 that F1, F2 and F5 leave out (SP is their zero line)
-FIGURE_OMIT = frozenset({"persistence", "smart_persistence", "seasonal_naive"})
 NO_COV_MARK = "†"
 NO_COV_LABEL = "(no covariates)"
+POST_HOC_MARK = "‡"
 
-#: The family of pairwise tests (T6), tied to the research questions. It was chosen
-#: after an exploratory look at day-level tests on panel v1 (8 of those 10 pairs kept,
-#: 3 added) and fixed on 2 Oct 2026, before panel v2 ran: for the v2 results it is
-#: pre-specified. The Holm adjustment covers exactly the comparisons below that can run.
+#: The family of pairwise tests (T5 block 1), tied to the research questions. It was
+#: chosen after an exploratory look at day-level tests on panel v1 (8 of those 10 pairs
+#: kept, 3 added) and fixed on 2 Oct 2026, before panel v2 ran, on the same test days.
+#: The Holm adjustment covers exactly the comparisons below that can run.
 #: (id, (model A, setting A), (model B, setting B)); d = loss A - loss B. A side whose
 #: model cannot use weather is tested where T1 reports it (``tested_side``).
 COMPARISONS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
@@ -162,7 +216,22 @@ COMPARISONS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("P10", ("chronos2", "nwp"), ("chronos2", "none")),
     ("P11", ("cliper", "nwp"), ("smart_persistence", "nwp")),
 )
+#: Post hoc comparisons (T5 block 2; DECISIONS.md, 4 Oct 2026): they involve the runs
+#: added after panel v2, so they get a paired skill difference with its interval and
+#: no test. Same layout as ``COMPARISONS``.
+POST_HOC: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
+    ("E1", ("chronos2_ctx2048", "nwp"), ("chronos2", "nwp")),
+    ("E2", ("lightgbm", "nwp"), ("chronos2_ctx2048", "nwp")),
+    ("E3", ("chronos2_ft", "nwp"), ("chronos2_ctx2048", "nwp")),
+    ("E4", ("lightgbm", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E5", ("chronos2_ft", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+)
+#: the P2 pair whose robustness the appendix shows, and the fine-tuning seeds of its B side
+P2_PAIR = ("lightgbm", "chronos2_ft")
+FT_SEEDS = (("chronos2_ft", "seed 0"), ("chronos2_ft_s1", "seed 1"),
+            ("chronos2_ft_s2", "seed 2"))
 ALPHA = 0.05
+INTERVAL = (2.5, 97.5)  # percentiles of the bootstrap distribution: a 95 % interval
 DM_HORIZON = 1          # day-ahead: one daily loss per issue, so h = 1
 BLOCK_DAYS = 7          # bootstrap block: one week keeps weather spells together
 BOOTSTRAP_RESAMPLES = 10_000
@@ -176,7 +245,13 @@ HOURS = ("daytime", "all")
 
 #: files earlier versions of this script wrote that no longer exist in the thesis
 STALE_TABLES = ("master_results.csv", "master_results.md",
-                "master_results_by_site.csv", "master_results_by_site.md")
+                "master_results_by_site.csv", "master_results_by_site.md",
+                # moved to appendix/ on 4 Oct 2026
+                "skill_by_station.csv", "skill_by_station.md",
+                "skill_by_fold.csv", "skill_by_fold.md",
+                "all_hours.csv", "all_hours.md",
+                "panel_diagnostics.csv", "panel_diagnostics.md")
+APPENDIX_DIR = "appendix"   # the appendix tables' folder inside --tables-dir
 STALE_FIGURES = ("nrmse_by_model.png", "calibration_picp80.png")
 
 EM_DASH = "—"
@@ -272,6 +347,19 @@ def setting_order(settings: Iterable[str]) -> list[str]:
     return sorted(set(settings), key=lambda s: (rank.get(s, len(rank)), s))
 
 
+def skill_metric(reference: str | None = None) -> str:
+    """The ``run_metrics`` column of skill over a reference (default ``HEADLINE_REF``)."""
+    reference = HEADLINE_REF if reference is None else reference
+    return "skill_sp" if reference == SP else f"skill_{reference}"
+
+
+def reference_name(reference: str | None = None) -> str:
+    """A reference as named inside a sentence: "CLIPER", "Smart persistence" (a model
+    name, capitalised as in the chapters)."""
+    reference = HEADLINE_REF if reference is None else reference
+    return display_name(reference)
+
+
 # --------------------------------------------------------------------------- #
 # Inputs
 # --------------------------------------------------------------------------- #
@@ -315,16 +403,30 @@ def has_quantiles(frame: pd.DataFrame) -> bool:
     return all(c in frame.columns for c in QUANTILE_COLUMNS)
 
 
-def stored_hashes(results_path: Path) -> set[str]:
-    try:
-        return set(pd.read_parquet(results_path, columns=["config_hash"])["config_hash"].dropna())
-    except (FileNotFoundError, KeyError, ValueError):
-        return set()
+def _paths(paths: str | Path | Iterable[str | Path]) -> list[Path]:
+    """One path or several, as a list of distinct paths in the order given."""
+    items = [paths] if isinstance(paths, (str, Path)) else list(paths)
+    return list(dict.fromkeys(Path(p) for p in items))
 
 
-def load_predictions(predictions_dir: Path, include_synthetic: bool = False,
+def stored_hashes(results_paths: str | Path | Iterable[str | Path]) -> set[str]:
+    """Config hashes of the rows in one or more results stores (a missing or unreadable
+    store contributes none)."""
+    hashes: set[str] = set()
+    for path in _paths(results_paths):
+        try:
+            hashes |= set(pd.read_parquet(path, columns=["config_hash"])["config_hash"].dropna())
+        except (OSError, KeyError, ValueError):
+            continue
+    return hashes
+
+
+def load_predictions(predictions_dirs: str | Path | Iterable[str | Path],
+                     include_synthetic: bool = False,
                      known_hashes: set[str] | None = None) -> dict[RunKey, pd.DataFrame]:
-    """Read every run's predictions into ``{(model, setting, site): frame}``.
+    """Read every run's predictions, from one or more folders, into
+    ``{(model, setting, site): frame}``. A folder that does not exist is skipped with
+    a warning, as is a file that cannot be read (e.g. one a running batch is writing).
 
     Each frame keeps the runner's columns plus ``y_point``, the point forecast the
     point metrics score (``point_forecast_frame``). Model labels are normalised
@@ -333,13 +435,24 @@ def load_predictions(predictions_dir: Path, include_synthetic: bool = False,
     covering the most test windows wins, then the one whose config hash is in the
     results store, then the newest; the others are logged and ignored.
     """
-    files = sorted(Path(predictions_dir).glob("*.parquet"))
+    dirs = _paths(predictions_dirs)
+    files = []
+    for folder in dirs:
+        if not folder.is_dir():
+            logger.warning("no predictions folder %s: skipped", folder)
+            continue
+        files += sorted(folder.glob("*.parquet"))
+    where = ", ".join(str(d) for d in dirs)
     if not files:
-        raise SystemExit(f"No predictions in {predictions_dir}. Run experiments/run_panel.py.")
+        raise SystemExit(f"No predictions in {where}. Run experiments/run_panel.py.")
     found: dict[RunKey, list[tuple[Path, pd.DataFrame]]] = {}
     n_synthetic = 0
     for path in files:
-        frame = pd.read_parquet(path)
+        try:
+            frame = pd.read_parquet(path)
+        except (OSError, ValueError) as exc:
+            logger.warning("skipping %s: unreadable (%s)", path.name, exc)
+            continue
         missing = REQUIRED_COLUMNS - set(frame.columns)
         if missing or frame.empty:
             logger.warning("skipping %s: %s", path.name,
@@ -378,7 +491,7 @@ def load_predictions(predictions_dir: Path, include_synthetic: bool = False,
                            len(candidates), names[0], ", ".join(names[1:]))
         runs[key] = candidates[0][1]
     if not runs:
-        raise SystemExit(f"No usable predictions in {predictions_dir}.")
+        raise SystemExit(f"No usable predictions in {where}.")
     return runs
 
 
@@ -414,14 +527,25 @@ def load_capacities(runs: dict[RunKey, pd.DataFrame],
     return capacities
 
 
-def load_timing(results_path: Path, runs: dict[RunKey, pd.DataFrame],
+def load_timing(results_paths: str | Path | Iterable[str | Path],
+                runs: dict[RunKey, pd.DataFrame],
                 include_synthetic: bool = False) -> pd.DataFrame | None:
-    """Per-fold timing and memory rows of the runs in use (results store,
-    ``daytime_only`` rows so each fold counts once, matched on config hash)."""
-    if not Path(results_path).exists():
-        logger.warning("no results store at %s: T3 is empty and F2 is skipped", results_path)
+    """Per-fold timing and memory rows of the runs in use (one or more results stores,
+    ``daytime_only`` rows so each fold counts once, matched on config hash). A store
+    that is missing or unreadable is skipped with a warning."""
+    frames = []
+    for path in _paths(results_paths):
+        if not path.exists():
+            logger.warning("no results store at %s: skipped", path)
+            continue
+        try:
+            frames.append(pd.read_parquet(path))
+        except (OSError, ValueError) as exc:
+            logger.warning("results store %s unreadable (%s): skipped", path, exc)
+    if not frames:
+        logger.warning("no results store: the compute table is empty and F2 is skipped")
         return None
-    df = pd.read_parquet(results_path)
+    df = pd.concat(frames, ignore_index=True)
     if "daytime_only" in df.columns:
         df = df[df["daytime_only"].astype(bool)]
     if not include_synthetic:
@@ -657,18 +781,29 @@ class Summary:
 
 
 def compute_fold_skill(panel: Panel) -> pd.DataFrame:
-    """Skill vs SP per station-fold: 1 - RMSE_model / RMSE_SP over that station's
-    scored daytime hours in that test window."""
+    """Skill per station-fold: 1 - RMSE_model / RMSE_R over that station's scored
+    daytime hours in that test window, for R = SP (``skill_sp``) and each reference of
+    ``EXTRA_REFERENCES`` with predictions (``skill_<name>``, on the hours where the
+    reference has a forecast)."""
+    metrics = ["skill_sp"] + [skill_metric(r) for r in EXTRA_REFERENCES]
     rows = []
     for (model, setting, site), frame in panel.runs.items():
         sub = frame.loc[scored_mask(frame), ["fold", "y_true", "y_point", "ref_hat"]]
+        for name in EXTRA_REFERENCES:
+            series = reference_forecast(panel, name, site, setting)
+            sub[name] = math.nan if series is None else series.reindex(sub.index).to_numpy(float)
         for fold, g in sub.groupby("fold"):
             y = g["y_true"].to_numpy(float)
-            skill = _skill(_rmse(g["y_point"].to_numpy(float) - y),
-                           _rmse(g["ref_hat"].to_numpy(float) - y))
-            rows.append({"model": model, "setting": setting, "site": site,
-                         "fold": int(fold), "skill_sp": skill})
-    return pd.DataFrame(rows, columns=["model", "setting", "site", "fold", "skill_sp"])
+            err = g["y_point"].to_numpy(float) - y
+            row = {"model": model, "setting": setting, "site": site, "fold": int(fold),
+                   "skill_sp": _skill(_rmse(err), _rmse(g["ref_hat"].to_numpy(float) - y))}
+            for name in EXTRA_REFERENCES:
+                ref = g[name].to_numpy(float)
+                ok = np.isfinite(ref)
+                row[skill_metric(name)] = (_skill(_rmse(err[ok]), _rmse(ref[ok] - y[ok]))
+                                           if ok.any() else math.nan)
+            rows.append(row)
+    return pd.DataFrame(rows, columns=["model", "setting", "site", "fold", *metrics])
 
 
 def fold_labels(panel: Panel) -> dict[int, str]:
@@ -800,6 +935,30 @@ def diebold_mariano(loss_a: Sequence[float] | np.ndarray, loss_b: Sequence[float
     return DMResult(statistic, float(2.0 * stats.t.sf(abs(statistic), df=n - 1)), variance, n)
 
 
+def block_indices(n: int, block: int = BLOCK_DAYS, n_boot: int = BOOTSTRAP_RESAMPLES,
+                  seed: int = BOOTSTRAP_SEED) -> np.ndarray:
+    """The moving-block resamples of a series of length ``n``: an (n_boot, n) array of
+    positions. Each resample joins ceil(n / block) blocks of ``block`` consecutive
+    positions, their starts drawn uniformly (``numpy.random.default_rng(seed)``),
+    and is cut to length n. The one scheme of the bootstrap p-value and the intervals."""
+    size = min(block, n)
+    n_blocks = math.ceil(n / size)
+    rng = np.random.default_rng(seed)
+    starts = rng.integers(0, n - size + 1, size=(n_boot, n_blocks))
+    return (starts[:, :, None] + np.arange(size)).reshape(n_boot, n_blocks * size)[:, :n]
+
+
+def day_weights(n_days: int, block: int = BLOCK_DAYS, n_boot: int = BOOTSTRAP_RESAMPLES,
+                seed: int = BOOTSTRAP_SEED) -> np.ndarray:
+    """W: (n_boot, n_days) integer multiplicities, W[b, j] = how often resample b draws
+    day j (``block_indices``); every row sums to n_days. A resampled pooled statistic
+    is then a matrix product: (W @ per-day sums) / (W @ per-day counts)."""
+    index = block_indices(n_days, block, n_boot, seed)
+    offsets = (np.arange(n_boot) * n_days)[:, None]
+    return np.bincount((index + offsets).ravel(),
+                       minlength=n_boot * n_days).reshape(n_boot, n_days)
+
+
 def block_bootstrap_p(d: Sequence[float] | np.ndarray, block: int = BLOCK_DAYS,
                       n_boot: int = BOOTSTRAP_RESAMPLES, seed: int = BOOTSTRAP_SEED) -> float:
     """Moving-block bootstrap p-value of mean(d) = 0, the check on the DM test.
@@ -814,12 +973,7 @@ def block_bootstrap_p(d: Sequence[float] | np.ndarray, block: int = BLOCK_DAYS,
     n = d.size
     if n == 0:
         return math.nan
-    size = min(block, n)
-    n_blocks = math.ceil(n / size)
-    rng = np.random.default_rng(seed)
-    starts = rng.integers(0, n - size + 1, size=(n_boot, n_blocks))
-    index = (starts[:, :, None] + np.arange(size)).reshape(n_boot, n_blocks * size)[:, :n]
-    means = d[index].mean(axis=1)
+    means = d[block_indices(n, block, n_boot, seed)].mean(axis=1)
     observed = float(d.mean())
     exceed = int(np.count_nonzero(np.abs(means - observed) >= abs(observed)))
     return (1 + exceed) / (n_boot + 1)
@@ -855,7 +1009,7 @@ def tested_side(panel: Panel, model: str, setting: str) -> tuple[str, str]:
 
 
 def compute_significance(panel: Panel) -> pd.DataFrame:
-    """Run the pre-specified comparisons (``COMPARISONS``) on daily losses.
+    """Run the comparisons fixed before panel v2 (``COMPARISONS``) on daily losses.
 
     Per pair: days n, mean daily losses, relative difference mean(d) / mean(L_B),
     the Diebold-Mariano statistic and p-value, the Holm-adjusted p (over the pairs
@@ -906,6 +1060,231 @@ def compute_significance(panel: Panel) -> pd.DataFrame:
     return df
 
 
+# --------------------------------------------------------------------------- #
+# Bootstrap intervals
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Estimate:
+    """A statistic: its value on the test days (``point``) and on each bootstrap
+    resample of them (``samples``, empty when it cannot be computed)."""
+
+    point: float
+    samples: np.ndarray
+
+    @property
+    def available(self) -> bool:
+        return _finite(self.point) and self.samples.size > 0
+
+    @property
+    def interval(self) -> tuple[float, float]:
+        """The 95 % percentile interval (``INTERVAL``) of the resampled values."""
+        if not self.available:
+            return math.nan, math.nan
+        lo, hi = np.percentile(self.samples, INTERVAL)
+        return float(lo), float(hi)
+
+    def __sub__(self, other: "Estimate") -> "Estimate":
+        """The paired difference: resample by resample (both on the same weights)."""
+        if not (self.available and other.available) or self.samples.shape != other.samples.shape:
+            return NOT_AVAILABLE
+        return Estimate(self.point - other.point, self.samples - other.samples)
+
+
+NOT_AVAILABLE = Estimate(math.nan, np.empty(0))
+
+
+class Bootstrap:
+    """Moving-block bootstrap over the date-ordered local test days, shared by every
+    station and model.
+
+    The days are the local (Asia/Hong_Kong) calendar days with a scored daytime hour
+    at any station. One weight matrix W (``day_weights``: ``BLOCK_DAYS``-day blocks,
+    ``BOOTSTRAP_RESAMPLES`` resamples, ``BOOTSTRAP_SEED``) gives each resample's day
+    multiplicities; the same W serves every station and model, so the difference of
+    two statistics, resample by resample, is paired. Per run (and reference) the
+    per-day sums of squared error, scored hours and hours inside [q0.1, q0.9] are
+    kept, so a resampled per-station pooled statistic is (W @ sums) / (W @ counts),
+    e.g. MSE; skill per station is 1 - sqrt(MSE_model / MSE_reference) on the same
+    hours, and the statistic is its mean over the stations. With all-ones weights
+    these are exactly the point estimates of ``run_metrics`` and ``Summary``.
+    """
+
+    def __init__(self, panel: Panel, block: int = BLOCK_DAYS,
+                 n_boot: int = BOOTSTRAP_RESAMPLES, seed: int = BOOTSTRAP_SEED) -> None:
+        self.panel, self.block, self.n_boot, self.seed = panel, block, n_boot, seed
+        fold_of: dict[pd.Timestamp, int] = {}
+        for frame in panel.runs.values():
+            mask = scored_mask(frame)
+            days = _local_days(frame.index[mask])
+            for day, fold in zip(days, frame["fold"].to_numpy()[mask]):
+                fold_of.setdefault(day, int(fold))
+        #: the test days in date order, and the test window each belongs to
+        self.days = pd.DatetimeIndex(sorted(fold_of))
+        self.fold = np.array([fold_of[d] for d in self.days], dtype=int)
+        self._weights: dict[int, np.ndarray] = {}
+        self._sums: dict[tuple[RunKey, str | None], dict[str, np.ndarray] | None] = {}
+
+    def weights(self, n_days: int) -> np.ndarray:
+        """W for a series of ``n_days`` days (float, for the matrix products)."""
+        if n_days not in self._weights:
+            self._weights[n_days] = day_weights(n_days, self.block, self.n_boot,
+                                                self.seed).astype(float)
+        return self._weights[n_days]
+
+    def _run_sums(self, key: RunKey, reference: str | None) -> dict[str, np.ndarray] | None:
+        """Per-day sums of one run over its scored daytime hours. With a reference:
+        hours ``n``, squared error of the point forecast ``sse`` (mean rule) and of
+        ``y_hat`` ``sse_median`` (median rule), and of the reference ``sse_ref``, on
+        the hours where the reference has a forecast. Without: hours ``n`` and hours
+        inside [q0.1, q0.9] ``inside`` (quantile runs). None if there is no reference."""
+        if (key, reference) in self._sums:
+            return self._sums[(key, reference)]
+        model, setting, site = key
+        frame = self.panel.runs[key]
+        mask = scored_mask(frame)
+        y = frame["y_true"].to_numpy(float)[mask]
+        pos = self.days.get_indexer(_local_days(frame.index[mask]))
+        n_days = len(self.days)
+
+        def per_day(weights: np.ndarray | None, ok: np.ndarray) -> np.ndarray:
+            return np.bincount(pos[ok], weights=None if weights is None else weights[ok],
+                               minlength=n_days).astype(float)
+
+        out: dict[str, np.ndarray] | None
+        if reference is None:
+            everywhere = np.ones(y.size, dtype=bool)
+            out = {"n": per_day(None, everywhere)}
+            if has_quantiles(frame):
+                lower, upper = (frame[c].to_numpy(float)[mask] for c in ("q0.1", "q0.9"))
+                out["inside"] = per_day(((y >= lower) & (y <= upper)).astype(float), everywhere)
+        else:
+            if reference == SP:
+                ref = frame["ref_hat"].to_numpy(float)[mask]
+            else:
+                series = reference_forecast(self.panel, reference, site, setting)
+                ref = None if series is None else series.reindex(frame.index).to_numpy(float)[mask]
+            if ref is None:
+                out = None
+            else:
+                ok = np.isfinite(ref)
+                out = {"n": per_day(None, ok),
+                       "sse": per_day((frame["y_point"].to_numpy(float)[mask] - y) ** 2, ok),
+                       "sse_median": per_day((frame["y_hat"].to_numpy(float)[mask] - y) ** 2, ok),
+                       "sse_ref": per_day((ref - y) ** 2, ok)}
+        self._sums[(key, reference)] = out
+        return out
+
+    def sites(self, model: str, setting: str, reference: str | None = None) -> list[str]:
+        """The stations where the model ran in the setting and, unless ``reference`` is
+        None, the reference has a forecast."""
+        return [s for s in self.panel.sites if (model, setting, s) in self.panel.runs
+                and self._run_sums((model, setting, s), reference) is not None]
+
+    def _stack(self, model: str, setting: str, reference: str | None, sites: Sequence[str],
+               column: str, days: np.ndarray | None) -> np.ndarray:
+        """(days, stations) matrix of one per-day sum."""
+        matrix = np.column_stack([self._run_sums((model, setting, s), reference)[column]
+                                  for s in sites])
+        return matrix if days is None else matrix[days]
+
+    def skill(self, model: str, setting: str, reference: str | None = None,
+              rule: str = "mean", sites: Sequence[str] | None = None,
+              days: np.ndarray | None = None) -> Estimate:
+        """Skill over ``reference`` (default ``HEADLINE_REF``), mean over ``sites``
+        (default: every station with both runs), optionally on a subset of the days
+        (``days``: a boolean mask over ``self.days``, resampled with its own W of the
+        same seed). ``rule`` "median" scores ``y_hat`` (the median of a quantile
+        model) instead of the point forecast."""
+        reference = HEADLINE_REF if reference is None else reference
+        sites = self.sites(model, setting, reference) if sites is None else list(sites)
+        if not sites:
+            return NOT_AVAILABLE
+        error = "sse" if rule == "mean" else "sse_median"
+        sse, sse_ref, n = (self._stack(model, setting, reference, sites, c, days)
+                           for c in (error, "sse_ref", "n"))
+
+        def resampled(w: np.ndarray) -> np.ndarray:
+            with np.errstate(divide="ignore", invalid="ignore"):
+                counts = w @ n
+                mse, mse_ref = (w @ sse) / counts, (w @ sse_ref) / counts
+                return (1.0 - np.sqrt(mse / mse_ref)).mean(axis=1)
+
+        n_days = sse.shape[0]
+        return Estimate(float(resampled(np.ones((1, n_days)))[0]),
+                        resampled(self.weights(n_days)))
+
+    def skill_difference(self, a: tuple[str, str], b: tuple[str, str],
+                         reference: str | None = None, rule: str = "mean",
+                         days: np.ndarray | None = None) -> Estimate:
+        """Paired skill difference A - B, both over the stations they share."""
+        reference = HEADLINE_REF if reference is None else reference
+        common = [s for s in self.sites(*a, reference) if s in self.sites(*b, reference)]
+        if not common:
+            return NOT_AVAILABLE
+        return (self.skill(*a, reference=reference, rule=rule, sites=common, days=days)
+                - self.skill(*b, reference=reference, rule=rule, sites=common, days=days))
+
+    def picp(self, model: str, setting: str) -> Estimate:
+        """PICP-80 (share of scored hours inside [q0.1, q0.9]), mean over stations."""
+        sites = [s for s in self.sites(model, setting)
+                 if "inside" in self._run_sums((model, setting, s), None)]
+        if not sites or not self.panel.is_quantile(model, setting):
+            return NOT_AVAILABLE
+        inside, n = (self._stack(model, setting, None, sites, c, None) for c in ("inside", "n"))
+
+        def resampled(w: np.ndarray) -> np.ndarray:
+            return ((w @ inside) / (w @ n)).mean(axis=1)
+
+        return Estimate(float(resampled(np.ones((1, inside.shape[0])))[0]),
+                        resampled(self.weights(inside.shape[0])))
+
+
+def _local_days(index: pd.DatetimeIndex) -> pd.DatetimeIndex:
+    """Each UTC timestamp's local (Asia/Hong_Kong) calendar day, as naive midnight."""
+    return index.tz_convert(HKUST_TZ).tz_localize(None).normalize()
+
+
+def complete(panel: Panel, model: str, setting: str) -> bool:
+    """Whether a model has a (checked) run in the setting at every station."""
+    return all((model, setting, s) in panel.runs for s in panel.sites)
+
+
+def add_skill_differences(sig: pd.DataFrame, boot: Bootstrap) -> pd.DataFrame:
+    """The comparisons' paired skill difference A - B over ``HEADLINE_REF``, on the
+    tested sides' settings: ``skill_diff`` and its 95 % interval ``skill_diff_lo``,
+    ``skill_diff_hi`` (NaN where not available)."""
+    out = sig.copy()
+    values = []
+    for r in out.to_dict("records"):
+        est = (boot.skill_difference((r["model_a"], r["setting_a"]),
+                                     (r["model_b"], r["setting_b"]))
+               if r["available"] else NOT_AVAILABLE)
+        values.append((est.point, *est.interval))
+    out[["skill_diff", "skill_diff_lo", "skill_diff_hi"]] = (
+        np.array(values, dtype=float).reshape(len(values), 3))
+    return out
+
+
+def compute_post_hoc(panel: Panel, boot: Bootstrap) -> pd.DataFrame:
+    """The post hoc comparisons (``POST_HOC``): paired skill difference A - B over
+    ``HEADLINE_REF`` with its 95 % interval, no test. A comparison is "not available"
+    unless both sides have runs at every station (an incomplete run is never compared
+    on fewer stations)."""
+    rows = []
+    for pid, a, b in POST_HOC:
+        a, b = tested_side(panel, *a), tested_side(panel, *b)
+        row = {"id": pid, "model_a": a[0], "setting_a": a[1], "model_b": b[0],
+               "setting_b": b[1]}
+        est = (boot.skill_difference(a, b)
+               if complete(panel, *a) and complete(panel, *b) else NOT_AVAILABLE)
+        if not est.available:
+            logger.warning("%s not available: %s/%s or %s/%s has no run at some station",
+                           pid, *a, *b)
+        rows.append({**row, "available": est.available, "skill_diff": est.point,
+                     "skill_diff_lo": est.interval[0], "skill_diff_hi": est.interval[1]})
+    return pd.DataFrame(rows)
+
+
 @dataclass
 class Diagnostics:
     table: pd.DataFrame   # one row per station
@@ -945,16 +1324,28 @@ def pairwise_correlations(corr: pd.DataFrame) -> np.ndarray:
     return corr.to_numpy()[upper]
 
 
+#: compute summary columns: medians over station-folds, ``window_s`` = fit_s + predict_s
+#: of each station-fold, and the maximum peak RSS
+COMPUTE_COLUMNS = (*TIMING_COLUMNS, "window_s", "max_peak_rss_mb", "n")
+
+
 def compute_medians(panel: Panel) -> pd.DataFrame:
-    """Median fit, predict, fit + predict seconds and peak RSS per fold, per model x
-    setting, over its station-folds (``n``)."""
-    cols = list(TIMING_COLUMNS)
+    """Per model x setting, over its station-folds (``n``): the median fit, predict and
+    fit + predict seconds and peak RSS, the median of fit_s + predict_s per
+    station-fold (``window_s``), and the maximum peak RSS (``max_peak_rss_mb``)."""
+    cols = list(COMPUTE_COLUMNS)
     if panel.timing is None or panel.timing.empty:
-        return pd.DataFrame(columns=cols + ["n"])
-    grouped = panel.timing.groupby(["model", "weather_mode"])
-    medians = grouped[[c for c in cols if c in panel.timing.columns]].median()
+        return pd.DataFrame(columns=cols)
+    timing = panel.timing
+    if {"fit_s", "predict_s"} <= set(timing.columns):
+        timing = timing.assign(window_s=timing["fit_s"] + timing["predict_s"])
+    grouped = timing.groupby(["model", "weather_mode"])
+    medians = grouped[[c for c in (*TIMING_COLUMNS, "window_s")
+                       if c in timing.columns]].median()
+    if "peak_rss_mb" in timing.columns:
+        medians["max_peak_rss_mb"] = grouped["peak_rss_mb"].max()
     medians["n"] = grouped.size()
-    return medians.reindex(columns=cols + ["n"])
+    return medians.reindex(columns=cols)
 
 
 # --------------------------------------------------------------------------- #
@@ -967,6 +1358,7 @@ class Table:
     caption: str
     display: pd.DataFrame
     numeric: pd.DataFrame
+    appendix: bool = False   # written to <tables-dir>/appendix/
 
 
 def _finite(x: object) -> bool:
@@ -994,6 +1386,11 @@ def _num_range(mean: float, lo: float, hi: float, decimals: int = 3) -> str:
     return f"{_num(mean, decimals)} [{_num(lo, decimals)},{NBSP}{_num(hi, decimals)}]"
 
 
+def _interval_cell(est: Estimate, decimals: int = 3) -> str:
+    """The cell "point [lo, hi]" of a bootstrap estimate (its 95 % interval)."""
+    return _num_range(est.point, *est.interval, decimals) if est.available else EM_DASH
+
+
 def _p(p: object) -> str:
     if not _finite(p):
         return EM_DASH
@@ -1004,8 +1401,13 @@ def _int(x: object) -> str:
     return f"{round(float(x)):d}" if _finite(x) else EM_DASH  # type: ignore[arg-type]
 
 
+def _post_hoc(model: str) -> str:
+    """The name with the post hoc mark, if the configuration was added after the main run."""
+    return display_name(model) + (f" {POST_HOC_MARK}" if model in POST_HOC_MODELS else "")
+
+
 def _model_cell(panel: Panel, model: str) -> str:
-    return display_name(model) + (f" {NO_COV_MARK}" if model in panel.no_covariates else "")
+    return _post_hoc(model) + (f" {NO_COV_MARK}" if model in panel.no_covariates else "")
 
 
 def _identity(panel: Panel, model: str) -> dict:
@@ -1014,10 +1416,17 @@ def _identity(panel: Panel, model: str) -> dict:
 
 
 def _no_cov_note(panel: Panel, models: Iterable[str]) -> str:
-    if not panel.no_covariates & set(models):
-        return ""
-    return (f" {NO_COV_MARK} No covariates: the forecasts are identical in both weather "
-            "settings, so the model is reported once, under No weather.")
+    """The caption notes of the marks that ``models`` carry: † (no covariates) and ‡
+    (post hoc)."""
+    models = set(models)
+    note = ""
+    if panel.no_covariates & models:
+        note += (f" {NO_COV_MARK} No covariates: the forecasts are identical in both weather "
+                 "settings, so the model is reported once, under No weather.")
+    if POST_HOC_MODELS & models:
+        note += (f" {POST_HOC_MARK} Post hoc: added after the results of the main run had "
+                 "been seen.")
+    return note
 
 
 def _station_note(panel: Panel, summary: Summary, models: Iterable[str]) -> str:
@@ -1025,7 +1434,7 @@ def _station_note(panel: Panel, summary: Summary, models: Iterable[str]) -> str:
     missing or failed ``check_runs``), so a caption never overstates a mean."""
     short = [f"{display_name(m)}, {setting_label(s)} ({n})"
              for m in models for s in panel.reported_settings(m)
-             if 0 < (n := summary.n_stations(m, s)) < len(panel.sites)]
+             if 0 < (n := summary.n_stations(m, s, skill_metric())) < len(panel.sites)]
     if not short:
         return ""
     return (f" Means over fewer than the {len(panel.sites)} stations (number in brackets): "
@@ -1061,8 +1470,12 @@ def pipe_table(frame: pd.DataFrame) -> str:
     text column claims no more than that word, so in a crowded table the numbers keep
     their width and the names wrap.
     """
-    columns = [str(c) for c in frame.columns]
-    cells = [[str(v).replace("|", "\\|") for v in row]
+    def keep_units(text: str) -> str:
+        # a number and its unit stay on one line: "2,048 h)", never "2,048" / "h)"
+        return re.sub(r"(\d) (h\b|s\b)", rf"\1{NBSP}\2", text)
+
+    columns = [keep_units(str(c)) for c in frame.columns]
+    cells = [[keep_units(str(v)).replace("|", "\\|") for v in row]
              for row in frame.itertuples(index=False, name=None)]
     words = [any(any(ch.isalpha() for ch in r[i]) for r in cells if r[i] != EM_DASH)
              for i in range(len(columns))]
@@ -1073,7 +1486,7 @@ def pipe_table(frame: pd.DataFrame) -> str:
     rule_widths = [max(3, round(DASHES_PER_DIGIT * max([longest(c.replace("-", "- ")),
                                                         *(longest(r[i]) for r in cells)])))
                    for i, c in enumerate(columns)]
-    widths = [max(len(c), *(len(r[i]) for r in cells)) for i, c in enumerate(columns)]
+    widths = [max([len(c), *(len(r[i]) for r in cells)]) for i, c in enumerate(columns)]
 
     def line(values: list[str]) -> str:
         return "| " + " | ".join(v.ljust(w) if left else v.rjust(w)
@@ -1086,7 +1499,10 @@ def pipe_table(frame: pd.DataFrame) -> str:
 
 
 def write_table(table: Table, tables_dir: Path) -> list[Path]:
-    """CSV (numbers at full precision) and Markdown: caption line, blank line, table."""
+    """CSV (numbers at full precision) and Markdown: caption line, blank line, table;
+    an appendix table goes to the ``APPENDIX_DIR`` folder of ``tables_dir``."""
+    if table.appendix:
+        tables_dir = tables_dir / APPENDIX_DIR
     tables_dir.mkdir(parents=True, exist_ok=True)
     csv, md = tables_dir / f"{table.stem}.csv", tables_dir / f"{table.stem}.md"
     table.numeric.to_csv(csv, index=False)
@@ -1095,8 +1511,276 @@ def write_table(table: Table, tables_dir: Path) -> list[Path]:
     return [csv, md]
 
 
-def table_master_skill(panel: Panel, summary: Summary) -> Table:
-    """T1: per model, skill vs SP (and vs CLIPER when present) as mean [min, max]
+def _present(panel: Panel, models: Iterable[str]) -> list[str]:
+    """The models of a set that have predictions, in the set's order."""
+    return [m for m in models if m in panel.models]
+
+
+def _interval_note() -> str:
+    """The interval method, as captions state it."""
+    return (f"95 % interval from a {BLOCK_DAYS}-day moving-block bootstrap over the test days "
+            f"({BOOTSTRAP_RESAMPLES:,} resamples, the same days for all stations)")
+
+
+def _skill_cells(panel: Panel, boot: Bootstrap, model: str) -> tuple[dict, dict]:
+    """A model's skill over ``HEADLINE_REF`` per setting where it is reported: display
+    cells ("Skill (<setting>)": "0.280 [0.231, 0.326]", the reference's own row "0")
+    and numeric columns (skill_<s>, skill_<s>_lo, skill_<s>_hi)."""
+    shown = panel.reported_settings(model)
+    cells, values = {}, {}
+    for s in panel.settings:
+        est = boot.skill(model, s) if s in shown else NOT_AVAILABLE
+        lo, hi = est.interval
+        own = model == HEADLINE_REF and est.available
+        cells[f"Skill ({setting_label(s)})"] = "0" if own else _interval_cell(est)
+        values.update({f"skill_{s}": est.point, f"skill_{s}_lo": lo, f"skill_{s}_hi": hi})
+    return cells, values
+
+
+def table_master_skill(panel: Panel, summary: Summary, boot: Bootstrap) -> Table:
+    """T1: per main model, skill over ``HEADLINE_REF`` with its 95 % interval and the
+    mean nRMSE over stations, per setting."""
+    models = _present(panel, MAIN_MODELS)
+    display, numeric = [], []
+    for model in models:
+        shown = panel.reported_settings(model)
+        cells, values = _skill_cells(panel, boot, model)
+        drow = {"Model": _model_cell(panel, model), **cells}
+        nrow = {**_identity(panel, model), "reference": HEADLINE_REF, **values}
+        for s in panel.settings:
+            nrmse = summary.stat(model, s, "nrmse") if s in shown else math.nan
+            drow[f"nRMSE ({setting_label(s)})"] = _num(nrmse)
+            nrow[f"nrmse_{s}"] = nrmse
+            nrow[f"n_stations_{s}"] = (summary.n_stations(model, s, skill_metric())
+                                       if s in shown else 0)
+        display.append(drow)
+        numeric.append(nrow)
+    ref, other = reference_name(), reference_name(CLIPER if HEADLINE_REF == SP else SP)
+    caption = (
+        f"Accuracy on daytime hours: skill over {ref} (1 {MINUS} RMSE / RMSE of {ref}), "
+        "each station pooled over all test days, mean over the "
+        f"{len(panel.sites)} stations, with its {_interval_note()}; nRMSE = RMSE / "
+        "capacity, mean over stations. Probabilistic models are scored on the mean of "
+        f"their nine quantiles. The full table, with skill over {other} and the range "
+        "across stations, is @tbl:master-skill-full."
+        + _no_cov_note(panel, models) + _station_note(panel, summary, models))
+    return Table("master_skill", "master-skill", caption, pd.DataFrame(display),
+                 pd.DataFrame(numeric))
+
+
+#: the setting whose PICP-80 and time T2 shows
+PRIMARY_SETTING = "nwp"
+
+
+def table_chronos2_configs(panel: Panel, summary: Summary, boot: Bootstrap,
+                           medians: pd.DataFrame) -> Table:
+    """T2: the Chronos-2 configurations (``CHRONOS2_MODELS``): skill over
+    ``HEADLINE_REF`` with its interval per setting, PICP-80 and the median fit +
+    predict seconds per test window in the NWP setting. A configuration without a
+    run at every station in each setting it ran in is left out (with a warning and a
+    caption note), never averaged over fewer stations."""
+    display, numeric, left_out = [], [], []
+    for model in _present(panel, CHRONOS2_MODELS):
+        ran = [s for s in panel.settings if panel.has(model, s)]
+        if not all(complete(panel, model, s) for s in ran):
+            logger.warning("T2: %s left out: not every station has a run", model)
+            left_out.append(display_name(model))
+            continue
+        cells, values = _skill_cells(panel, boot, model)
+        primary = PRIMARY_SETTING in panel.reported_settings(model)
+        picp = summary.stat(model, PRIMARY_SETTING, "picp_80") \
+            if primary and panel.is_quantile(model, PRIMARY_SETTING) else math.nan
+        key = (model, PRIMARY_SETTING)
+        seconds = float(medians.at[key, "window_s"]) \
+            if primary and key in medians.index and pd.notna(medians.at[key, "window_s"]) \
+            else math.nan
+        checkpoint, context_h, _ = CHRONOS2_SETUP.get(model, ("", 0, ""))
+        display.append({"Configuration": _model_cell(panel, model),
+                        "Checkpoint": checkpoint,
+                        "Context (h)": f"{context_h:,}" if context_h else EM_DASH, **cells,
+                        f"PICP-80 ({setting_label(PRIMARY_SETTING)})": _num(picp),
+                        "Time per window (s)": _num(seconds, 1)})
+        numeric.append({**_identity(panel, model), "reference": HEADLINE_REF, **values,
+                        f"picp_80_{PRIMARY_SETTING}": picp,
+                        f"median_window_s_{PRIMARY_SETTING}": seconds})
+    columns = ["Configuration", "Checkpoint", "Context (h)",
+               *(f"Skill ({setting_label(s)})" for s in panel.settings),
+               f"PICP-80 ({setting_label(PRIMARY_SETTING)})", "Time per window (s)"]
+    missing = (" Not shown (a run is missing at some station): " + "; ".join(left_out) + "."
+               if left_out else "")
+    shown = [m for m in _present(panel, CHRONOS2_MODELS) if display_name(m) not in left_out]
+    caption = (
+        "The Chronos-2 configurations. Names: S and B for the small and base checkpoints, "
+        "-mid and -long for contexts longer than the one fixed before the main run, -FT for "
+        "fine-tuning on each training window (repeated with seeds 1 and 2 in the NWP "
+        f"setting only). Skill over {reference_name()} on daytime hours as in "
+        f"@tbl:master-skill, with its {_interval_note()}. PICP-80: share of hours inside "
+        "the 10–90 % interval (nominal 0.8). Time: median over the station-folds of fit "
+        f"+ predict seconds per {window_days(panel)}-day test window." + missing
+        + _no_cov_note(panel, shown))
+    return Table("chronos2_configs", "chronos2-configs", caption,
+                 pd.DataFrame(display, columns=columns), pd.DataFrame(numeric))
+
+
+def _setting_blocks(panel: Panel, models: Iterable[str]) -> list[tuple[str, str, bool]]:
+    """(setting, model, first row of its block) rows for the long tables: a block per
+    setting, models in the given order, each no-covariate model once (No weather)."""
+    models = list(models)
+    rows = []
+    for s in panel.settings:
+        block = [m for m in models if s in panel.reported_settings(m)]
+        rows += [(s, m, i == 0) for i, m in enumerate(block)]
+    return rows
+
+
+def _quantile_blocks(panel: Panel, models: Iterable[str]) -> list[tuple[str, str, bool]]:
+    """``_setting_blocks`` restricted to the runs that issue the nine quantiles."""
+    rows = [(s, m) for s, m, _ in _setting_blocks(panel, models) if panel.is_quantile(m, s)]
+    return [(s, m, i == 0 or rows[i - 1][0] != s) for i, (s, m) in enumerate(rows)]
+
+
+def table_probabilistic(panel: Panel, summary: Summary, boot: Bootstrap) -> Table:
+    """T3: per probabilistic main model and setting, the quantile score / C (mean
+    pinball loss over the nine levels / C = the store column ``crps`` / 2), PICP-80
+    with its 95 % interval and the mean width-80 / C (means over stations)."""
+    display, numeric = [], []
+    models = _present(panel, MAIN_MODELS)
+    for s, model, first in _quantile_blocks(panel, models):
+        qs = summary.stat(model, s, "ncrps") / 2.0
+        picp = boot.picp(model, s)
+        display.append({"Setting": setting_label(s) if first else "",
+                        "Model": _model_cell(panel, model),
+                        "QS / C": _num(qs, 4),
+                        "PICP-80": _interval_cell(picp),
+                        "Width-80 / C": _num(summary.stat(model, s, "nwidth_80"))})
+        numeric.append({"setting": s, **_identity(panel, model), "qs_c": qs,
+                        "picp_80": picp.point, "picp_80_lo": picp.interval[0],
+                        "picp_80_hi": picp.interval[1],
+                        "width_80_c": summary.stat(model, s, "nwidth_80")})
+    caption = (
+        "Probabilistic accuracy on daytime hours of the models that issue quantiles, mean "
+        "over the stations of each station's value pooled over all test days. QS / C: the "
+        "quantile score, the mean pinball loss over the nine quantile levels 0.1, …, 0.9, "
+        "divided by capacity C (lower is better); twice the QS is a common approximation of "
+        "the CRPS. PICP-80: share of hours inside the 10–90 % interval (nominal 0.8), with "
+        f"its {_interval_note()}. Width-80 / C: the interval's mean width divided by C."
+        + _no_cov_note(panel, models) + _station_note(panel, summary, models))
+    return Table("probabilistic", "probabilistic", caption,
+                 pd.DataFrame(display, columns=["Setting", "Model", "QS / C", "PICP-80",
+                                                "Width-80 / C"]),
+                 pd.DataFrame(numeric))
+
+
+#: bytes per GB in the compute table: the store's "MB" are MiB (ru_maxrss / 1024²)
+MB_PER_GB = 1024.0
+
+
+def table_compute(panel: Panel, medians: pd.DataFrame) -> Table:
+    """T4: per main model (references left out) and setting, the median fit and
+    predict seconds over its station-folds and the maximum peak RSS, in GB."""
+    display, numeric = [], []
+    models = [m for m in _present(panel, MAIN_MODELS) if family(m) != REFERENCE]
+    for s, model, first in _setting_blocks(panel, models):
+        rec = medians.loc[(model, s)] if (model, s) in medians.index else None
+
+        def get(col: str, rec: pd.Series | None = rec) -> float:
+            return float(rec[col]) if rec is not None and pd.notna(rec[col]) else math.nan
+
+        display.append({"Setting": setting_label(s) if first else "",
+                        "Model": _model_cell(panel, model),
+                        "Fit (s)": _num(get("fit_s"), 1),
+                        "Predict (s)": _num(get("predict_s"), 1),
+                        "Max memory (GB)": _num(get("max_peak_rss_mb") / MB_PER_GB, 1)})
+        numeric.append({"setting": s, **_identity(panel, model),
+                        **{f"median_{c}": get(c) for c in (*TIMING_COLUMNS, "window_s")},
+                        "max_peak_rss_mb": get("max_peak_rss_mb"),
+                        "max_peak_rss_gb": get("max_peak_rss_mb") / MB_PER_GB,
+                        "n_station_folds": get("n")})
+    caption = (
+        f"Compute cost per test window of {window_days(panel)} days: median wall-clock "
+        "seconds over the station-folds to fit the model and to issue the window's "
+        "day-ahead forecasts, and the maximum over the station-folds of the process's peak "
+        "resident set size (one process per run, so it includes the data and the "
+        "framework; 1 GB = 1,024³ bytes). Memory does not count GPU (Metal) memory, so it "
+        "is a lower bound for the neural models." + _no_cov_note(panel, models))
+    return Table("compute", "compute", caption,
+                 pd.DataFrame(display, columns=["Setting", "Model", "Fit (s)", "Predict (s)",
+                                                "Max memory (GB)"]),
+                 pd.DataFrame(numeric))
+
+
+#: verdicts as printed in the detail table (the CSV keeps the words); the caption explains them
+VERDICT_SHORT = {"no significant difference": "n.s.", "not available": "n/a"}
+
+
+def _side(panel: Panel, model: str, setting: str) -> str:
+    """One side named as in T1: a no-covariate model with †, any other with its setting."""
+    if model in panel.no_covariates:
+        return _model_cell(panel, model)
+    return f"{display_name(model)}, {setting_label(setting)}"
+
+
+def _comparison(panel: Panel, r: dict) -> str:
+    """"Setting: A vs B" when both sides run in one setting, "Model: setting A vs
+    setting B" when one model is compared across settings, else both sides in full."""
+    (ma, sa), (mb, sb) = (r["model_a"], r["setting_a"]), (r["model_b"], r["setting_b"])
+    if sa == sb:
+        return f"{setting_label(sa)}: {_model_cell(panel, ma)} vs {_model_cell(panel, mb)}"
+    if ma == mb:
+        return f"{display_name(ma)}: {setting_label(sa)} vs {setting_label(sb)}"
+    return f"{_side(panel, ma, sa)} vs {_side(panel, mb, sb)}"
+
+
+def _difference_cell(r: dict) -> str:
+    if not r["available"] or not _finite(r["skill_diff"]):
+        return EM_DASH
+    return _num_range(r["skill_diff"], r["skill_diff_lo"], r["skill_diff_hi"])
+
+
+def table_significance(panel: Panel, sig: pd.DataFrame, post_hoc: pd.DataFrame) -> Table:
+    """T5: the comparisons fixed before panel v2 (P1-P11: paired skill difference over
+    ``HEADLINE_REF`` with its interval, Holm p, verdict) and the post hoc ones (E1-E5:
+    skill difference with its interval only, no test). ``sig`` comes from
+    ``add_skill_differences``; the test statistics are in ``significance_detail``."""
+    columns = ["ID", "Comparison (A vs B)", f"Skill difference (A {MINUS} B)", "Holm p",
+               "Verdict"]
+    display = []
+    for r in sig.to_dict("records"):
+        ok = bool(r["available"])
+        display.append(dict(zip(columns, [
+            r["id"], _comparison(panel, r), _difference_cell(r), _p(r["p_holm"]),
+            VERDICT_SHORT.get(r["verdict"], r["verdict"]) if ok else "not available"])))
+    for r in post_hoc.to_dict("records"):
+        display.append(dict(zip(columns, [
+            r["id"], _comparison(panel, r), _difference_cell(r), EM_DASH,
+            "post hoc" if r["available"] else "not available"])))
+    n_tested = int(sig["p_holm"].notna().sum())
+    first = f"{sig['id'].iloc[0]}–{sig['id'].iloc[-1]}" if len(sig) else "P"
+    later = (f"{post_hoc['id'].iloc[0]}–{post_hoc['id'].iloc[-1]}"
+             if len(post_hoc) else "E")
+    ref = reference_name()
+    caption = (
+        f"Pairwise comparisons. Skill difference: skill over {ref} of A minus that of B "
+        f"(positive: A more accurate), with its {_interval_note()}. {first} were fixed "
+        "before the main run, after a first run on the same test days had been examined: "
+        "Diebold-Mariano test on daily squared-error losses, Holm-adjusted over the "
+        f"{n_tested} comparisons; verdict at Holm p < {ALPHA} (n.s.: no significant "
+        f"difference). {later} are post hoc (they involve configurations added after the "
+        "main run) and are reported with intervals only. Full test statistics: "
+        "@tbl:significance-detail."
+        + _no_cov_note(panel, set(sig["model_a"]) | set(sig["model_b"])
+                       | set(post_hoc.get("model_a", [])) | set(post_hoc.get("model_b", []))))
+    numeric = pd.concat([sig.assign(block="fixed before panel v2"),
+                         post_hoc.assign(block="post hoc")], ignore_index=True)
+    return Table("significance", "significance", caption,
+                 pd.DataFrame(display, columns=columns), numeric)
+
+
+# --------------------------------------------------------------------------- #
+# Appendix tables
+# --------------------------------------------------------------------------- #
+def table_master_skill_full(panel: Panel, summary: Summary) -> Table:
+    """Every model: skill over SP (and over CLIPER when present) as mean [min, max]
     over stations, and the mean over stations of nRMSE and nMBE, per setting."""
     blocks = [("skill_sp", "Skill vs SP", True)]
     if CLIPER in panel.models:
@@ -1120,168 +1804,19 @@ def table_master_skill(panel: Panel, summary: Summary) -> Table:
         numeric.append(nrow)
     vs_cliper = " and over CLIPER" if CLIPER in panel.models else ""
     caption = (
-        f"Headline accuracy on daytime hours: skill over smart persistence (SP){vs_cliper} "
-        f"as the mean over the {len(panel.sites)} stations [min, max across stations], and "
+        f"Accuracy of every model run on daytime hours: skill over Smart persistence (SP)"
+        f"{vs_cliper} as the mean over the {len(panel.sites)} stations [min, max across "
+        "stations: the spread between stations, not an uncertainty interval], and "
         "capacity-normalised RMSE and mean bias error (nMBE > 0: over-forecast), mean over "
         "stations. Each station's metrics pool the hours of all test windows; probabilistic "
         "models are scored on the mean of their nine quantiles."
         + _no_cov_note(panel, panel.models) + _station_note(panel, summary, panel.models))
-    return Table("master_skill", "master-skill", caption, pd.DataFrame(display),
-                 pd.DataFrame(numeric))
+    return Table("master_skill_full", "master-skill-full", caption, pd.DataFrame(display),
+                 pd.DataFrame(numeric), appendix=True)
 
 
-def _setting_blocks(panel: Panel, models: Iterable[str]) -> list[tuple[str, str, bool]]:
-    """(setting, model, first row of its block) rows for the long tables: a block per
-    setting, models in thesis order, each no-covariate model once (No weather)."""
-    models = list(models)
-    rows = []
-    for s in panel.settings:
-        block = [m for m in models if s in panel.reported_settings(m)]
-        rows += [(s, m, i == 0) for i, m in enumerate(block)]
-    return rows
-
-
-def table_probabilistic(panel: Panel, summary: Summary) -> Table:
-    """T2: probabilistic scores per model x setting (mean over stations of the
-    per-station pooled values); deterministic models score CRPS = MAE, flagged."""
-    display, numeric = [], []
-    covs = ("0.1", "0.5", "0.9")
-    for s, model, first in _setting_blocks(panel, panel.models):
-        quantile = panel.is_quantile(model, s)
-
-        def get(metric: str, model: str = model, s: str = s) -> float:
-            return summary.stat(model, s, metric)
-
-        display.append({
-            "Setting": setting_label(s) if first else "",
-            "Model": _model_cell(panel, model),
-            "CRPS / C": _num(get("ncrps")),
-            "CRPS skill vs SP": _num(get("crps_skill_sp")),
-            "PICP-80": _num(get("picp_80")) if quantile else EM_DASH,
-            "Width-80 / C": _num(get("nwidth_80")) if quantile else EM_DASH,
-            **{f"Cov. q{tau}": _num(get(f"cov_q{tau}")) if quantile else EM_DASH
-               for tau in covs},
-            "Note": "" if quantile else "deterministic (CRPS = MAE)",
-        })
-        numeric.append({"setting": s, **_identity(panel, model), "probabilistic": quantile,
-                        "crps_c": get("ncrps"), "crps_skill_sp": get("crps_skill_sp"),
-                        "picp_80": get("picp_80"), "width_80_c": get("nwidth_80"),
-                        **{f"cov_q{tau}": get(f"cov_q{tau}")
-                           for tau in (f"{t:g}" for t in DEFAULT_QUANTILES)}})
-    caption = (
-        "Probabilistic accuracy on daytime hours, mean over stations of each station's "
-        "pooled value: CRPS (2 × mean pinball loss over the nine quantiles) / C, CRPS skill "
-        f"over SP (1 {MINUS} CRPS / MAE of SP), coverage of the 10–90 % interval (PICP-80, "
-        "nominal 0.8) and its mean width / C, and the observed share of hours at or below "
-        "the 0.1, 0.5 and 0.9 quantiles (Cov.). Deterministic models enter with CRPS = MAE."
-        + _no_cov_note(panel, panel.models) + _station_note(panel, summary, panel.models))
-    return Table("probabilistic", "probabilistic", caption, pd.DataFrame(display),
-                 pd.DataFrame(numeric))
-
-
-def table_compute(panel: Panel, medians: pd.DataFrame) -> Table:
-    """T3: median fit, predict and fit + predict seconds per fold and median peak RSS
-    over each model x setting's station-folds (results store timings)."""
-    display, numeric = [], []
-    for s, model, first in _setting_blocks(panel, panel.models):
-        rec = medians.loc[(model, s)] if (model, s) in medians.index else None
-
-        def get(col: str, rec: pd.Series | None = rec) -> float:
-            return float(rec[col]) if rec is not None and pd.notna(rec[col]) else math.nan
-
-        display.append({"Setting": setting_label(s) if first else "",
-                        "Model": _model_cell(panel, model),
-                        "Fit (s)": _num(get("fit_s"), 1),
-                        "Predict (s)": _num(get("predict_s"), 1),
-                        "Fit + predict (s)": _num(get("fit_predict_s"), 1),
-                        "Peak RSS (MB)": _int(get("peak_rss_mb")),
-                        "Station-folds": _int(get("n"))})
-        numeric.append({"setting": s, **_identity(panel, model),
-                        **{f"median_{c}": get(c) for c in TIMING_COLUMNS},
-                        "n_station_folds": get("n")})
-    caption = (
-        "Compute cost per test window: median wall-clock seconds to fit, to issue the "
-        f"window's {window_days(panel)} day-ahead forecasts, and both, and median peak "
-        "resident memory of the run's process (one process per run, so it includes the data "
-        "and the framework), over the station-folds of each model and setting."
-        + _no_cov_note(panel, panel.models))
-    return Table("compute", "compute", caption, pd.DataFrame(display), pd.DataFrame(numeric))
-
-
-def table_skill_by_station(panel: Panel, summary: Summary) -> Table:
-    """T4: skill vs SP per model x station (and its mean), a block per setting."""
-    display, numeric = [], []
-    models = [m for m in panel.models if m != SP]
-    for s, model, first in _setting_blocks(panel, models):
-        values = {site: summary.at_site(model, s, site, "skill_sp") for site in panel.sites}
-        mean = summary.stat(model, s, "skill_sp")
-        display.append({"Setting": setting_label(s) if first else "",
-                        "Model": _model_cell(panel, model),
-                        **{site: _num(v) for site, v in values.items()}, "Mean": _num(mean)})
-        numeric.append({"setting": s, **_identity(panel, model), **values, "mean": mean})
-    caption = ("Skill over smart persistence per station (daytime hours, all test windows "
-               "pooled) and its mean over stations." + _no_cov_note(panel, models)
-               + _station_note(panel, summary, models))
-    return Table("skill_by_station", "skill-station", caption, pd.DataFrame(display),
-                 pd.DataFrame(numeric))
-
-
-def fold_means(folds: pd.DataFrame) -> pd.DataFrame:
-    """Mean over stations of the per-station-fold skill, (model, setting) x fold."""
-    if folds.empty:
-        return pd.DataFrame()
-    return folds.groupby(["model", "setting", "fold"])["skill_sp"].mean().unstack("fold")
-
-
-def table_skill_by_fold(panel: Panel, summary: Summary, folds: pd.DataFrame,
-                        labels: dict[int, str]) -> Table:
-    """T5: skill vs SP per test window: per station-fold 1 - RMSE ratio, then the mean
-    over stations; columns are labelled by ``fold_labels``."""
-    means = fold_means(folds)
-    display, numeric = [], []
-    models = [m for m in panel.models if m != SP]
-    for s, model, first in _setting_blocks(panel, models):
-        row = means.loc[(model, s)] if (model, s) in means.index else pd.Series(dtype=float)
-        values = {f: float(row.get(f, math.nan)) for f in labels}
-        display.append({"Setting": setting_label(s) if first else "",
-                        "Model": _model_cell(panel, model),
-                        **{labels[f]: _num(v) for f, v in values.items()}})
-        numeric.append({"setting": s, **_identity(panel, model),
-                        **{f"fold_{f}": v for f, v in values.items()}})
-    columns = ("each window's start date" if any(t[:1].isdigit() for t in labels.values())
-               else "the month holding the middle of each window")
-    caption = (f"Skill over smart persistence per {window_days(panel)}-day test window "
-               f"(columns: {columns}), computed per station and window on daytime hours and "
-               "averaged over stations." + _no_cov_note(panel, models)
-               + _station_note(panel, summary, models))
-    return Table("skill_by_fold", "skill-fold", caption, pd.DataFrame(display),
-                 pd.DataFrame(numeric))
-
-
-#: T6 verdicts as printed (the CSV keeps the words); the caption explains them
-VERDICT_SHORT = {"no significant difference": "n.s.", "not available": "n/a"}
-
-
-def _side(panel: Panel, model: str, setting: str) -> str:
-    """One side named as in T1: a no-covariate model with †, any other with its setting."""
-    if model in panel.no_covariates:
-        return _model_cell(panel, model)
-    return f"{display_name(model)}, {setting_label(setting)}"
-
-
-def _comparison(panel: Panel, r: dict) -> str:
-    """"Setting: A vs B" when both sides run in one setting, "Model: setting A vs
-    setting B" when one model is compared across settings, else both sides in full."""
-    (ma, sa), (mb, sb) = (r["model_a"], r["setting_a"]), (r["model_b"], r["setting_b"])
-    if sa == sb:
-        return f"{setting_label(sa)}: {_model_cell(panel, ma)} vs {_model_cell(panel, mb)}"
-    if ma == mb:
-        return f"{display_name(ma)}: {setting_label(sa)} vs {setting_label(sb)}"
-    return f"{_side(panel, ma, sa)} vs {_side(panel, mb, sb)}"
-
-
-def table_significance(panel: Panel, sig: pd.DataFrame) -> Table:
-    """T6: the pre-specified Diebold-Mariano comparisons.
+def table_significance_detail(panel: Panel, sig: pd.DataFrame) -> Table:
+    """The test statistics of the comparisons fixed before panel v2 (T5 block 1).
 
     Laid out to fit the text width at the manuscript's 11 pt: A and B share one cell,
     the verdicts are short (explained in the caption), and the day count goes in the
@@ -1309,7 +1844,8 @@ def table_significance(panel: Panel, sig: pd.DataFrame) -> Table:
     missing = (" n/a: not available (a model has no predictions)."
                if (~sig["available"].astype(bool)).any() else "")
     caption = (
-        f"Pre-specified pairwise comparisons on daily losses{span}: each local day's loss "
+        f"Test statistics of the comparisons of @tbl:significance fixed before the main run, "
+        f"on daily losses{span}: each local day's loss "
         f"is the station average of the mean ((forecast {MINUS} truth) / C)² over the day's "
         "scored daytime hours; Loss A and B are their means over the days, and Rel. diff. "
         f"is the mean of d = loss A {MINUS} loss B relative to loss B (negative: A better). "
@@ -1321,12 +1857,163 @@ def table_significance(panel: Panel, sig: pd.DataFrame) -> Table:
         f"gaps between test windows. Verdict at Holm p < {ALPHA}; n.s.: no significant "
         "difference." + missing
         + _no_cov_note(panel, set(sig["model_a"]) | set(sig["model_b"])))
-    return Table("significance", "significance", caption, pd.DataFrame(display), sig.copy())
+    return Table("significance_detail", "significance-detail", caption, pd.DataFrame(display),
+                 sig.copy(), appendix=True)
+
+
+def _appendix_models(panel: Panel) -> list[str]:
+    """The rows of the per-station and per-window tables: the main models but the
+    headline reference (its skill is 0 everywhere)."""
+    return [m for m in _present(panel, MAIN_MODELS) if m != HEADLINE_REF]
+
+
+def table_skill_by_station(panel: Panel, summary: Summary) -> Table:
+    """Skill over ``HEADLINE_REF`` per main model x station (and its mean), a block
+    per setting."""
+    display, numeric = [], []
+    metric = skill_metric()
+    models = _appendix_models(panel)
+    for s, model, first in _setting_blocks(panel, models):
+        values = {site: summary.at_site(model, s, site, metric) for site in panel.sites}
+        mean = summary.stat(model, s, metric)
+        display.append({"Setting": setting_label(s) if first else "",
+                        "Model": _model_cell(panel, model),
+                        **{site: _num(v) for site, v in values.items()}, "Mean": _num(mean)})
+        numeric.append({"setting": s, **_identity(panel, model), "reference": HEADLINE_REF,
+                        **values, "mean": mean})
+    caption = (f"Skill over {reference_name()} per station (daytime hours, all test windows "
+               "pooled) and its mean over stations." + _no_cov_note(panel, models)
+               + _station_note(panel, summary, models))
+    return Table("skill_by_station", "skill-by-station", caption, pd.DataFrame(display),
+                 pd.DataFrame(numeric), appendix=True)
+
+
+def fold_means(folds: pd.DataFrame, metric: str | None = None) -> pd.DataFrame:
+    """Mean over stations of the per-station-fold skill (default: over
+    ``HEADLINE_REF``), (model, setting) x fold."""
+    metric = skill_metric() if metric is None else metric
+    if folds.empty or metric not in folds.columns:
+        return pd.DataFrame()
+    return folds.groupby(["model", "setting", "fold"])[metric].mean().unstack("fold")
+
+
+def table_skill_by_fold(panel: Panel, summary: Summary, folds: pd.DataFrame,
+                        labels: dict[int, str]) -> Table:
+    """Skill over ``HEADLINE_REF`` per test window: per station-fold 1 - RMSE ratio,
+    then the mean over stations; columns are labelled by ``fold_labels``."""
+    means = fold_means(folds)
+    display, numeric = [], []
+    models = _appendix_models(panel)
+    for s, model, first in _setting_blocks(panel, models):
+        row = means.loc[(model, s)] if (model, s) in means.index else pd.Series(dtype=float)
+        values = {f: float(row.get(f, math.nan)) for f in labels}
+        display.append({"Setting": setting_label(s) if first else "",
+                        "Model": _model_cell(panel, model),
+                        **{labels[f]: _num(v) for f, v in values.items()}})
+        numeric.append({"setting": s, **_identity(panel, model), "reference": HEADLINE_REF,
+                        **{f"fold_{f}": v for f, v in values.items()}})
+    columns = ("each window's start date" if any(t[:1].isdigit() for t in labels.values())
+               else "the month holding the middle of each window")
+    caption = (f"Skill over {reference_name()} per {window_days(panel)}-day test window "
+               f"(columns: {columns}), computed per station and window on daytime hours and "
+               "averaged over stations." + _no_cov_note(panel, models)
+               + _station_note(panel, summary, models))
+    return Table("skill_by_fold", "skill-by-fold", caption, pd.DataFrame(display),
+                 pd.DataFrame(numeric), appendix=True)
+
+
+def median_is_y_hat(panel: Panel, model: str, setting: str) -> bool:
+    """Whether a quantile run's ``y_hat`` equals its 0.5 quantile on every scored
+    hour (the median rule scores ``y_hat``)."""
+    for site in panel.sites:
+        frame = panel.runs.get((model, setting, site))
+        if frame is None:
+            continue
+        mask = scored_mask(frame)
+        if not np.allclose(frame["y_hat"].to_numpy(float)[mask],
+                           frame["q0.5"].to_numpy(float)[mask], rtol=0, atol=1e-9):
+            return False
+    return True
+
+
+def table_point_rule(panel: Panel, boot: Bootstrap) -> Table:
+    """Skill over ``HEADLINE_REF`` of the probabilistic main models under the point
+    rule used (the mean of the nine quantiles) and under the median rule (``y_hat``,
+    checked to equal q0.5), and their difference."""
+    display, numeric, differs = [], [], []
+    models = _present(panel, MAIN_MODELS)
+    for s, model, first in _quantile_blocks(panel, models):
+        if not median_is_y_hat(panel, model, s):
+            logger.warning("point rule: %s/%s has y_hat != q0.5 on some scored hour", model, s)
+            differs.append(f"{display_name(model)}, {setting_label(s)}")
+        mean_rule = boot.skill(model, s).point
+        median_rule = boot.skill(model, s, rule="median").point
+        display.append({"Setting": setting_label(s) if first else "",
+                        "Model": _model_cell(panel, model),
+                        "Skill, mean rule": _num(mean_rule),
+                        "Skill, median rule": _num(median_rule),
+                        "Difference": _num(mean_rule - median_rule)})
+        numeric.append({"setting": s, **_identity(panel, model), "reference": HEADLINE_REF,
+                        "skill_mean_rule": mean_rule, "skill_median_rule": median_rule,
+                        "difference": mean_rule - median_rule})
+    note = (" For these runs y_hat is not the 0.5 quantile: " + "; ".join(differs) + "."
+            if differs else "")
+    caption = (
+        f"Sensitivity to the point-forecast rule: skill over {reference_name()} on daytime "
+        "hours (mean over stations) when a probabilistic model is scored on the mean of its "
+        "nine quantiles (the rule used throughout) and on its median (the 0.5 quantile), and "
+        "the difference (mean rule minus median rule)." + note + _no_cov_note(panel, models))
+    return Table("point_rule", "point-rule", caption,
+                 pd.DataFrame(display, columns=["Setting", "Model", "Skill, mean rule",
+                                                "Skill, median rule", "Difference"]),
+                 pd.DataFrame(numeric), appendix=True)
+
+
+def table_p2_robustness(panel: Panel, boot: Bootstrap, labels: dict[int, str]) -> Table:
+    """The P2 skill difference (LightGBM minus fine-tuned Chronos-2, NWP, over
+    ``HEADLINE_REF``) with its interval: on all windows with each fine-tuning seed,
+    and with seed 0 leaving out each test window in turn (the interval then resamples
+    the remaining days)."""
+    a_model, b_model = P2_PAIR
+    a = (a_model, PRIMARY_SETTING)
+    rows = []   # (label, window left out or None, model B, days used, estimate)
+    for model, seed in FT_SEEDS:
+        if not (complete(panel, *a) and complete(panel, model, PRIMARY_SETTING)):
+            logger.warning("P2 robustness: %s left out: not every station has a run", model)
+            continue
+        label = ("All windows (seed 0)" if model == b_model
+                 else f"All windows, {seed} {POST_HOC_MARK}")
+        rows.append((label, None, model, len(boot.days),
+                     boot.skill_difference(a, (model, PRIMARY_SETTING))))
+    if complete(panel, *a) and complete(panel, b_model, PRIMARY_SETTING):
+        for fold, name in labels.items():
+            days = boot.fold != fold
+            if not days.all():
+                rows.append((f"Without {name}", fold, b_model, int(days.sum()),
+                             boot.skill_difference(a, (b_model, PRIMARY_SETTING), days=days)))
+    column = f"{display_name(a_model)} {MINUS} {display_name(b_model)}"
+    display = [{"Test days": label, column: _interval_cell(est)}
+               for label, _, _, _, est in rows]
+    numeric = [{"variant": label, "fold_left_out": fold, "model_a": a_model, "model_b": model,
+                "setting": PRIMARY_SETTING, "reference": HEADLINE_REF, "n_days": n_days,
+                "skill_diff": est.point, "skill_diff_lo": est.interval[0],
+                "skill_diff_hi": est.interval[1]} for label, fold, model, n_days, est in rows]
+    caption = (
+        f"Robustness of comparison P2 (@tbl:significance): skill over {reference_name()} of "
+        f"{display_name(a_model)} minus that of {display_name(b_model)}, "
+        f"{setting_label(PRIMARY_SETTING)} setting (positive: {display_name(a_model)} more "
+        f"accurate), with its {_interval_note()}: on all test windows with each fine-tuning "
+        "seed, and with seed 0 leaving out one test window (named by the month holding its "
+        "middle) at a time, the interval then resampling the remaining days."
+        + (_no_cov_note(panel, [m for _, _, m, _, _ in rows])))
+    return Table("p2_robustness", "p2-robustness", caption,
+                 pd.DataFrame(display, columns=["Test days", column]),
+                 pd.DataFrame(numeric), appendix=True)
 
 
 def table_all_hours(panel: Panel, summary: Summary) -> Table:
-    """T7: the headline skill vs SP scored on all hours (night included), and the
-    all-hours nRMSE; the caption quantifies both changes against daytime scoring."""
+    """The skill vs SP scored on all hours (night included), and the all-hours nRMSE;
+    the caption quantifies both changes against daytime scoring."""
     display, numeric, skill_shift, nrmse_ratio = [], [], [], []
     for model in panel.models:
         shown = panel.reported_settings(model)
@@ -1351,23 +2038,23 @@ def table_all_hours(panel: Panel, summary: Summary) -> Table:
         display.append(drow)
         numeric.append(nrow)
     shift = (f" No model's mean skill moves by more than {max(skill_shift):.5f} from its "
-             "daytime value (@tbl:master-skill): at night both truth and forecasts are close "
-             "to zero for every model, so the night adds almost nothing to either RMSE in the "
-             "skill ratio." if skill_shift else "")
+             "daytime value (@tbl:master-skill-full): at night both truth and forecasts are "
+             "close to zero for every model, so the night adds almost nothing to either RMSE "
+             "in the skill ratio." if skill_shift else "")
     dilution = (f" The night zeros do lower nRMSE, by {100 * (1 - np.mean(nrmse_ratio)):.0f} % "
                 "on average, which is why accuracy is reported on daytime hours."
                 if nrmse_ratio else "")
-    caption = ("Robustness of the headline to the scoring mask: skill over smart persistence "
+    caption = ("Robustness of the headline to the scoring mask: skill over Smart persistence "
                "and nRMSE scored on all hours with valid truth (night included); skill as the "
                "mean over stations [min, max], nRMSE as the mean." + shift + dilution
                + _no_cov_note(panel, panel.models)
                + _station_note(panel, summary, panel.models))
     return Table("all_hours", "all-hours", caption, pd.DataFrame(display),
-                 pd.DataFrame(numeric))
+                 pd.DataFrame(numeric), appendix=True)
 
 
 def table_panel_diagnostics(diagnostics: Diagnostics) -> Table:
-    """T8: per-station scored data and the correlation of SP errors across stations."""
+    """Per-station scored data and the correlation of SP errors across stations."""
     diag, pairs = diagnostics.table, pairwise_correlations(diagnostics.corr)
     display = [{"Station": r["site"], "Capacity (kW)": _num(r["capacity_kw"], 2),
                 "Days": _int(r["days"]), "Daytime hours": _int(r["daytime_hours"]),
@@ -1398,7 +2085,7 @@ def table_panel_diagnostics(diagnostics: Diagnostics) -> Table:
         "correlations [min, max]. The stations share one campus and one weather regime, so "
         "their errors are far from independent.")
     return Table("panel_diagnostics", "panel-diagnostics", caption, pd.DataFrame(display),
-                 numeric)
+                 numeric, appendix=True)
 
 
 def metrics_long(panel: Panel, station: pd.DataFrame) -> pd.DataFrame:
@@ -1437,11 +2124,11 @@ def _save(fig: plt.Figure, figures_dir: Path, stem: str) -> list[Path]:
 
 
 def _figure_label(panel: Panel, model: str) -> str:
-    return display_name(model) + (f" {NO_COV_LABEL}" if model in panel.no_covariates else "")
+    return _post_hoc(model) + (f" {NO_COV_LABEL}" if model in panel.no_covariates else "")
 
 
 def _zero_line(ax: plt.Axes, axis: str = "y") -> None:
-    """The zero reference on a skill axis (skill 0 = smart persistence)."""
+    """The zero reference on a skill axis (skill 0 = the headline reference)."""
     (ax.axhline if axis == "y" else ax.axvline)(0.0, color=INK_2, linewidth=0.8, zorder=1.5)
 
 
@@ -1517,38 +2204,46 @@ def _legend_below(fig: plt.Figure, groups: list[list], max_cols: int | None = No
         cols -= 1
 
 
-def _entries(panel: Panel, summary: Summary, metric: str = "skill_sp",
-             omit: frozenset[str] = FIGURE_OMIT) -> list[tuple[str, list[tuple]]]:
-    """(model, [(setting, mean, min, max), ...]) sorted by the NWP mean, best first
-    (a model without an NWP value sorts by its other one)."""
+def figure_models(panel: Panel) -> list[str]:
+    """The models of the per-model figures: the main models but the headline
+    reference, which is their zero line."""
+    return [m for m in _present(panel, MAIN_MODELS) if m != HEADLINE_REF]
+
+
+def _entries(panel: Panel, summary: Summary, models: Iterable[str],
+             metric: str | None = None) -> list[tuple[str, list[tuple[str, float]]]]:
+    """(model, [(setting, mean over stations), ...]) of the given models, sorted by the
+    NWP mean, best first (a model without an NWP value sorts by its other one).
+    ``metric`` defaults to skill over ``HEADLINE_REF``."""
+    metric = skill_metric() if metric is None else metric
     entries = []
-    for model in panel.models:
-        if model in omit:
-            continue
-        values = [(s, *summary.triple(model, s, metric)) for s in panel.reported_settings(model)]
+    for model in models:
+        values = [(s, summary.stat(model, s, metric)) for s in panel.reported_settings(model)]
         values = [v for v in values if _finite(v[1])]
         if values:
             entries.append((model, values))
 
-    def key(entry: tuple[str, list[tuple]]) -> float:
-        by_setting = {v[0]: v[1] for v in entry[1]}
+    def key(entry: tuple[str, list[tuple[str, float]]]) -> float:
+        by_setting = dict(entry[1])
         return -by_setting.get("nwp", entry[1][0][1])
 
     return sorted(entries, key=key)
 
 
 def figure_order(panel: Panel, summary: Summary) -> list[str]:
-    """The one model order of every per-model figure (F1, F3-F6): by NWP skill vs SP,
-    best first, a model without an NWP value by its No-weather one (``_entries``);
-    models without a skill value follow in thesis order."""
-    ranked = [m for m, _ in _entries(panel, summary, omit=frozenset())]
+    """The one model order of every per-model figure (F1, F3-F6): by NWP skill over
+    ``HEADLINE_REF``, best first, a model without an NWP value by its No-weather one
+    (``_entries``); models without a skill value follow in thesis order."""
+    ranked = [m for m, _ in _entries(panel, summary, panel.models)]
     return ranked + [m for m in panel.models if m not in ranked]
 
 
-def fig_skill_by_model(panel: Panel, summary: Summary, figures_dir: Path) -> list[Path]:
-    """F1: skill vs SP per model, an NWP and a No-weather bar with station min-max
-    whiskers; a no-covariate model has one bar."""
-    entries = _entries(panel, summary)
+def fig_skill_by_model(panel: Panel, summary: Summary, boot: Bootstrap,
+                       figures_dir: Path) -> list[Path]:
+    """F1: skill over ``HEADLINE_REF`` per main model, an NWP and a No-weather bar
+    with its 95 % interval; a no-covariate model has one bar."""
+    entries = [(model, [(s, boot.skill(model, s)) for s, _ in values])
+               for model, values in _entries(panel, summary, figure_models(panel))]
     if not entries:
         logger.warning("F1 skipped: no model to plot")
         return []
@@ -1557,21 +2252,23 @@ def fig_skill_by_model(panel: Panel, summary: Summary, figures_dir: Path) -> lis
     height, gap = 0.34, 0.05
     for i, (model, values) in enumerate(entries):
         offsets = [0.0] if len(values) == 1 else [-(height + gap) / 2, (height + gap) / 2]
-        for (setting, mean, lo, hi), off in zip(values, offsets):
-            ax.barh(i + off, mean, height=height, zorder=2, **_bar_style(model, setting))
+        for (setting, est), off in zip(values, offsets):
+            ax.barh(i + off, est.point, height=height, zorder=2, **_bar_style(model, setting))
+            lo, hi = est.interval
             if _finite(lo) and _finite(hi):
-                ax.errorbar(mean, i + off, xerr=[[mean - lo], [hi - mean]], fmt="none",
-                            ecolor=INK_2, elinewidth=0.8, capsize=2, capthick=0.8, zorder=3)
+                ax.errorbar(est.point, i + off, xerr=[[est.point - lo], [hi - est.point]],
+                            fmt="none", ecolor=INK_2, elinewidth=0.8, capsize=2,
+                            capthick=0.8, zorder=3)
     ax.set_yticks(range(n), labels=[_figure_label(panel, m) for m, _ in entries])
     ax.set_ylim(n - 0.5, -0.5)
     ax.tick_params(axis="y", length=0, labelcolor=INK)
     ax.spines["left"].set_visible(False)
     ax.grid(axis="x")
     _zero_line(ax, "x")
-    ax.set_xlabel("Skill vs smart persistence (daytime, mean over stations)")
+    ax.set_xlabel(f"Skill vs {reference_name()} (daytime, mean over stations)")
     settings = {v[0] for _, values in entries for v in values}
     whisker = Line2D([], [], color=INK_2, linewidth=0.8, marker="|", markersize=6,
-                     markeredgewidth=0.8, label="Station min–max")
+                     markeredgewidth=0.8, label="95 % interval")
     _legend_below(fig, [_family_handles(m for m, _ in entries),
                         _setting_handles(settings) + [whisker]])
     return _save(fig, figures_dir, "skill_by_model")
@@ -1640,15 +2337,16 @@ def _place_labels(ax: plt.Axes, labels: list[tuple[str, float, float, str]],
 
 def fig_skill_vs_compute(panel: Panel, summary: Summary, medians: pd.DataFrame,
                          figures_dir: Path) -> list[Path]:
-    """F2: skill vs SP against median fit + predict seconds per fold (log x)."""
+    """F2: skill over ``HEADLINE_REF`` against the median fit + predict seconds per
+    test window (log x), for the main models without the references."""
     points: dict[str, list[tuple[str, float, float]]] = {}
-    for model in panel.models:
-        if model in FIGURE_OMIT:
+    for model in figure_models(panel):
+        if family(model) == REFERENCE:
             continue
         for s in panel.reported_settings(model):
-            x = float(medians.at[(model, s), "fit_predict_s"]) \
+            x = float(medians.at[(model, s), "window_s"]) \
                 if (model, s) in medians.index else math.nan
-            y = summary.stat(model, s, "skill_sp")
+            y = summary.stat(model, s, skill_metric())
             if _finite(x) and x > 0 and _finite(y):
                 points.setdefault(model, []).append((s, x, y))
     if not points:
@@ -1665,17 +2363,18 @@ def fig_skill_vs_compute(panel: Panel, summary: Summary, medians: pd.DataFrame,
             ax.plot(x, y, linestyle="none", zorder=3, **_marker_style(model, s))
     xs = [p[1] for pts in points.values() for p in pts]
     ys = [p[2] for pts in points.values() for p in pts]
-    ax.set_xlim(min(xs) / 2.5, max(xs) * 3.5)
+    # room on both sides for direct labels as long as "Chronos-2 (fine-tuned, 336 h)"
+    ax.set_xlim(min(xs) / 16, max(xs) * 12)
     lo, hi = min(min(ys), 0.0), max(max(ys), 0.0)
     pad = 0.14 * ((hi - lo) or 1.0)
     ax.set_ylim(lo - pad, hi + pad)
     _zero_line(ax, "y")
-    zero_text = ax.text(0.995, 0.0, "smart persistence", ha="right", va="bottom",
+    zero_text = ax.text(0.995, 0.0, reference_name(), ha="right", va="bottom",
                         color=INK_2, fontsize=8,
                         transform=blended_transform_factory(ax.transAxes, ax.transData))
     ax.grid(axis="y")
     ax.set_xlabel("Median fit + predict time per test window (s, log scale)")
-    ax.set_ylabel("Skill vs smart persistence")
+    ax.set_ylabel(f"Skill vs {reference_name()}")
     settings = {p[0] for pts in points.values() for p in pts}
     _legend_below(fig, [_family_handles(points, "marker"), _setting_handles(settings, "marker")])
     fig.canvas.draw()                # settle the layout, then freeze it for labelling
@@ -1693,10 +2392,11 @@ def fig_skill_vs_compute(panel: Panel, summary: Summary, medians: pd.DataFrame,
 
 
 def fig_reliability(panel: Panel, summary: Summary, figures_dir: Path) -> list[Path]:
-    """F3: reliability (observed P(y <= q_tau) vs tau), a panel per quantile model, in
-    ``figure_order``."""
-    models = [m for m in figure_order(panel, summary)
-              if any(panel.is_quantile(m, s) for s in panel.reported_settings(m))]
+    """F3: reliability (observed P(y <= q_tau) vs tau), a panel per quantile main
+    model, in ``figure_order``."""
+    main = set(MAIN_MODELS)
+    models = [m for m in figure_order(panel, summary) if m in main
+              and any(panel.is_quantile(m, s) for s in panel.reported_settings(m))]
     if not models:
         logger.warning("F3 skipped: no quantile model")
         return []
@@ -1716,7 +2416,7 @@ def fig_reliability(panel: Panel, summary: Summary, figures_dir: Path) -> list[P
             ax.plot(taus, cov, color=colour(model), linestyle="-" if s == "nwp" else "--",
                     zorder=3, **_marker_style(model, s, size=4.5))
             used_settings.add(s)
-        ax.set_title(display_name(model), loc="left")
+        ax.set_title(_post_hoc(model), loc="left")
         if model in panel.no_covariates:
             ax.text(0.04, 0.96, "no covariates", transform=ax.transAxes, ha="left",
                     va="top", color=INK_2, fontsize=8)
@@ -1755,10 +2455,12 @@ def _ink_on(rgba: tuple[float, ...]) -> str:
 
 def fig_skill_by_fold(panel: Panel, summary: Summary, folds: pd.DataFrame,
                       labels: dict[int, str], figures_dir: Path) -> list[Path]:
-    """F4: heatmaps of skill vs SP per test window (mean over stations), one per
-    setting; rows are the non-reference models and CLIPER, in ``figure_order``."""
+    """F4: heatmaps of skill over ``HEADLINE_REF`` per test window (mean over
+    stations), one per setting; rows are the main models but the headline reference,
+    in ``figure_order``."""
     means = fold_means(folds)
-    models = [m for m in figure_order(panel, summary) if family(m) != REFERENCE or m == CLIPER]
+    shown = set(figure_models(panel))
+    models = [m for m in figure_order(panel, summary) if m in shown]
     blocks = []
     for s in panel.settings:
         rows = [m for m in models if s in panel.reported_settings(m) and (m, s) in means.index]
@@ -1798,14 +2500,16 @@ def fig_skill_by_fold(panel: Panel, summary: Summary, folds: pd.DataFrame,
                         aspect=30, pad=0.02)
     cbar.outline.set_visible(False)
     cbar.ax.tick_params(length=2, color=AXIS, labelcolor=INK_2)
-    cbar.set_label("Skill vs smart persistence", color=INK, fontsize=8.5)
+    cbar.set_label(f"Skill vs {reference_name()}", color=INK, fontsize=8.5)
     return _save(fig, figures_dir, "skill_by_fold")
 
 
 def fig_skill_by_station(panel: Panel, summary: Summary, figures_dir: Path) -> list[Path]:
-    """F5: per model, each station's skill vs SP (small gray dots) and their mean (a
-    larger marker in the family hue), a panel per setting."""
-    order = [m for m, _ in _entries(panel, summary)]
+    """F5: per main model (but the headline reference), each station's skill over
+    ``HEADLINE_REF`` (small gray dots) and their mean (a larger marker in the family
+    hue), a panel per setting."""
+    metric = skill_metric()
+    order = [m for m, _ in _entries(panel, summary, figure_models(panel))]
     blocks = [(s, [m for m in order if s in panel.reported_settings(m)])
               for s in panel.settings]
     blocks = [b for b in blocks if b[1]]
@@ -1820,11 +2524,11 @@ def fig_skill_by_station(panel: Panel, summary: Summary, figures_dir: Path) -> l
     jitter = np.linspace(-0.16, 0.16, len(sites)) if len(sites) > 1 else np.zeros(1)
     for ax, (s, rows) in zip(axes[:, 0], blocks):
         for i, model in enumerate(rows):
-            values = np.array([summary.at_site(model, s, site, "skill_sp") for site in sites])
+            values = np.array([summary.at_site(model, s, site, metric) for site in sites])
             ok = np.isfinite(values)
             ax.plot(values[ok], i + jitter[ok], linestyle="none", marker="o", markersize=3.5,
                     markerfacecolor=STATION_DOT, markeredgewidth=0, alpha=0.9, zorder=2)
-            ax.plot(summary.stat(model, s, "skill_sp"), i, linestyle="none", zorder=3,
+            ax.plot(summary.stat(model, s, metric), i, linestyle="none", zorder=3,
                     **_marker_style(model, s, size=7.5))
         ax.set_yticks(range(len(rows)), labels=[_figure_label(panel, m) for m in rows])
         ax.set_ylim(len(rows) - 0.5, -0.5)
@@ -1833,7 +2537,7 @@ def fig_skill_by_station(panel: Panel, summary: Summary, figures_dir: Path) -> l
         ax.grid(axis="x")
         _zero_line(ax, "x")
         ax.set_title(setting_label(s), loc="left")
-    axes[-1, 0].set_xlabel("Skill vs smart persistence (daytime)")
+    axes[-1, 0].set_xlabel(f"Skill vs {reference_name()} (daytime)")
     station = Line2D([], [], linestyle="none", marker="o", markersize=3.5,
                      markerfacecolor=STATION_DOT, markeredgewidth=0, label="One station")
     means = [Line2D([], [], linestyle="none", label=f"Mean over stations, {setting_label(s)}",
@@ -1843,13 +2547,15 @@ def fig_skill_by_station(panel: Panel, summary: Summary, figures_dir: Path) -> l
 
 
 def fig_weather_gain(panel: Panel, summary: Summary, figures_dir: Path) -> list[Path]:
-    """F6: per covariate-using model, No-weather skill (hollow) to NWP skill (filled), in
-    ``figure_order``."""
+    """F6: per covariate-using main model, No-weather skill (hollow) to NWP skill
+    (filled) over ``HEADLINE_REF``, in ``figure_order``."""
     rows = []
+    shown, metric = set(figure_models(panel)), skill_metric()
     for model in figure_order(panel, summary):
-        if model in panel.no_covariates or not {"nwp", "none"} <= set(panel.settings):
+        if model not in shown or model in panel.no_covariates \
+                or not {"nwp", "none"} <= set(panel.settings):
             continue
-        nwp, none = summary.stat(model, "nwp", "skill_sp"), summary.stat(model, "none", "skill_sp")
+        nwp, none = summary.stat(model, "nwp", metric), summary.stat(model, "none", metric)
         if _finite(nwp) and _finite(none):
             rows.append((model, none, nwp))
     if not rows:
@@ -1860,13 +2566,13 @@ def fig_weather_gain(panel: Panel, summary: Summary, figures_dir: Path) -> list[
         ax.plot([none, nwp], [i, i], color=AXIS, linewidth=1.2, zorder=2)
         ax.plot(none, i, linestyle="none", zorder=3, **_marker_style(model, "none"))
         ax.plot(nwp, i, linestyle="none", zorder=3, **_marker_style(model, "nwp"))
-    ax.set_yticks(range(len(rows)), labels=[display_name(m) for m, _, _ in rows])
+    ax.set_yticks(range(len(rows)), labels=[_post_hoc(m) for m, _, _ in rows])
     ax.set_ylim(len(rows) - 0.5, -0.5)
     ax.tick_params(axis="y", length=0, labelcolor=INK)
     ax.spines["left"].set_visible(False)
     ax.grid(axis="x")
     _zero_line(ax, "x")
-    ax.set_xlabel("Skill vs smart persistence")
+    ax.set_xlabel(f"Skill vs {reference_name()}")
     _legend_below(fig, [_setting_handles(["none", "nwp"], "marker")[::-1],  # reading order
                         _family_handles((m for m, _, _ in rows), "marker")], max_cols=2)
     return _save(fig, figures_dir, "weather_gain")
@@ -1887,12 +2593,15 @@ def _log_inputs(panel: Panel) -> None:
             if n < len(panel.sites):
                 logger.warning("%s/%s has %d of %d stations: its means cover only those",
                                model, s, n, len(panel.sites))
+    if HEADLINE_REF not in panel.models:
+        logger.warning("no %s predictions: skill over the headline reference is not "
+                       "available (main tables and figures)", HEADLINE_REF)
     if CLIPER not in panel.models:
-        logger.info("no CLIPER predictions: skipped the skill-vs-CLIPER columns (T1) and the "
-                    "CLIPER rows (F1, F4, F5)")
+        logger.info("no CLIPER predictions: skipped the skill-vs-CLIPER columns of "
+                    "master_skill_full")
     if CLIMATOLOGY not in panel.models:
         logger.info("no climatology predictions: skipped skill vs climatology "
-                    "(metrics_long.csv) and the climatology rows (F1, F5)")
+                    "(metrics_long.csv)")
 
 
 def _remove_stale(tables_dir: Path, figures_dir: Path) -> None:
@@ -1905,10 +2614,15 @@ def _remove_stale(tables_dir: Path, figures_dir: Path) -> None:
 def main(argv: Sequence[str] | None = None) -> list[Path]:
     ap = argparse.ArgumentParser(description="Build the Results-chapter tables and figures "
                                              "from the saved predictions.")
-    ap.add_argument("--results", default=str(ROOT / "results" / "results.parquet"),
-                    help="results store (timing and memory only)")
-    ap.add_argument("--predictions-dir", default=str(ROOT / "results" / "predictions"),
-                    help="per-run prediction parquets (the source of every accuracy number)")
+    ap.add_argument("--results", nargs="+",
+                    default=[str(ROOT / "results" / "results.parquet"),
+                             str(ROOT / "results" / "extra" / "results.parquet")],
+                    help="results stores (timing and memory only); missing ones are skipped")
+    ap.add_argument("--predictions-dir", nargs="+",
+                    default=[str(ROOT / "results" / "predictions"),
+                             str(ROOT / "results" / "extra" / "predictions")],
+                    help="folders of per-run prediction parquets (the source of every "
+                         "accuracy number); missing ones are skipped")
     ap.add_argument("--tables-dir", default=str(ROOT / "thesis" / "tables"))
     ap.add_argument("--figures-dir", default=str(ROOT / "thesis" / "figures"))
     ap.add_argument("--processed-dir", default=str(PROCESSED_DIR),
@@ -1919,12 +2633,12 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     setup_logging()
     logging.getLogger("fontTools").setLevel(logging.WARNING)  # PDF font subsetting chatter
 
-    results_path = Path(args.results)
-    runs = check_runs(load_predictions(Path(args.predictions_dir), args.include_synthetic,
-                                       stored_hashes(results_path)))
+    results_paths = [Path(p) for p in args.results]
+    runs = check_runs(load_predictions([Path(p) for p in args.predictions_dir],
+                                       args.include_synthetic, stored_hashes(results_paths)))
     panel = Panel(runs=runs, capacity=load_capacities(runs, Path(args.processed_dir)))
     panel.no_covariates = detect_no_covariates(runs)
-    panel.timing = load_timing(results_path, runs, args.include_synthetic)
+    panel.timing = load_timing(results_paths, runs, args.include_synthetic)
     _log_inputs(panel)
 
     station = compute_station_metrics(panel)
@@ -1932,14 +2646,22 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     folds = compute_fold_skill(panel)
     labels = fold_labels(panel)
     medians = compute_medians(panel)
-    significance = compute_significance(panel)
+    boot = Bootstrap(panel)
+    significance = add_skill_differences(compute_significance(panel), boot)
+    post_hoc = compute_post_hoc(panel, boot)
     diagnostics = compute_panel_diagnostics(panel)
 
     tables_dir, figures_dir = Path(args.tables_dir), Path(args.figures_dir)
-    tables = [table_master_skill(panel, summary), table_probabilistic(panel, summary),
-              table_compute(panel, medians), table_skill_by_station(panel, summary),
+    tables = [table_master_skill(panel, summary, boot),
+              table_chronos2_configs(panel, summary, boot, medians),
+              table_probabilistic(panel, summary, boot), table_compute(panel, medians),
+              table_significance(panel, significance, post_hoc),
+              # appendix
+              table_master_skill_full(panel, summary),
+              table_significance_detail(panel, significance),
               table_skill_by_fold(panel, summary, folds, labels),
-              table_significance(panel, significance),
+              table_skill_by_station(panel, summary), table_point_rule(panel, boot),
+              table_p2_robustness(panel, boot, labels),
               table_all_hours(panel, summary), table_panel_diagnostics(diagnostics)]
     written: list[Path] = []
     for table in tables:
@@ -1949,7 +2671,7 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     written.append(long_path)
 
     with plt.rc_context(STYLE):
-        written += fig_skill_by_model(panel, summary, figures_dir)
+        written += fig_skill_by_model(panel, summary, boot, figures_dir)
         written += fig_skill_vs_compute(panel, summary, medians, figures_dir)
         written += fig_reliability(panel, summary, figures_dir)
         written += fig_skill_by_fold(panel, summary, folds, labels, figures_dir)
@@ -1958,8 +2680,8 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     _remove_stale(tables_dir, figures_dir)
 
     for model in panel.models:
-        logger.info("skill vs SP %-24s %s", display_name(model), "  ".join(
-            f"{setting_label(s)} {_num(summary.stat(model, s, 'skill_sp'))}"
+        logger.info("skill vs %s %-38s %s", reference_name(), display_name(model), "  ".join(
+            f"{setting_label(s)} {_num(summary.stat(model, s, skill_metric()))}"
             for s in panel.reported_settings(model)))
     pairs = pairwise_correlations(diagnostics.corr)
     if pairs.size:

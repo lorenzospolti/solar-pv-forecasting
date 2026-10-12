@@ -12,6 +12,8 @@
   data_weather   monthly midday irradiance from the campus tower and from the
                  Open-Meteo archive, and the panel's apparent performance ratio
                  (mean capacity factor per kW/m2 of each irradiance series)
+  data_leadtime  schematic, no data: the issue time, the scored hours and the
+                 weather-model runs behind them, in the archive and in operation
 
 Inputs (read-only): the processed station frames (``pvfc.data.load_station``,
 weather mode "none", cached under data/processed/ for the current ETL_VERSION), the
@@ -21,7 +23,7 @@ irradiance files and the cached Open-Meteo archive
 configs/experiment.yaml. Writes only thesis/figures/data_*.
 
 Usage:
-    python experiments/data_figures.py                   # all four figures
+    python experiments/data_figures.py                   # all five figures
     python experiments/data_figures.py --only k,weather  # a subset
 """
 from __future__ import annotations
@@ -240,7 +242,7 @@ def fig_clearsky() -> None:
                                    gridspec_kw={"height_ratios": [1.7, 1]})
     ax1.fill_between(t, 0, w["p_clear"], color=INK2, alpha=0.10, linewidth=0)
     ax1.plot(t, w["p_clear"], color=INK2, linewidth=1.0,
-             label=r"clear-sky template $P^{\mathrm{cs}}_t$")
+             label=r"template $P^{\mathrm{cs}}_t$")
     ax1.plot(t, w["power"], color=CAT[0], linewidth=1.4, label=r"measured power $P_t$")
     ax1.axhline(cap, color=AXIS, linewidth=0.6)
     ax1.annotate(f"nameplate C = {cap:.0f} kW", xy=(t[0], cap), xytext=(2, 2),
@@ -364,8 +366,71 @@ def fig_weather() -> None:
     _save(fig, "data_weather")
 
 
+# ---------------------------------------------------------------- (e) lead times
+def fig_leadtime() -> None:
+    """Schematic of the lead times behind the NWP setting, on one forecast day (x: hours
+    from the issue time, 00:00 HKT = 16:00 UTC the day before). The archive stitches the
+    first hours of the 00 and 12 UTC runs, so the scored hours (labels 06:00-18:00 HKT)
+    come from runs started 10 h before to 10 h after the issue time; a forecast issued at
+    midnight could use at most the 06 UTC run of the day before (Section 3.6)."""
+    utc_offset = 8                        # HKT = UTC + 8, no daylight saving
+    scored = (6.0, 19.0)                  # hours labelled 06:00 to 18:00, interval ends at 19:00
+    x0, x1 = -12.0, 21.0
+    fig, ax = plt.subplots(figsize=(FULL_W, 1.95), layout="constrained")
+    ax.axvspan(*scored, color=CAT[3], alpha=0.14, linewidth=0, zorder=0)
+    ax.annotate("scored hours", xy=(sum(scored) / 2, 2.62), ha="center", va="center",
+                fontsize=7, color=INK2)
+    ax.axvline(0.0, color=INK, linewidth=0.9, zorder=3)
+    ax.annotate("forecast issued", xy=(0.0, 2.62), xytext=(-3, 0),
+                textcoords="offset points", ha="right", va="center", fontsize=7, color=INK)
+
+    def run(y: float, start: float, used: tuple[float, float], colour: str, label: str,
+            alpha: float = 1.0) -> None:
+        """One weather-model run: its start (dot) and the hours it supplies (thick bar)."""
+        ax.plot([start, used[0]], [y, y], color=colour, linewidth=0.7, alpha=0.5, zorder=2)
+        ax.plot(list(used), [y, y], color=colour, linewidth=5.0, solid_capstyle="butt",
+                alpha=alpha, zorder=2)
+        ax.plot([start], [y], marker="o", markersize=5, color=colour, zorder=4,
+                markeredgecolor=SURFACE, markeredgewidth=0.8)
+        ax.annotate(label, xy=(start, y), xytext=(0, 5.5), textcoords="offset points",
+                    ha="center", va="bottom", fontsize=6.8, color=colour)
+
+    # what the archive holds for these hours: first hours of the 12 UTC and 00 UTC runs
+    archive, real = CAT[0], CAT[1]
+    run(1.0, 20.0 - 24.0, (6.0, 8.0), archive, "12 UTC run", alpha=0.55)
+    run(1.0, 8.0, (8.0, 19.0), archive, "00 UTC run")
+    ax.annotate("lead about\n0–12 h", xy=(19.4, 1.0), ha="left", va="center", fontsize=7,
+                color=archive)
+    # what a forecaster has at the issue time: the 06 UTC run of the day before
+    run(2.0, 14.0 - 24.0, scored, real, "06 UTC run")
+    ax.annotate("lead\n16–28 h", xy=(19.4, 2.0), ha="left", va="center", fontsize=7,
+                color=real)
+    ax.annotate("", xy=(8.0, 0.45), xytext=(0.0, 0.45),
+                arrowprops={"arrowstyle": "<->", "color": INK2, "linewidth": 0.6,
+                            "shrinkA": 0, "shrinkB": 0})
+    ax.annotate("starts 8 h after the issue", xy=(4.0, 0.45), xytext=(0, -2),
+                textcoords="offset points", ha="center", va="top", fontsize=6.8, color=INK2)
+
+    ax.set_yticks([1.0, 2.0], labels=["archive used\nin this thesis",
+                                      "available at\nthe issue time"])
+    ax.set_ylim(0.05, 2.8)
+    ticks = np.arange(-12, 21, 4)
+    ax.set_xticks(ticks, labels=[f"{int(h) % 24:02d}:00" for h in ticks])
+    ax.set_xlim(x0, x1)
+    ax.set_xlabel("Hong Kong time (HKT), day before and forecast day")
+    top = ax.secondary_xaxis("top", functions=(lambda h: h - utc_offset,
+                                               lambda h: h + utc_offset))
+    top.set_xticks(ticks - utc_offset, labels=[f"{int(h) % 24:02d}" for h in ticks - utc_offset])
+    top.tick_params(labelsize=6.8, colors=INK2, length=2)
+    top.set_xlabel("UTC", fontsize=7, color=INK2, labelpad=1)
+    ax.grid(axis="y", visible=False)
+    ax.tick_params(axis="y", length=0)
+    ax.spines["left"].set_visible(False)
+    _save(fig, "data_leadtime")
+
+
 FIGURES = {"coverage": fig_coverage, "clearsky": fig_clearsky, "k": fig_k,
-           "weather": fig_weather}
+           "weather": fig_weather, "leadtime": fig_leadtime}
 
 
 def main() -> None:

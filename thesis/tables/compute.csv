@@ -1,15 +1,15 @@
-setting,model,display_name,family,no_covariates,median_fit_s,median_predict_s,median_fit_predict_s,median_peak_rss_mb,n_station_folds
-nwp,sarima,SARIMA,trained,False,102.5485,0.6904999999999999,103.22749999999999,4148.25,54.0
-nwp,lightgbm,LightGBM,trained,False,170.8155,2.156,172.94,864.9,54.0
-nwp,lstm,LSTM,trained,False,234.732,0.584,235.2975,668.65,54.0
-nwp,chronos2,Chronos-2 (zero-shot),foundation_zero_shot,False,0.007,2.536,2.5439999999999996,811.15,54.0
-none,persistence,Persistence,reference,True,0.0,0.016,0.016,288.05,54.0
-none,seasonal_naive,Seasonal naive (168 h),reference,True,0.0,0.016,0.016,287.4,54.0
-none,smart_persistence,Smart persistence,reference,True,0.0,0.019,0.019,288.2,54.0
-none,climatology,Climatology,reference,True,0.0,0.014,0.014,288.2,54.0
-none,cliper,CLIPER,reference,True,0.001,0.019,0.02,288.85,54.0
-none,sarima,SARIMA,trained,False,95.112,0.681,95.7915,4134.7,54.0
-none,lightgbm,LightGBM,trained,False,128.6445,1.9425,130.56900000000002,649.85,54.0
-none,chronos2,Chronos-2 (zero-shot),foundation_zero_shot,False,0.007,2.401,2.4074999999999998,757.4,54.0
-none,timesfm,TimesFM-2.5,foundation_zero_shot,True,0.005,6.505,6.509,2266.45,54.0
-none,tirex,TiRex,foundation_zero_shot,True,0.005,11.011,11.016,949.95,54.0
+setting,model,display_name,family,no_covariates,median_fit_s,median_predict_s,median_fit_predict_s,median_peak_rss_mb,median_window_s,max_peak_rss_mb,max_peak_rss_gb,n_station_folds
+nwp,sarima,SARIMA,trained,False,102.5485,0.6904999999999999,103.22749999999999,4148.25,103.2275,8056.9,7.86806640625,54.0
+nwp,lightgbm,LightGBM,trained,False,170.8155,2.156,172.94,864.9,172.9395,1184.8,1.15703125,54.0
+nwp,lstm,LSTM,trained,False,234.732,0.584,235.2975,668.65,235.298,716.3,0.69951171875,54.0
+nwp,chronos2,Chronos-S,foundation_zero_shot,False,0.007,2.536,2.5439999999999996,811.15,2.544,931.5,0.90966796875,54.0
+nwp,chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,0.008,11.845,11.904499999999999,1423.4499999999998,11.9045,1424.1,1.39072265625,54.0
+nwp,chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,183.8295,2.5835,186.5125,915.5,186.5125,1138.9,1.11220703125,54.0
+none,sarima,SARIMA,trained,False,95.112,0.681,95.7915,4134.7,95.7915,8070.2,7.8810546875,54.0
+none,lightgbm,LightGBM,trained,False,128.6445,1.9425,130.56900000000002,649.85,130.5695,881.9,0.86123046875,54.0
+none,lstm,LSTM,trained,False,138.176,0.5634999999999999,138.7495,613.5,138.749,653.8,0.6384765625,54.0
+none,chronos2,Chronos-S,foundation_zero_shot,False,0.007,2.401,2.4074999999999998,757.4,2.4074999999999998,814.8,0.795703125,54.0
+none,chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,0.007,9.588000000000001,9.7455,1418.85,9.745000000000001,1419.4,1.3861328125,54.0
+none,chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,87.015,2.3405,89.322,1497.65,89.322,2092.8,2.04375,54.0
+none,timesfm,TimesFM,foundation_zero_shot,True,0.005,6.505,6.509,2266.45,6.51,2268.2,2.2150390625,54.0
+none,tirex,TiRex,foundation_zero_shot,True,0.005,11.011,11.016,949.95,11.0155,1135.2,1.10859375,54.0

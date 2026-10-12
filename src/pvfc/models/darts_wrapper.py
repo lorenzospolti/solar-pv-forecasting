@@ -38,6 +38,7 @@ from ..evaluation import DEFAULT_QUANTILES, enforce_monotone_quantiles
 from ..features import calendar_features
 from ..normalize import fill_index_gaps, reconstruct_power
 from .base import Forecaster
+from .xreg import XREG_DEFAULTS, ClearSkyGHICache, day_mask, design_matrix, fit_ridge
 
 logger = logging.getLogger("pvfc.models")
 
@@ -148,6 +149,18 @@ class DartsForecaster(Forecaster):
         self._use_cov = bool(params.get(
             "use_future_covariates", _FOUNDATION_COV_DEFAULT.get(self.arch, True)
         )) if self._is_foundation else True
+        # In-context covariate regression for foundation models that read no covariates
+        # (TiRex, TimesFM-2.5): ``xreg: true`` or ``xreg: {features, ridge, fit_hours}``.
+        # The darts model itself stays univariate and forecasts the regression's residual
+        # (pvfc.models.xreg).
+        xreg = params.get("xreg")
+        if xreg and not self._is_foundation:
+            raise ValueError(f"{name}: `xreg` is for the foundation arches {sorted(_FOUNDATION)}")
+        self._xreg = {**XREG_DEFAULTS, **(xreg if isinstance(xreg, dict) else {})} if xreg else None
+        if self._xreg is not None:
+            self._use_cov = False
+        self._xreg_cols: list[str] = []
+        self._ghi_cache: ClearSkyGHICache | None = None
         self._model = None
         self._mode = None        # "global" | "local"
         self._likelihood = None  # "quantile" | "sample" | None
@@ -255,8 +268,13 @@ class DartsForecaster(Forecaster):
 
         cls = getattr(importlib.import_module(module), cls_name)
 
+        # an int is a fixed window; a [min, max] pair (darts >= 0.47) lets a long-context
+        # model read every available hour up to max (shorter histories are NaN-padded and
+        # masked), e.g. TimesFM-2.5 at [2048, 16360] on folds with 8,856+ hours of history
+        icl = self.params.get("input_chunk_length", 336)
         kwargs: dict = {
-            "input_chunk_length": int(self.params.get("input_chunk_length", 336)),
+            "input_chunk_length": (tuple(int(v) for v in icl) if isinstance(icl, (list, tuple))
+                                   else int(icl)),
             "output_chunk_length": int(self.params.get("output_chunk_length", 24)),
             "random_state": seed,
             "pl_trainer_kwargs": self._device_trainer_kwargs(),
@@ -312,6 +330,8 @@ class DartsForecaster(Forecaster):
         if fit_days:  # cap the fit window (e.g. SARIMA, a local model, needs recent data only)
             train = train.loc[train.index >= train.index.max() - pd.Timedelta(days=int(fit_days))]
         self._fit_cols = self._resolve_weather_cols(train) if self._use_cov else []
+        if self._xreg is not None:
+            self._xreg_cols = self._resolve_weather_cols(train)
         target = _target_series(train, "k")
         cov = _covariate_series(train, train.iloc[0:0], self._fit_cols) if self._use_cov else None
         if self._scale:  # train-only fit, applied identically at predict (leakage-safe)
@@ -353,6 +373,8 @@ class DartsForecaster(Forecaster):
         if self.context_days and (self._mode == "local" or self._is_foundation):
             cutoff = history.index.max() - pd.Timedelta(days=self.context_days)
             hist = history.loc[history.index >= cutoff]
+        if self._xreg is not None:
+            return self._predict_xreg(hist, future)
         target = _target_series(hist, "k")
         cov = _covariate_series(hist, future, self._fit_cols) if self._use_cov else None
         p_clear = future["p_clear"]
@@ -372,6 +394,55 @@ class DartsForecaster(Forecaster):
             kq = None
 
         out = pd.DataFrame(index=future.index)
+        out["y_hat"] = reconstruct_power(pd.Series(k_point, index=future.index), p_clear).to_numpy()
+        if kq is not None:
+            for tau, arr in kq.items():
+                out[f"q{tau}"] = reconstruct_power(
+                    pd.Series(arr, index=future.index), p_clear).to_numpy()
+        return out
+
+    def _predict_xreg(self, hist: pd.DataFrame, future: pd.DataFrame) -> pd.DataFrame:
+        """Regression on the covariates + the foundation model on its residual.
+
+        1. ridge-fit k on the covariates over the daytime hours of the last ``fit_hours``
+           (default: the model's ``input_chunk_length``) of the context;
+        2. the darts model forecasts the residual series (night: 0, gaps filled like k);
+        3. every quantile of the residual is shifted by the regression's forecast, which
+           is 0 at night. Power is then k x p_clear, as for every other model.
+        """
+        from ..data import HKUST_ALT, HKUST_LAT, HKUST_LON
+
+        n = len(future)
+        cfg = self._xreg
+        if self._ghi_cache is None:
+            self._ghi_cache = ClearSkyGHICache(HKUST_LAT, HKUST_LON, HKUST_ALT)
+        span = pd.concat([hist, future])
+        span = span[~span.index.duplicated(keep="first")].sort_index()
+        X = design_matrix(span, self._xreg_cols, cfg["features"], self._ghi_cache)
+        icl = self.params.get("input_chunk_length", 336)
+        icl = max(icl) if isinstance(icl, (list, tuple)) else icl
+        fit_hours = int(cfg.get("fit_hours") or icl)
+        fit_rows = hist.index[-fit_hours:]
+        reg = fit_ridge(hist.loc[fit_rows, "k"], X.loc[fit_rows],
+                        day_mask(hist.loc[fit_rows]), float(cfg.get("ridge", 1.0)))
+        day_h, day_f = day_mask(hist).to_numpy(), day_mask(future).to_numpy()
+        xr_hist = np.where(day_h, reg.predict(X.loc[hist.index]), 0.0)
+        xr_fut = np.where(day_f, reg.predict(X.loc[future.index]), 0.0)
+
+        resid = pd.DataFrame({"k": hist["k"].to_numpy(dtype=float) - xr_hist,
+                              "is_day": day_h}, index=hist.index)
+        target = _target_series(resid, "k")
+        if self.supports_quantiles:
+            rq = self._predict_quantiles(target, None, n)
+            kq = enforce_monotone_quantiles({tau: arr + xr_fut for tau, arr in rq.items()})
+            k_point = kq[0.5]
+        else:
+            fc = self._predict_point(target, None, n)
+            k_point = np.asarray(fc.values()).reshape(-1)[:n] + xr_fut
+            kq = None
+
+        out = pd.DataFrame(index=future.index)
+        p_clear = future["p_clear"]
         out["y_hat"] = reconstruct_power(pd.Series(k_point, index=future.index), p_clear).to_numpy()
         if kq is not None:
             for tau, arr in kq.items():

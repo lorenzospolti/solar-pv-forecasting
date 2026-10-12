@@ -7,32 +7,29 @@ through the same code, and the data are described in Chapter [-@sec:data].
 
 The experiment crosses four factors: the six stations of the panel (@sec:data-panel), two
 weather settings, twelve models and nine test windows, called folds. Five models are
-simple reference forecasts. Three are purpose-trained on each station's history: a
+simple reference forecasts (@sec:background-concepts). Three are purpose-trained on each
+station's history: a
 seasonal autoregressive integrated moving-average model (SARIMA), the gradient-boosted
 tree model LightGBM and a long short-term memory network (LSTM). Four are pretrained
-time-series foundation models: Chronos-2, TimesFM-2.5 and TiRex, used without any
+time-series foundation models: Chronos-2, TimesFM and TiRex, used without any
 training on the station ("zero-shot"), and Chronos-2 fine-tuned on each station. The
-*NWP setting* adds archived numerical weather prediction (NWP) forecasts to the
-clear-sky template and calendar features; the *no-weather setting* does not. Every model
+*NWP setting* adds archived numerical weather prediction (NWP) forecasts to the clear-sky
+power $P^{\mathrm{cs}}_t$ (@sec:data-clearsky) and calendar features; the *no-weather
+setting* does not. Every model
 is scored on the same quantity, power, and on the same hours.
 
-The design addresses four research questions:
+Each research question of @sec:intro-questions is a contrast within this design: RQ1
+compares the zero-shot foundation models with the purpose-trained models and the
+references, RQ2 fine-tuned with zero-shot Chronos-2, RQ3 the two weather settings, and
+RQ4 the calibration and the cost of every model.
 
-- **RQ1.** How accurate are zero-shot foundation models for day-ahead hourly
-  photovoltaic (PV) power, compared with purpose-trained models and reference forecasts?
-- **RQ2.** Does fine-tuning a foundation model on a station's own history improve on its
-  zero-shot forecasts enough to justify the extra compute?
-- **RQ3.** What do weather forecasts add as inputs, and which models can use them?
-- **RQ4.** How well calibrated are the probabilistic forecasts, and how much time and
-  memory does each model need on a laptop?
-
-<!-- TODO(Lorenzo): finalise the wording of RQ1-RQ4 together with the Introduction and keep the two chapters identical. -->
-
-The reported results come from one complete run of this design, *panel v2*: 144 runs,
-one per station, weather setting and model, each over the nine folds. An earlier run
-with older data processing and fitting code, panel v1, is not reported; its results
-prompted the two references added in @sec:method-models and informed the choice of
-comparisons in @sec:method-tests.
+The results come from one complete run of this design, the *main run*: 144 runs, one per
+station, weather setting and model, each over the nine folds. Seven further
+configurations of Chronos-2 and TiRex, which vary context length, checkpoint size and
+seed, were run afterwards on the same folds with the same code, after the main results
+had been seen; they are post hoc and marked ‡ in every table and figure. An earlier
+complete run on the same test days is not reported. @Tbl:decisions in Appendix
+[-@sec:appendix-repro] dates every choice and states what had been seen when it was made.
 
 ## Forecasting task {#sec:method-task}
 
@@ -46,19 +43,22 @@ At the issue time a model receives the *history*, every observation strictly bef
 local midnight (power $P_t$, clear-sky index $k_t$ and covariates), and the *future
 frame*, the 24 target timestamps with the covariates known in advance
 (@sec:method-covariates). The runner deletes power and clear-sky index from the future
-frame, so a model cannot read the values it must predict (`pvfc.runner`).
+frame, so a model cannot read the values it must predict.
 
 Two simplifications make the task easier than in operation. First, the last hour before
 midnight is assumed to be available at the issue time, whereas an operator who submits a
 schedule earlier in the day forecasts further ahead [@yang2020verification]. Second, the
-archived weather forecasts come from model runs at most a few hours old
-(@sec:data-weather), closer to an analysis of the current weather than to a forecast
-frozen at midnight, so the NWP setting is optimistic.
+archived weather forecasts are not frozen at the issue time (@sec:data-weather): most
+scored hours come from model runs that start after it, at lead times of about 0–12 hours,
+whereas a forecast issued at midnight would rely on runs with lead times of 16–28 hours
+(@fig:data-leadtime). The NWP setting therefore gives an upper bound on what these
+forecasts can add.
 
-## Target: the clear-sky index {#sec:method-target}
+## Forecasting in clear-sky-index space {#sec:method-target}
 
-All models except Persistence and Seasonal naive forecast the clear-sky index rather than
-power. With the clear-sky power template $P^{\mathrm{cs}}_t$ of @sec:data-clearsky,
+Every model is scored on power, but all except Persistence and Seasonal naive forecast
+the clear-sky index $k_t$ and convert the forecast back to power with @eq:reconstruct.
+With the clear-sky power $P^{\mathrm{cs}}_t$ of @sec:data-clearsky,
 
 $$
 k_t =
@@ -86,10 +86,8 @@ need a series without gaps. A missing hour of the index (a feed gap or an outage
 @sec:data-qc) therefore takes the value of the same hour on the most recent earlier day
 that has one, at most seven days back, the rule of the references (@sec:method-models);
 an hour still missing, on the first day of a series or in a longer gap, takes the
-series' mean daytime index, or 0 outside the daytime mask
-(`pvfc.normalize.fill_index_gaps`). Filled hours are inputs only, never scored.
-
-<!-- TODO(Lorenzo): refer to the raw-power vs clear-sky-index ablation here once it has run (planned for 6-12 Oct). -->
+series' mean daytime index, or 0 outside the daytime mask. Filled hours are inputs
+only, never scored.
 
 ## Covariates and weather settings {#sec:method-covariates}
 
@@ -103,7 +101,7 @@ setting, with their names in the code. {#tbl:method-covariates}
 
 | Covariate | Code name | Source | NWP | No weather |
 |:--------------------------------------|:--------------------|:------------------------|:--------:|:-----------:|
-| Clear-sky power template $P^{\mathrm{cs}}_t$ (kW) | `p_clear` | Template (@sec:data-clearsky) | yes | yes |
+| Clear-sky power $P^{\mathrm{cs}}_t$ (kW) | `p_clear` | Template (@sec:data-clearsky) | yes | yes |
 | Hour of day, sine and cosine | `hour_sin`, `hour_cos` | Timestamp | yes | yes |
 | Day of year, sine and cosine | `doy_sin`, `doy_cos` | Timestamp | yes | yes |
 | Global horizontal irradiance (W/m²) | `ghi` | Archived NWP forecast | yes | no |
@@ -117,62 +115,66 @@ supplies all nine covariates, the no-weather setting only the template and the c
 features; the latter isolates what the weather forecasts add (RQ3) and does not depend
 on their quality.
 
-@Tbl:method-models lists the covariates that each model receives. TimesFM-2.5 and TiRex
+@Tbl:method-models lists the covariates that each model receives. TimesFM and TiRex
 receive none, because their darts wrappers do not accept covariates; their forecasts are
 the same in both settings and are reported once, under the no-weather setting. Among the
-foundation models, only Chronos-2 thus uses the weather forecasts. For TimesFM-2.5 this
-is a limit of darts 0.47.0, which does not expose the separate covariate regression
-(XReg) of the model's own package;^[TimesFM repository, README, update of 29 October
-2025; <https://github.com/google-research/timesfm>, accessed 2 October 2026.] the TiRex
-version used here (tirex-ts 1.4.2) takes none.
+foundation models, only Chronos-2 thus uses the weather forecasts. For TimesFM this
+is a limit of the darts version used (Appendix [-@sec:appendix-repro]), which does not
+expose the separate covariate regression of the model's own package;^[TimesFM repository,
+README, update of 29 October 2025; <https://github.com/google-research/timesfm>, accessed 2
+October 2026.] the TiRex version used here takes none.
 
 ## Models {#sec:method-models}
 
-@tbl:method-models summarises the twelve models. Their settings were fixed in
-`configs/experiment.yaml` before panel v1 and are unchanged in panel v2 (Climatology and
-CLIPER, added in between, have none to tune). Two settings drew on a test fold: the
-fine-tuning recipe of Chronos-2 (fine-tuned), discussed below, and the lag inputs of
-LightGBM, fixed after a check on a real fold exposed a wiring bug that a regression test
-now guards against.
+@tbl:method-models summarises the models and defines the short names used from here on.
+Their settings were fixed in one configuration file before the first run and were not
+tuned. Two settings drew on a test fold: the fine-tuning recipe, discussed below, and the
+lag inputs of LightGBM, corrected after a check on a test fold exposed a wiring bug that
+a regression test now guards against (@tbl:decisions).
 
 ### Reference forecasts
 
-*Persistence* repeats the power of the same hour on the previous day, $\hat{P}_t =
-P_{t-24\,\mathrm{h}}$, and *Seasonal naive* that of one week earlier, $\hat{P}_t =
-P_{t-168\,\mathrm{h}}$. *Smart persistence* repeats the clear-sky index instead,
+A reference forecast is a cheap rule that any useful model must beat
+(@sec:background-concepts). *Smart persistence* repeats the clear-sky index of the same
+hour on the previous day,
 $\hat{P}_t = k_{t-24\,\mathrm{h}}\, P^{\mathrm{cs}}_t$, which corrects for the change
 in solar geometry; with climatology, it is one of the two popular day-ahead references
 named by @yang2020verification.^[They call it clear-sky persistence and reserve "smart
 persistence" for persistence of a cloudiness index; the shorter name is kept here.] When
-the lagged value is missing, these three rules step back one day at a time, up to seven
-days, to the same hour (0 if none is found), never to the last value of the history,
-which at midnight is a night-time zero.
+the lagged value is missing, the persistence rules step back one day at a time, up to
+seven days, to the same hour (0 if none is found), never to the last value of the
+history, which at midnight is a night-time zero. *Climatology* forecasts the mean
+daytime clear-sky index of the training window, $\bar{k}$, at every hour: $\hat{P}_t =
+\bar{k}\, P^{\mathrm{cs}}_t$.
 
-<!-- TODO(Lorenzo): say why a weekly Seasonal naive is kept at all (e.g. as a second, deliberately weak reference); the config only records that a 24-h season would duplicate Persistence. -->
-
-At a 24-hour lag Smart persistence and Persistence are almost identical, because the
-template changes little from one day to the next: over the panel their skill scores
-differ by less than 0.001. Two further references were therefore added. *Climatology*
-forecasts the mean daytime clear-sky index of the training window, $\bar{k}$, at every
-hour: $\hat{P}_t = \bar{k}\, P^{\mathrm{cs}}_t$. *CLIPER* (climatology--persistence)
-combines the two [@yang2019cliper]:
+*CLIPER* (CLImatology--PERsistence) combines the two
+[@yang2019cliper]. When consecutive days are alike, yesterday is the better guide to
+today; when they are not, the long-term mean is. CLIPER therefore weights the two by how
+well yesterday has predicted today:
 
 $$
 \hat{k}_t = \rho\, k_{t-24\,\mathrm{h}} + (1-\rho)\, \bar{k}, \qquad
 \hat{P}_t = \hat{k}_t\, P^{\mathrm{cs}}_t ,
 $$ {#eq:cliper}
 
-where $\rho$ is the correlation between $k_t$ and $k_{t-24\,\mathrm{h}}$ over the pairs
-of daytime hours in the training window, matched by timestamp and clipped to $[0, 1]$;
-night hours are left out because their zeros would inflate $\rho$. For a stationary
+where the weight $\rho$ is the correlation between $k_t$ and $k_{t-24\,\mathrm{h}}$ over
+the pairs of daytime hours in the training window, matched by timestamp and clipped to
+$[0, 1]$; $\rho = 1$ gives Smart persistence and $\rho = 0$ Climatology. Night hours are
+left out because their zeros would inflate $\rho$. For a stationary
 index with variance $\sigma^2$, climatology has a mean squared error (MSE) of $\sigma^2$,
 persistence $2(1-\rho)\,\sigma^2$ and the combination $(1-\rho^2)\,\sigma^2$, never more
 than either [@yang2019cliper], so persistence is worse than climatology whenever
 $\rho < 0.5$. In the training windows $\rho$ lies between 0.44 and 0.51: Smart
-persistence is a weak bar. @yang2020verification strongly recommend skill over this
-combination, with a single climatological mean as here, for all solar forecasting
+persistence is a weak bar. @yang2020verification strongly recommend skill (the relative
+reduction in RMSE, @eq:skill) over this combination, with a single climatological mean as
+here, for all solar forecasting
 studies. They estimate the mean and $\rho$ on the verified sample; here both come from
 the training window, so the guarantee holds only approximately.
+
+Three further references were run and appear only in @tbl:master-skill-full: Climatology
+on its own, *Persistence* of power, $\hat{P}_t = P_{t-24\,\mathrm{h}}$, which equals Smart
+persistence within 0.001 skill at this horizon, and *Seasonal naive*, $\hat{P}_t =
+P_{t-168\,\mathrm{h}}$.
 
 <!-- TODO(Lorenzo): eq:cliper follows the code (src/pvfc/models/baselines.py): one mean for all hours, Yang's single-valued climatology. The protocol spec had one mean per hour of day, which the code docstring says moves CLIPER's mean skill by 0.0001 (panel v1). Confirm the single-valued form; otherwise change eq:cliper, tbl:method-models and the code. -->
 
@@ -182,19 +184,21 @@ the training window, so the guarantee holds only approximately.
 autoregressive integrated moving-average errors. Its orders are chosen by the stepwise
 procedure of @hyndman2008automatic, in its statsforecast implementation: seasonal
 period 24 hours, at most three non-seasonal and two seasonal autoregressive and
-moving-average terms, selection by the corrected Akaike information criterion (AICc),
+moving-average terms, selection by the corrected Akaike information criterion,
 final maximum-likelihood fit. It is fitted once per fold
-on the whole training window; at each issue time statsforecast's `forward()` applies it
-to the last 60 days of history, updating its state but not its orders or coefficients.
+on the whole training window; at each issue time it is applied to the last 60 days of
+history, updating its state but not its orders or coefficients.
 Its quantiles come from its Gaussian prediction intervals.
 
 *LightGBM* [@ke2017lightgbm] is a direct multi-horizon regressor: one gradient-boosted
 tree ensemble (booster) per target hour and quantile level, 216 per fold, each with
 LightGBM's default settings (100 trees of at most 31 leaves, learning rate 0.1) and the
 pinball loss of its quantile (@sec:method-metrics) as objective. Each sees the index over the
-previous local day and every covariate at each of the 24 target hours.
+previous local day and every covariate at each of the 24 target hours, and is trained on
+every hourly origin of the training window. LightGBM is untuned by design, so its scores
+probably understate what tuned gradient boosting can reach.
 
-The *LSTM* [@hochreiter1997lstm], built with darts' `RNNModel`, has one layer of 32
+The *LSTM* [@hochreiter1997lstm], built with darts, has one layer of 32
 units and a linear output. At each step it reads the previous hour's index and the
 covariates of the hour it predicts. It is trained for 30 epochs on the squared error
 over 192-hour sequences (batches of 32, Adam [@kingma2015adam] at darts' default
@@ -211,94 +215,100 @@ competitor.
 Foundation models, pretrained on large collections of time series, forecast a new series
 from its context window without training on it. *Chronos-2* [@ansari2025chronos2]
 is an encoder-only transformer whose group attention relates the target to its
-covariates, so it can use covariates without task-specific training. We use its small
-checkpoint (`autogluon/chronos-2-small`, 28 M parameters), which trails the authors'
-120 M-parameter base model by as little as one percentage point of skill on the
-GIFT-Eval benchmark, at nearly twice the inference speed [@ansari2025chronos2], with a
-336-hour context. *TimesFM-2.5* (September 2025)
+covariates, so it can use covariates without task-specific training. It comes in a small
+and a base checkpoint (28 M and 120 M parameters). The main run uses the small one,
+*Chronos-S*, chosen for its cost on the laptop, with a 336-hour context, zero-shot and
+fine-tuned (*Chronos-S-FT*, below). *TimesFM* (version 2.5, September 2025)
 [@das2024timesfm] is a decoder-only transformer with about 200 M parameters, and *TiRex*
 [@auer2025tirex] a recurrent model with 35 M parameters based on xLSTM, an extended LSTM
 [@beck2024xlstm]; both read a 512-hour context. All three output the nine quantiles
 $\tau = 0.1, \dots, 0.9$ of the 24 target hours in one pass. These contexts are far
-shorter than the models allow (8,192 hours for Chronos-2-small, 16,384 for
-TimesFM-2.5).
+shorter than the models allow; they were fixed before the first run without testing
+alternatives. After the main run had been seen, zero-shot Chronos-2 was also run with
+longer contexts of 1,024 and 2,048 hours (suffixes *-mid* and *-long*), with the base
+checkpoint (*Chronos-B*, *Chronos-B-long*) and TiRex with 2,048 hours (*TiRex-long*);
+the longer contexts were given 90 days of history instead of 60
+(@tbl:chronos2-configs). Chronos-B-long is the best zero-shot configuration tested. The
+comparisons that involve these runs are post hoc (@sec:method-tests).
 
 <!-- TODO(Lorenzo): confirm that speed and memory on the laptop were the reasons for the small Chronos-2 checkpoint; otherwise state the actual reason. -->
 
-<!-- TODO(Lorenzo): state why 336 h (Chronos-2) and 512 h (TimesFM-2.5, TiRex) were chosen, and point to the context-length sweep once it has run. -->
-
-The pretraining corpora named on the model cards do not include the HKUST dataset,
-though an overlap cannot be excluded. Newer versions with covariate support,
+The dataset has been public since 2 April 2024 [@lin2024hkustdata], before any of the
+checkpoints used here was released; no pretraining corpus named on their model cards
+includes it, but an overlap cannot be excluded and would favour the zero-shot models.
+Four of the six panel stations have also been part of a public foundation-model
+benchmark, FETS, since April 2026 [@obermeier2026fets], after all the checkpoints.
+<!-- TODO(Lorenzo): the FETS paper names only "PV Hong Kong"; "four of the six" rests on the file list of the FETS dataset release. Cite or keep that evidence. -->
+Newer versions with covariate support,
 TiRex-2 (July 2026) [@podest2026tirex2] and TimesFM 3.0 (August 2026),^[TimesFM
 repository, README, "Update — August 2026"; <https://github.com/google-research/timesfm>,
-accessed 2 October 2026.] are not wrapped by darts 0.47.0, used here.
+accessed 2 October 2026.] are not wrapped by the darts version used here.
 
 <!-- TODO(Lorenzo): confirm when and why the model set was frozen (date and reason), and consider TiRex-2 and TimesFM 3.0, both with covariates, as future work in the Discussion. -->
 
-*Chronos-2 (fine-tuned)* starts in every fold from a fresh copy of the pretrained
+*Chronos-S-FT* starts in every fold from a fresh copy of the pretrained small
 checkpoint and updates all its weights on the station's training window, with Adam at a
 learning rate of $10^{-5}$, five epochs and batches of 32. Each training example is one
-day, a 336-hour context ending at local midnight followed by the next day's 24 hours; a
-fold provides 354 to 933 such windows, 12 to 30 optimiser steps per epoch. The loss is
+day, a 336-hour context ending at local midnight followed by the next day's 24 hours, so
+a fold provides 60 to 150 optimiser steps. The loss is
 the pinball loss summed over the checkpoint's 13 quantile levels, as darts implements
 fine-tuning, with no validation split and no early stopping.
 
-The rate of $10^{-5}$ is the default of AutoGluon's Chronos-2 model, which by default
-trains low-rank adapters (LoRA) rather than all the weights. For full fine-tuning, as
-here, AutoGluon recommends a lower rate such as $10^{-6}$, the default of the
-chronos-forecasting library that it wraps; both default to 1,000 optimiser steps, against
-60 to 150 per fold here.^[AutoGluon 1.6.1 model zoo, `Chronos2` fine-tuning
-hyperparameters (<https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html>,
-accessed 2 October 2026); chronos-forecasting 2.2.2, `Chronos2Pipeline.fit`.] The recipe
-was chosen in a smoke test on the first fold of the development station, CYT (Station 2),
-where it beat the zero-shot model and two runs at PyTorch's default rate for Adam,
-$10^{-3}$: skill over Smart persistence +0.35 in 122 s, against +0.24 zero-shot, +0.25 in
-574 s (one epoch over all hourly windows) and +0.08 (five epochs over the daily windows),
-scored on the median and on the data processing of the time (`configs/experiment.yaml`).
-A rate of $10^{-6}$ was not tried; a sensitivity check is planned. No other station-fold
-influenced the recipe.
+The official Chronos-2 quickstart also fine-tunes all weights at a learning rate of
+$10^{-5}$ with batches of 32, but for 1,000 optimiser steps.^[chronos-forecasting
+repository, notebook `chronos-2-quickstart.ipynb`, section "Fine-Tuning";
+<https://github.com/amazon-science/chronos-forecasting>, accessed 4 October 2026. The
+default rate of `Chronos2Pipeline.fit` (chronos-forecasting 2.2.2) is $10^{-6}$; AutoGluon
+1.6.1 uses $10^{-5}$ for its default low-rank adapters
+(<https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html>, accessed 2
+October 2026).] The recipe was chosen in a smoke test on one test fold of one station,
+where it beat the zero-shot model and Adam's default learning rate of $10^{-3}$
+(@tbl:decisions); no other learning rate was tried, including the library default of
+$10^{-6}$. No other station-fold influenced the recipe, and excluding that fold
+(@tbl:p2-robustness) or that station leaves the comparison with LightGBM unchanged.
 
-<!-- TODO(Lorenzo): add lr 1e-6 (AutoGluon's recommendation for full fine-tuning, chronos-forecasting's default) to the fine-tuning sensitivity ablation of 6-12 Oct and report the result here. -->
-
-: The twelve models. *Size*: parameters, counted from the checkpoints for the
-foundation models (TimesFM-2.5 uses 203 M of the 231 M stored); the LSTM has 5,153
-without weather inputs; SARIMA has at most ten autoregressive and moving-average (ARMA)
-terms plus regressor coefficients. *Context*: input window at the issue time. *All*:
-every covariate of the setting. *Training per fold*: what is estimated in each fold,
-from scratch. *Licence*: of the pretrained weights. {#tbl:method-models}
+: The models of the main tables and their short names. Chronos-S and Chronos-B are the
+small and base checkpoints of Chronos-2; *-long* marks a 2,048-hour context and *-FT* fine-tuning;
+the other configurations are in @tbl:chronos2-configs. ‡ Post hoc: added after the main run had
+been seen. *Size*: parameters, counted from the checkpoints for the foundation models
+(TimesFM uses 203 M of the 231 M stored); the LSTM has 5,153 without weather inputs; SARIMA has at
+most ten autoregressive and moving-average terms plus regressor coefficients. *Context*: input
+window at the issue time. *All*: every covariate of the setting. *Training per fold*: what is
+estimated in each fold, from scratch. *Licence*: of the pretrained weights. Persistence, Seasonal
+naive and Climatology are defined in the text. {#tbl:method-models}
 
 | Model | Family | Size | Context | Covariates | Output | Training per fold | Licence |
 |:-------------------|:--------------|:-----------|:---------|:--------------|:------------|:--------------|:----------------|
-| Persistence | Reference | -- | $P_{t-24\,\mathrm{h}}$ | -- | Point | -- | -- |
-| Seasonal naive | Reference | -- | $P_{t-168\,\mathrm{h}}$ | -- | Point | -- | -- |
 | Smart persistence | Reference | -- | $k_{t-24\,\mathrm{h}}$ | $P^{\mathrm{cs}}$ | Point | -- | -- |
-| Climatology | Reference | 1 | -- | $P^{\mathrm{cs}}$ | Point | $\bar{k}$ | -- |
 | CLIPER | Reference | 2 | $k_{t-24\,\mathrm{h}}$ | $P^{\mathrm{cs}}$ | Point | $\bar{k}$ and $\rho$ | -- |
-| SARIMA | Statistical | ≤ 10 ARMA | 60 days | All | Quantiles | Order search and fit | -- |
+| SARIMA | Statistical | ≤ 10 terms | 60 days | All | Quantiles | Order search and fit | -- |
 | LightGBM | Boosted trees | 216 × 100 trees | 24 h | All | Quantiles | 216 boosters | -- |
 | LSTM | Recurrent network | 5,665 | 168 h | All | Point | 30 epochs | -- |
-| Chronos-2 (zero-shot) | Foundation (encoder) | 28 M | 336 h | All | Quantiles | None | Apache-2.0 |
-| Chronos-2 (fine-tuned) | Foundation (encoder) | 28 M | 336 h | All | Quantiles | 5 epochs | Apache-2.0 |
-| TimesFM-2.5 | Foundation (decoder) | 203 M | 512 h | None | Quantiles | None | Apache-2.0 |
+| Chronos-S | Foundation (encoder) | 28 M | 336 h | All | Quantiles | None | Apache-2.0 |
+| Chronos-B-long ‡ | Foundation (encoder) | 120 M | 2,048 h | All | Quantiles | None | Apache-2.0 |
+| Chronos-S-FT | Foundation (encoder) | 28 M | 336 h | All | Quantiles | 5 epochs | Apache-2.0 |
+| TimesFM | Foundation (decoder) | 203 M | 512 h | None | Quantiles | None | Apache-2.0 |
 | TiRex | Foundation (xLSTM) | 35 M | 512 h | None | Quantiles | None | NXAI Community |
 
 ## Evaluation protocol {#sec:method-protocol}
 
 ### Walk-forward folds
 
-The models are evaluated by walk-forward validation on whole local days, a form of
+The models are tested walk-forward on whole local days, a form of
 rolling-origin evaluation with an expanding training window [@tashman2000out]. The folds
 are anchored to the calendar: the first test day is 5 July 2022 for every station,
 whatever the start of its record, so all stations are scored on the same days. Nine
 30-day test windows start 60 days apart, each preceded by a one-day *embargo* that
 belongs neither to the training nor to the test window. Every training window starts at
 the beginning of the station's record and holds at least 365 days, the fit period of the
-clear-sky template (@sec:data-clearsky): 368 to 948 days. The folds (@tbl:method-folds)
-contain 270 issue days and 6,480 target hours per station, 3,041 of them in the daytime
-mask; they cover all four seasons, unevenly (four windows in autumn, one in winter).
+template (@sec:data-clearsky). The folds (@tbl:method-folds) contain 270 test days per
+station, about 3,000 of their hours in the daytime mask; they cover all four seasons,
+unevenly (four windows in autumn, one in winter), and February and April have no test
+day.
 
 : Test windows of the nine folds (local dates, HKT) and training days, which vary
-across stations; meteorological seasons, by the majority of a window's days.
+across stations; meteorological seasons (three-month blocks, winter being December to
+February), by the majority of a window's days.
 {#tbl:method-folds}
 
 | Fold | Embargo day | Test window (30 days) | Season | Training days |
@@ -323,7 +333,7 @@ as for a forecaster that is re-trained now and then but run every day.
 
 Every fit starts from scratch, so no fold inherits anything estimated in an earlier one:
 the references, SARIMA and LightGBM are estimated anew, the LSTM starts from the same
-seeded initialisation and Chronos-2 (fine-tuned) from a fresh copy of the pretrained
+seeded initialisation and Chronos-S-FT from a fresh copy of the pretrained
 checkpoint. The zero-shot foundation models are never trained; their checkpoint is loaded
 in the first fold and kept.
 
@@ -342,14 +352,14 @@ which isolates crashes and memory measurements.
 The headline scores use the daytime mask of @sec:data-clearsky, the hours whose apparent
 solar zenith angle at mid-hour is below 85°, as @yang2020verification recommend. Within
 the mask they use every hour with a valid power value after quality control
-(@sec:data-qc); outage hours and other gaps are missing data and never scored. This
-leaves between 2,914 and all 3,041 daytime test hours per station. Outside the mask lie
-the night, where all models forecast zero or almost zero, and about 500 low-sun hours per
-station holding 0.2–0.3% of the energy measured in the test windows; scores over all
-hours are kept as a sensitivity check. $\mathcal{H}_s$ denotes the scored hours of
+(@sec:data-qc); outage hours and other gaps are missing data and never scored. Outside
+the mask lie the night, where all models forecast zero or almost zero, and low-sun hours
+that hold under 0.3% of the energy measured in the test windows; skill scores over all
+hours agree with the daytime ones to four decimals and are not reported.
+$\mathcal{H}_s$ denotes the scored hours of
 station $s$, pooled over the nine test windows.
 
-<!-- TODO(Lorenzo): ETL v4 (like v3) flags outage hours only where P_cs >= 0.1 C, so zero readings at the low-sun edges of outage days and feed gaps escape the rule and are scored: 30 hours in the test windows (SQ1 9, all at 06:00 on 8-16 May 2023; CYT (Station 2) 11 and SQ15 10, mostly the 17:00 hour after their 07:00-17:00 feed gaps), 0.17% of the 17,919 scored hours. sec:data-qc now states this, with its own TODO; decide there whether to extend the outage rule to whole outage days in a later ETL. Evidence: scratchpad ch4/v4_stats.py. -->
+<!-- TODO(Lorenzo): ETL v4 (like v3) flags outage hours only where P_cs >= 0.1 C, so zero readings at the low-sun edges of outage days and feed gaps escape the rule and are scored: 30 hours in the test windows (SQ1 9, all at 06:00 on 8-16 May 2023; CYT (Station 2) 11 and SQ15 10, mostly the 17:00 hour after their 07:00-17:00 feed gaps), 0.17% of the 17,919 scored hours. Appendix B (single events) now states this, with its own TODO; decide there whether to extend the outage rule to whole outage days in a later ETL. Evidence: scratchpad ch4/v4_stats.py. -->
 
 For the deterministic models, the references and the LSTM, the point forecast is the
 model's own output; for the probabilistic models it is the mean of the nine quantiles,
@@ -363,12 +373,13 @@ an estimate of the predictive mean that ignores the tails beyond the outer quant
 expected squared error is minimised by the predictive mean, not the median
 [@gneiting2011making], so scoring the probabilistic models on their median would
 handicap them against the LSTM, trained on the squared error; the mean absolute error,
-minimised by the median, is secondary for them.
+minimised by the median, is secondary for them. The mean rule was adopted after the first
+run had been examined (@tbl:decisions). Under the median rule the ranking in the NWP
+setting is unchanged, and in the no-weather setting every model except SARIMA scores
+slightly below CLIPER (@tbl:point-rule).
 
-All metrics are computed from the saved forecasts, which keep each model's raw output
-(`experiments/rescore.py`, `experiments/report.py`), so a change of scoring rule needs no
-re-run. The rules here are scoring version 2 (version 1 scored the probabilistic models
-on their median).
+All metrics are computed from the saved forecasts, which keep each model's raw output, so
+a change of scoring rule needs no re-run.
 
 ### Point metrics and skill
 
@@ -382,44 +393,55 @@ $$
 $$
 
 Divided by the station's nameplate capacity $C_s$, never by the observed power, which is
-close to zero at dawn and dusk, they give the normalised errors nRMSE and nMAE, comparable
-across station sizes. The main measure is the RMSE skill score over a reference,
+close to zero at dawn and dusk, they give the normalised errors nRMSE and nMAE,
+comparable across station sizes, though only approximately, because $C_s$ is not the same
+kind of rating at every station (@sec:data-dataset). Raw errors depend on the station and
+on the weather of the test period, so the main measure relates a model's error to that of
+a reference forecast; its value depends on the reference, and the weaker the reference,
+the higher the score. It is the RMSE skill score over a reference,
 
 $$
 \mathrm{SS}_s = 1 - \frac{\mathrm{RMSE}_s^{\,\mathrm{model}}}{\mathrm{RMSE}_s^{\,\mathrm{ref}}},
 $$ {#eq:skill}
 
 computed per station on the same hours for model and reference: a positive score means
-that the model beats the reference, and $\mathrm{SS}_s = 0.2$ a 20% lower RMSE. Smart
-persistence, among the most common day-ahead references [@yang2020verification], gives
-the headline numbers; CLIPER, the training-window version of the standard of reference
-recommended by @yang2020verification, is the stricter second reference. The reported
-value is the mean of $\mathrm{SS}_s$ over the six stations with its range; the other
-metrics are aggregated in the same way (@tbl:master-skill).
+that the model beats the reference, and $\mathrm{SS}_s = 0.2$ a 20% lower RMSE; a
+negative score means that the model does worse than the reference, and
+$\mathrm{SS}_s = -0.1$ a 10% higher RMSE. CLIPER, the training-window version of the
+reference recommended by
+@yang2020verification, gives the headline numbers. Smart persistence, among the most
+common day-ahead references [@yang2020verification], appears as a row of the main
+tables, and skill scores over it are in @tbl:master-skill-full. CLIPER became the headline
+reference after the results of the main run had been seen (@tbl:decisions); the ranking of
+the models of the main run is the same under either reference. The reported value is the mean of
+$\mathrm{SS}_s$ over the six stations with a 95% interval (@sec:method-tests); the other
+metrics are averaged over the stations in the same way (@tbl:master-skill).
 
 ### Probabilistic metrics
 
 The quantile forecasts are scored with the pinball loss
 $\ell_\tau(y, q) = \max\{\tau\,(y - q),\ (\tau - 1)\,(y - q)\}$, whose expectation is
-minimised by the true $\tau$-quantile [@gneiting2011making], and with the continuous
-ranked probability score (CRPS), a proper scoring rule for the whole predictive
-distribution [@gneiting2007strictly], approximated as twice the mean pinball loss,
+minimised by the true $\tau$-quantile [@gneiting2011making]. Its mean over the nine
+levels and the scored hours is the *quantile score* (QS), in kW, reported divided by
+capacity as QS / $C_s$ (@tbl:probabilistic):
 
 $$
-\mathrm{CRPS}_s \approx \frac{1}{|\mathcal{H}_s|} \sum_{t \in \mathcal{H}_s}
-\frac{2}{9} \sum_{\tau \in \mathcal{T}} \ell_\tau\!\left(P_{s,t},\ \hat{q}_{\tau,s,t}\right),
-$$ {#eq:crps}
+\mathrm{QS}_s = \frac{1}{|\mathcal{H}_s|} \sum_{t \in \mathcal{H}_s}
+\frac{1}{9} \sum_{\tau \in \mathcal{T}} \ell_\tau\!\left(P_{s,t},\ \hat{q}_{\tau,s,t}\right) .
+$$ {#eq:qs}
 
-a discrete version of $\mathrm{CRPS} = 2\int_0^1 \ell_\tau\,\mathrm{d}\tau$
-[@gneiting2011comparing], divided by $C_s$ like the point errors. If all nine quantiles
-equal the point forecast, @eq:crps reduces to the absolute error, because the levels are
-symmetric about 0.5: the CRPS of a deterministic forecast is its MAE, so all models can
-be compared on it, also through a CRPS skill score over Smart persistence. Calibration is
-measured for the probabilistic models by the prediction interval coverage probability
-(PICP) of the central 80% interval $[\hat{q}_{0.1,t}, \hat{q}_{0.9,t}]$, the share of
-observations inside it (ideally 0.8), reported with the interval's mean width divided by
-$C_s$, and by the share of observations at or below each $\hat{q}_{\tau,t}$ (ideally
-$\tau$), the data of a reliability diagram (@tbl:probabilistic). Crossing quantiles are sorted before scoring
+Twice the QS equals the weighted interval score of the four central intervals and the
+median [@bracher2021evaluating] and is a discrete version of the continuous ranked
+probability score, $\mathrm{CRPS} = 2\int_0^1 \ell_\tau\,\mathrm{d}\tau$
+[@gneiting2011comparing], a proper scoring rule for the whole predictive distribution
+[@gneiting2007strictly]; for a calibrated Gaussian forecast twice the QS lies about 9%
+above the exact CRPS. For a point forecast, twice the QS reduces to the absolute error, because the
+levels are symmetric about 0.5. Calibration is measured by the prediction interval
+coverage probability (PICP) of the central 80% interval $[\hat{q}_{0.1,t},
+\hat{q}_{0.9,t}]$, the share of observations inside it (ideally 0.8), reported with the
+interval's mean width divided by $C_s$ (@tbl:probabilistic), and by the share of
+observations at or below each $\hat{q}_{\tau,t}$ (ideally $\tau$), shown as a reliability
+diagram (@fig:reliability). Crossing quantiles are sorted before scoring
 [@chernozhukov2010quantile].
 
 ## Statistical testing {#sec:method-tests}
@@ -439,89 +461,90 @@ $$ {#eq:daily-loss}
 
 The Diebold--Mariano (DM) test [@diebold1995comparing] compares models $A$ and $B$
 through the loss differential $D_d = L^{A}_{d} - L^{B}_{d}$ over the $n = 270$ test days,
-taken in date order, under the null hypothesis that its expectation is zero. Consecutive
-days share weather, so the variance of $\bar{D}$ is estimated with the
-heteroskedasticity- and autocorrelation-consistent (HAC) estimator of @newey1987simple,
-with Bartlett weights and $m = \lfloor n^{1/3} \rfloor = 6$ lags, a choice that follows
-the $n^{1/3}$ growth of the lag window that is optimal for this kernel
-[@andrews1991heteroskedasticity]:
+taken in date order, under the null hypothesis that its expectation is zero. Because
+consecutive days share weather, the variance of the mean differential is estimated with
+the autocorrelation-consistent estimator of @newey1987simple (six lags), with the
+small-sample correction of @harvey1997testing and a p-value from Student's t
+distribution; a moving-block bootstrap gives a second p-value. The details are in
+@sec:appendix-results-tests.
 
-$$
-\hat{\gamma}_j = \frac{1}{n} \sum_{d=j+1}^{n} \left(D_d - \bar{D}\right)\left(D_{d-j} - \bar{D}\right),
-\qquad
-\hat{\sigma}^2 = \hat{\gamma}_0 + 2 \sum_{j=1}^{m} \left(1 - \frac{j}{m+1}\right) \hat{\gamma}_j,
-$$
-$$
-\mathrm{DM}^{*} = \sqrt{\frac{n + 1 - 2h + h(h-1)/n}{n}}\;
-\frac{\bar{D}}{\sqrt{\hat{\sigma}^2 / n}}, \qquad h = 1 .
-$$ {#eq:dm}
-
-The square-root factor is the small-sample correction of @harvey1997testing for a
-horizon of $h = 1$ day, and the two-sided p-value comes from Student's t distribution
-with $n - 1$ degrees of freedom; with $n = 270$ both corrections are small. A
-moving-block bootstrap of the differentials [@kunsch1989jackknife], with blocks of seven
-days and 10,000 resamples, gives a second p-value that relies neither on the t
-approximation nor on the choice of lags. Lags and blocks also span the gaps between test
-windows.
+Every skill score, skill difference and PICP-80 in the Results carries a 95% interval
+from a moving-block bootstrap over the test days [@kunsch1989jackknife]. Blocks of seven
+consecutive test days, in date order, are drawn with replacement to form each of 10,000
+resamples of the 270 days (seed 0), and the same resampled days are used for every
+station and model, so differences between models are paired. In each resample the skill
+is recomputed per station on the hours of the resampled days and averaged over the
+stations; the interval runs from the 2.5th to the 97.5th percentile of the resampled
+values. The stations are not resampled, and the range across stations, which is not a
+measure of uncertainty, is given only in @tbl:master-skill-full.
 
 The tests form one family of eleven comparisons, each tied to a research question:
 
-1. LightGBM vs Chronos-2 (zero-shot), NWP setting (RQ1);
-2. LightGBM vs Chronos-2 (fine-tuned), NWP setting (RQ1, RQ2);
-3. Chronos-2 (fine-tuned) vs SARIMA, NWP setting (RQ1);
-4. Chronos-2 (fine-tuned) vs Chronos-2 (zero-shot), NWP setting (RQ2);
-5. Chronos-2 (fine-tuned) vs Chronos-2 (zero-shot), no-weather setting (RQ2);
-6. SARIMA vs Chronos-2 (zero-shot), no-weather setting (RQ1);
-7. Chronos-2 (zero-shot) vs TiRex, no-weather setting (RQ1);
-8. TiRex vs TimesFM-2.5, no-weather setting (RQ1);
+1. LightGBM vs Chronos-S, NWP setting (RQ1);
+2. LightGBM vs Chronos-S-FT, NWP setting (RQ1, RQ2);
+3. Chronos-S-FT vs SARIMA, NWP setting (RQ1);
+4. Chronos-S-FT vs Chronos-S, NWP setting (RQ2);
+5. Chronos-S-FT vs Chronos-S, no-weather setting (RQ2);
+6. SARIMA vs Chronos-S, no-weather setting (RQ1);
+7. Chronos-S vs TiRex, no-weather setting (RQ1);
+8. TiRex vs TimesFM, no-weather setting (RQ1);
 9. LightGBM, NWP vs no-weather setting (RQ3);
-10. Chronos-2 (zero-shot), NWP vs no-weather setting (RQ3);
+10. Chronos-S, NWP vs no-weather setting (RQ3);
 11. CLIPER vs Smart persistence (choice of reference).
 
-The family was chosen after an exploratory look at day-level tests on the panel v1
-forecasts (eight of the ten pairs tested there kept, items 1, 10 and 11 added) and fixed
-in the reporting script on 2 October 2026, before panel v2 ran. It is therefore
-pre-specified for the reported results, although panel v1 covered the same test days.
-The p-values are adjusted with the Holm--Bonferroni procedure [@holm1979simple], which
-keeps the probability of at least one false rejection in the family at or below 5%
-(@tbl:significance).
+The family was chosen after an exploratory look at day-level tests on the forecasts of
+the first run (eight of the ten pairs tested there kept, items 1, 10 and 11 added) and
+fixed before the main run (@tbl:decisions). The first run covered the same test days, so
+the family was fixed before the main run but after the first run had been examined. The p-values are adjusted with the Holm--Bonferroni procedure
+[@holm1979simple], which keeps the probability of at least one false rejection in the
+family at or below 5% (@tbl:significance).
+
+Comparisons that involve the post hoc configurations are themselves post hoc: E1–E3
+were chosen after their results had been seen, E4 and E5 before the last run
+(@tbl:decisions). They are reported as paired skill differences $A - B$ over CLIPER with
+95% intervals, without tests (@tbl:significance, second block), all in the NWP setting:
+
+- **E1.** Chronos-S-long vs Chronos-S;
+- **E2.** LightGBM vs Chronos-S-long;
+- **E3.** Chronos-S-FT vs Chronos-S-long;
+- **E4.** LightGBM vs Chronos-B-long;
+- **E5.** Chronos-S-FT vs Chronos-B-long.
+
+RQ1 is answered with the best zero-shot configuration tested, a post hoc selection that
+favours the zero-shot models.
 
 ## Compute measurement {#sec:method-compute}
 
 Compute cost is measured per fold as wall-clock time around the model alone, without the
 reference forecast. The training time is that of the model's `fit()` call, which for the
-LSTM and Chronos-2 (fine-tuned) includes building the model, for the latter reloading
+LSTM and Chronos-S-FT includes building the model, for the latter reloading
 the pretrained checkpoint; the zero-shot foundation models load their checkpoint only in
 the first fold, in a few seconds, so their median training time is close to zero. The
-prediction time covers the fold's 30 daily forecasts. @Tbl:compute reports medians over
-the 54 station-folds of each model and setting.
+prediction time covers the fold's 30 daily forecasts. @Tbl:compute reports the median
+times over the 54 station-folds of each model and setting.
 
-Peak memory is the process's peak resident set size reported by the operating system
-(`pvfc.utils.peak_rss_mb`), a high-water mark over the life of the process. It leaves
-out the memory that PyTorch allocates for the graphics processor (GPU) through Apple's
-Metal framework, although the GPU and the central processor (CPU) share one physical
-memory (@sec:appendix-repro), so for the five neural models, the LSTM and the four
-foundation-model variants, the reported peak is a lower bound.
+Peak memory is the process's peak resident set size reported by the operating system,
+a high-water mark over the life of the process;
+@tbl:compute reports its maximum over the station-folds. It leaves
+out the memory that PyTorch allocates for the graphics processing unit (GPU) through Apple's
+Metal framework, although the GPU and the central processing unit (CPU) share one physical
+memory (@sec:appendix-repro), so for the neural models (the LSTM and the foundation
+models) the reported peak is a lower bound.
 
 All runs used one fanless laptop, an Apple MacBook Air with an M4 chip and 16 GB of
 memory shared by CPU and GPU; timings are not corrected for thermal throttling. The
-neural models ran on the GPU through PyTorch's Metal Performance Shaders (MPS) backend,
-with a fallback to the CPU for unsupported operations, the others on the CPU. The 144
-runs of panel v2 were executed one at a time, from 21:37 on 2 October 2026.
-
-<!-- TODO(Lorenzo): panel v2 wall time from results/logs/panel.out -->
+neural models ran on the GPU through PyTorch, with a fallback to the CPU for unsupported
+operations, the others on the CPU. The 144 runs of the main run were executed one at a
+time and took 18.5 hours (Appendix [-@sec:appendix-repro]).
 
 ## Reproducibility {#sec:method-repro}
 
 Every run is identified by a hash of its configuration: the data, including the version
-of the data processing (`data.etl_version`, here 4), the folds, the model and the seed.
-The hash keys the rows of the results store and names the file of saved forecasts, so
-runs on differently processed data never share a hash, and `experiments/run.py` refuses
-a configuration whose version differs from the one the code builds
-(`pvfc.data.ETL_VERSION`). All random number generators are seeded with 0, so the LSTM
-starts from the same weights in every fold; with a single seed, the sensitivity of the
-neural models to their initialisation was not measured. Regression tests (`tests/`)
-check the protocol properties of this chapter; @sec:appendix-repro gives the full
-checklist.
-
-<!-- TODO(Lorenzo): decide whether to run extra seeds for the LSTM and Chronos-2 (fine-tuned); if not, keep the single-seed caveat. Before any multi-seed run, pass the configuration's seed to the models: darts_wrapper takes random_state from the model params (default 0), and run.py passes only m["params"], so changing `seed` in experiment.yaml would not change the LSTM or fine-tuning initialisation. -->
+of the data processing, the folds, the model and the seed. The hash keys the rows of the
+results store and names the file of saved forecasts, so runs on differently processed
+data never mix. All random number generators are seeded with 0 by default, so the LSTM
+starts from the same weights in every fold; Chronos-S-FT was run with three seeds
+(@tbl:chronos2-configs), the LSTM with one. Regression tests check the protocol
+properties of this chapter. Appendix [-@sec:appendix-repro] gives the full checklist,
+the dated record of choices (@tbl:decisions) and where each step is implemented
+(@tbl:code-map).

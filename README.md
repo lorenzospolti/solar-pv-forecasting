@@ -1,14 +1,16 @@
 # Solar PV Day-Ahead Forecasting — Benchmark Harness
 
-Bachelor's thesis (Università di Milano-Bicocca, Sept 2026). **Variant B:** do
-zero-shot & fine-tuned time-series *foundation models* (Chronos-2, Moirai-2,
-TimesFM-2.5, TinyTimeMixer) match or beat purpose-trained classical/ML/deep
-models (smart persistence, SARIMA, LightGBM, LSTM) for **day-ahead hourly PV
-power** forecasting **on consumer hardware (M4, 16 GB)** — and at what compute cost?
+Bachelor's thesis, BSc in Artificial Intelligence (Università degli Studi di Milano,
+Milano-Bicocca and Pavia; supervisor Prof. Claudio Cusano), December 2026. Do
+zero-shot & fine-tuned time-series *foundation models* (Chronos-2, TimesFM-2.5,
+TiRex) match or beat purpose-trained models (SARIMA, LightGBM, LSTM) and reference
+forecasts (smart persistence, CLIPER) for **day-ahead hourly PV power** forecasting
+**on consumer hardware (M4, 16 GB)** — and at what compute cost?
 
 Evaluation follows the solar-forecasting verification canon: model the
-**clear-sky index**, score by **skill over smart persistence**, and report
-**probabilistic calibration** (CRPS / pinball / reliability).
+**clear-sky index**, score by **RMSE skill over CLIPER** (smart persistence as a row),
+and report **probabilistic accuracy and calibration** (quantile score, PICP-80,
+reliability), with 95% day-block bootstrap intervals.
 
 ## Quickstart
 
@@ -23,8 +25,8 @@ make smoke                                 # end-to-end run on a SYNTHETIC stati
 
 The synthetic-station path lets the whole harness run before any data is
 downloaded. For real runs, download the HKUST dataset (Dryad
-`doi:10.5061/dryad.m37pvmd99`) into `data/raw/` and implement the ETL in
-[`src/pvfc/data.py`](src/pvfc/data.py) (Week 3).
+`doi:10.5061/dryad.m37pvmd99`) into `data/raw/`; the ETL is in
+[`src/pvfc/data.py`](src/pvfc/data.py).
 
 ## Architecture (one shared harness)
 
@@ -55,7 +57,8 @@ daytime data gaps stay NaN instead of fake zeros; the runner strips `power`/`k` 
 the future frame, fits **once per fold** and scores both masks, and reports
 `fit_s`/`predict_s`/`peak_rss_mb` plus per-quantile coverage (`cov_q*`) for
 reliability diagrams; nwp frames carry **only** forecast weather; test folds now
-span May 2022–Nov 2023 (10 folds, 60-day stride). CYT processed caches regenerated.
+span May 2022–Nov 2023 (10 folds, 60-day stride; superseded: the reported panel uses
+9 calendar-anchored 30-day windows from 5 Jul 2022, see below). CYT processed caches regenerated.
 
 Harness spine + baselines + **real HKUST ETL** (per-station nameplate capacity from
 the Brick `.ttl` metadata) + **NWP weather feed** (Open-Meteo) + **SARIMA (AutoARIMA),
@@ -132,8 +135,15 @@ never pin it. `make checkpoints` pre-downloads the three foundation checkpoints.
 | chronos2 | darts | `chronos2` | `chronos2_ft` | `darts[torch]>=0.44` |
 | timesfm | darts | `timesfm` | — (out of scope) | `darts[torch]>=0.44` |
 | tirex | darts | `tirex` | — | `darts[torch]>=0.44`, `tirex-ts` |
-| ttm | **granite-tsfm** (optional stretch) | `ttm` | — | `granite-tsfm[notebooks]>=0.2.16` |
-| moirai2 | **uni2ts** (out of scope) | `moirai2` | — | `uni2ts>=1.2` |
+| ttm | **granite-tsfm** (wrapper only, not in the reported runs) | `ttm` | — | `granite-tsfm[notebooks]>=0.2.16` |
+| moirai2 | **uni2ts** (wrapper only, not in the reported runs) | `moirai2` | — | `uni2ts>=1.2` |
+| tirex / timesfm + xreg | darts + `pvfc.models.xreg` (weather via in-context regression) | `tirex_xreg`, `timesfm_xreg` | — | as tirex / timesfm |
+| timesfm3 | **timesfm>=3.0.2** (weather as native covariates) | `timesfm3` | — | `.[covariates]` |
+| tirex2 | **tirex-2** (weather as native covariates) | `tirex2` | — | `.[covariates]` |
+
+Weather covariates for TiRex and TimesFM, the longest contexts each model accepts, and the
+newer checkpoints that read the weather natively (TimesFM-3, TiRex-2) are described in
+[`COVARIATES.md`](COVARIATES.md); the proposed runs are in `configs/covariates.yaml`.
 
 The external wrappers (TTM, Moirai-2) have no fine-tuning loop: `finetune: true`
 raises instead of producing a zero-shot forecast under an `_ft` label. To try TTM
@@ -161,7 +171,14 @@ first, then LightGBM, SARIMA, LSTM, Chronos-2 fine-tuning), after a `check_data.
 pre-flight per station. Each run logs to `results/logs/`, a ledger records status and
 wall time, and `--skip-done` makes the batch resumable: start the same command again
 and finished runs are skipped. It keeps the Mac awake with `caffeinate` (stay on power,
-lid open). The full 120-run panel took 19.3 h on the M4 (1-2 Oct 2026).
+lid open). Panel v2 (144 runs, the reported results) took 18.5 h of run time, 22.4 h
+elapsed, on the M4 (2-3 Oct 2026); panel v1 (120 runs) had taken 19.3 h.
+
+**Extra runs and decision log.** Seven configurations added after panel v2 (longer
+Chronos-2 and TiRex contexts, the Chronos-2-base checkpoint, two more fine-tuning seeds)
+are in `configs/extras.yaml`, with results in `results/extra/` (git-ignored; same folds
+and code); `make report` reads them together with the panel. `DECISIONS.md` dates every
+protocol choice and states what had been seen when it was made.
 
 ```bash
 python experiments/run_panel.py --dry-run                         # plan + rough hours
