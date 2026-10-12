@@ -202,3 +202,52 @@ Times are local (Europe/Rome).
       further.
   - No further model runs after these unless the tutor asks for one; any such run
     gets its own entry here first.
+
+## 13 Oct 2026, after the declared covariate runs
+
+- **Outcome of the runs declared on 12 Oct** (commit 2ce7dd0, 22:08:51):
+  - Batch 1, `tirex_xreg` and `timesfm_xreg` (NWP): 22:09-22:38, 0.48 h of run time;
+    12 of 12 runs ok in `results/covariates/logs_b1_xreg/panel_ledger.csv`.
+  - Batch 2:
+    - `chronos2_base_ctx8192`: 22:38-23:49, 1.17 h; 12 of 12 ok (`logs_b2_chronos8192`).
+    - `timesfm_ctx16k`: 23:48-00:08, 0.30 h; 6 of 6 ok (`logs_b2_timesfm16k`).
+  - Batch 3 (`timesfm3`, `tirex2`) was not run: the licence steps had not been done. It
+    stays declared under the 12 Oct entry.
+- **Checks passed:**
+  - 30 prediction files, each with 6,480 rows, 9 folds and no missing forecast; time
+    index, folds and truth the same as the panel's files for that station.
+  - No line with WARNING, Traceback, "without covariates" or "kc_nwp dropped" in the
+    run logs. The 12 expected pandas FutureWarnings appeared, one per xreg run.
+  - `chronos2_base_ctx8192`: NWP and No-weather forecasts differ at every station
+    (largest gap 15-36 kW).
+  - `results/results.parquet` and `results/extra/` unchanged (sha256).
+  - Batch manifests: the main checkout at ef5833e with clean code throughout; env pv
+    identical to its lock; the reported checkpoint revisions; `HF_HUB_OFFLINE=1`.
+- **Result** (skill over CLIPER with 95 % interval; `experiments/covariate_summary.py`):
+  - With the weather through the regression, the two univariate models gain about a
+    quarter of CLIPER's error:
+    - `tirex_xreg` 0.247 [0.198, 0.293]; against TiRex-long, E8 0.245 [0.177, 0.307];
+    - `timesfm_xreg` 0.242 [0.189, 0.290]; against `timesfm_ctx16k`, E11 0.249
+      [0.188, 0.307].
+  - Both stay behind LightGBM (E7 −0.034 [−0.057, −0.009], E10 −0.038 [−0.064, −0.013])
+    and about 0.03 behind Chronos-B-long, with intervals reaching 0 (E6 −0.027
+    [−0.057, 0.005], E9 −0.032 [−0.065, 0.002]).
+  - Their intervals are too narrow: PICP-80 0.695 and 0.660 (nominal 0.80; Chronos-B-long
+    0.843).
+  - `timesfm_ctx16k` †: −0.007 [−0.046, 0.032] (TimesFM at 512 h: −0.049). Against the
+    NWP models: E12 −0.280 [−0.332, −0.226], E13 −0.287 [−0.342, −0.229].
+  - `chronos2_base_ctx8192`: 0.269 [0.224, 0.312] with NWP and 0.003 [−0.042, 0.058]
+    without weather. E14 −0.005 [−0.014, 0.005], E15 −0.011 [−0.047, 0.026]: the
+    longest context adds nothing over 2,048 h and takes about four times as long.
+  - Time per test window and peak RSS:
+
+    | Configuration | Time per window | Peak RSS |
+    |---|---|---|
+    | `tirex_xreg` | 11.4 s | 1.5 GB |
+    | `timesfm_xreg` | 19.2 s | 2.2 GB |
+    | `timesfm_ctx16k` | 19.4 s | 2.2 GB |
+    | `chronos2_base_ctx8192` | 45.5 s (NWP), 31.9 s (No weather) | 1.4 GB |
+
+  - By the 12 Oct rule, RQ1 is still answered by Chronos-B-long.
+- **Thesis:** not changed yet. These rows are post hoc (‡) and go in only by Lorenzo's
+  decision.
