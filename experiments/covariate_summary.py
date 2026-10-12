@@ -1,92 +1,155 @@
-"""Quick look at the covariate runs (configs/covariates.yaml) next to the reported models.
+"""The covariate runs (configs/covariates.yaml) next to the reported models.
 
-Skill over CLIPER on daytime hours, as in the master table: each station pooled over its
-test days, then the mean over stations; probabilistic models are scored on the mean of
-their nine quantiles (pvfc.evaluation.point_forecast). No bootstrap: the thesis tables
-come from experiments/report.py.
+Every number is computed by experiments/report.py's own functions, so it is defined
+exactly as in the thesis tables:
 
-Usage:
-    python experiments/covariate_summary.py
-    python experiments/covariate_summary.py --compare lightgbm,chronos2_base_ctx2048,tirex
+* skill over CLIPER on daytime hours: each station pooled over its test days, then the
+  mean over stations; probabilistic models are scored on the mean of their nine
+  quantiles;
+* 95 % intervals from the 7-day moving-block bootstrap over the 270 test days (10,000
+  resamples, seed 0), one weight matrix for every station and model, so differences
+  are paired (``report.Bootstrap``);
+* PICP-80 with its interval, QS / C, the median seconds per test window and the
+  maximum peak RSS (``report.compute_medians``).
+
+The paired skill differences are the ones declared in DECISIONS.md (12 Oct 2026) before
+the runs: A - B, positive when A is more skilful, post hoc, no tests. A comparison is
+"not available" unless both sides ran at every station.
+
+Usage (the stores and the ETL cache live in the main checkout):
+    python experiments/covariate_summary.py --root ~/Thesis/solar-pv-forecasting
 """
 from __future__ import annotations
 
 import argparse
-import json
+import logging
+import math
+import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
-from pvfc.evaluation import point_forecast
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import report as R  # noqa: E402  (experiments/report.py)
 
 ROOT = Path(__file__).resolve().parents[1]
-PROCESSED = ROOT / "data" / "processed"
+STORES = ("", "extra", "covariates")   # results/, results/extra/, results/covariates/
+
+#: the configurations of configs/covariates.yaml, in config order (the order of their rows)
+NEW_MODELS = ("tirex_xreg", "timesfm_xreg", "timesfm_ctx16k", "chronos2_base_ctx8192",
+              "timesfm3", "tirex2")
+#: the reported rows shown next to the new ones
+REFERENCE_ROWS = (("lightgbm", "nwp"), ("lightgbm", "none"),
+                  ("chronos2_base_ctx2048", "nwp"), ("chronos2_base_ctx2048", "none"),
+                  ("tirex", "none"), ("tirex_ctx2048", "none"), ("timesfm", "none"))
+#: univariate configurations run once, under No weather (DECISIONS.md, 12 Oct 2026):
+#: with one setting only, report.detect_no_covariates cannot see that they take none
+RUN_ONCE = frozenset({"timesfm_ctx16k"})
+#: the declared comparisons (DECISIONS.md, 12 Oct 2026), numbered after E1-E5
+DECLARED: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
+    ("E6", ("tirex_xreg", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E7", ("tirex_xreg", "nwp"), ("lightgbm", "nwp")),
+    ("E8", ("tirex_xreg", "nwp"), ("tirex_ctx2048", "none")),
+    ("E9", ("timesfm_xreg", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E10", ("timesfm_xreg", "nwp"), ("lightgbm", "nwp")),
+    ("E11", ("timesfm_xreg", "nwp"), ("timesfm_ctx16k", "none")),
+    ("E12", ("timesfm_ctx16k", "none"), ("chronos2_base_ctx2048", "nwp")),
+    ("E13", ("timesfm_ctx16k", "none"), ("lightgbm", "nwp")),
+    ("E14", ("chronos2_base_ctx8192", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E15", ("chronos2_base_ctx8192", "nwp"), ("lightgbm", "nwp")),
+    ("E16", ("timesfm3", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E17", ("timesfm3", "nwp"), ("lightgbm", "nwp")),
+    ("E18", ("tirex2", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E19", ("tirex2", "nwp"), ("lightgbm", "nwp")),
+)
 
 
-def _capacity(site: str, mode: str) -> float:
-    cap = next(PROCESSED.glob(f"{site}__{mode}__etl*.cap.json"), None)
-    return float(json.loads(cap.read_text())["capacity"]) if cap else float("nan")
+def _label(panel: R.Panel, model: str) -> str:
+    """Display name, with dagger (no covariates) and double dagger (post hoc)."""
+    mark = R.NO_COV_MARK if model in panel.no_covariates | RUN_ONCE else ""
+    mark += R.POST_HOC_MARK if model in R.POST_HOC_MODELS | set(NEW_MODELS) else ""
+    return f"{R.display_name(model)} {mark}".strip()
 
 
-def _load(dirs: list[Path]) -> pd.DataFrame:
-    """The newest prediction file per (site, weather, model) found in ``dirs``."""
-    files = {}
-    for d in dirs:
-        for f in sorted(Path(d).glob("*.parquet"), key=lambda p: p.stat().st_mtime):
-            df = pd.read_parquet(f, columns=["site", "model", "weather_mode"]).iloc[:1]
-            if len(df):
-                files[tuple(df.iloc[0])] = f
-    return files
+def main(argv: list[str] | None = None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    ap.add_argument("--root", default=str(ROOT),
+                    help="checkout holding results/ and data/processed (default: this one)")
+    ap.add_argument("--out-dir", default=None,
+                    help="where the two CSVs go (default: <root>/results/covariates)")
+    args = ap.parse_args(argv)
+    R.setup_logging()
+    root = Path(args.root).expanduser().resolve()
+    pred_dirs = [root / "results" / d / "predictions" for d in STORES]
+    stores = [root / "results" / d / "results.parquet" for d in STORES]
 
+    runs = R.check_runs(R.load_predictions(pred_dirs, False, R.stored_hashes(stores)))
+    panel = R.Panel(runs=runs, capacity=R.load_capacities(runs, root / "data" / "processed"))
+    panel.no_covariates = R.detect_no_covariates(runs)
+    panel.timing = R.load_timing(stores, runs)
+    summary = R.Summary(R.compute_station_metrics(panel))
+    medians = R.compute_medians(panel)
+    boot = R.Bootstrap(panel)
+    logging.getLogger("pvfc.report").info("%d test days in the bootstrap", len(boot.days))
 
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--pred-dir", default=str(ROOT / "results" / "covariates" / "predictions"))
-    ap.add_argument("--ref-dirs", default=",".join(str(ROOT / "results" / d / "predictions")
-                                                    for d in ("", "extra")).replace("//", "/"))
-    ap.add_argument("--compare", default="lightgbm,chronos2_base_ctx2048,chronos2_ft,timesfm,tirex",
-                    help="reported models shown alongside (from --ref-dirs)")
-    args = ap.parse_args()
-
-    ref_dirs = [Path(p) for p in args.ref_dirs.split(",") if Path(p).exists()]
-    reported = _load(ref_dirs)
-    new = _load([Path(args.pred_dir)])
-    cliper = {(s, w): f for (s, m, w), f in reported.items() if m == "cliper"}
-    wanted = {(s, m, w): f for (s, m, w), f in reported.items()
-              if m in set(args.compare.split(","))}
+    order = list(REFERENCE_ROWS) + sorted({(m, s) for (m, s, _) in runs if m in NEW_MODELS},
+                                          key=lambda k: (NEW_MODELS.index(k[0]), k[1] != "nwp"))
     rows = []
-    for (site, model, mode), f in {**wanted, **new}.items():
-        ref_f = cliper.get((site, mode)) or cliper.get((site, "none"))
-        if ref_f is None:
+    for model, setting in order:
+        if not panel.has(model, setting):
             continue
-        p = pd.read_parquet(f)
-        ref = pd.read_parquet(ref_f)["y_hat"].rename("cliper")
-        p = p.join(ref, how="inner")
-        m = p["is_day"].astype(bool) & np.isfinite(p["y_true"])
-        q = {float(c[1:]): p.loc[m, c].to_numpy() for c in p.columns
-             if c.startswith("q") and c[1:].replace(".", "").isdigit()} or None
-        y = p.loc[m, "y_true"].to_numpy()
-        yhat = point_forecast(p.loc[m, "y_hat"].to_numpy(), q)
-        rmse = np.sqrt(np.mean((yhat - y) ** 2))
-        cap = _capacity(site, mode)
-        row = {"model": model, "weather": mode, "site": site, "nrmse": rmse / cap,
-               "skill_cliper": 1 - rmse / np.sqrt(np.mean((p.loc[m, "cliper"].to_numpy() - y) ** 2))}
-        if q:
-            row["qs_c"] = np.mean([np.mean(np.maximum(t * (y - v), (t - 1) * (y - v)))
-                                   for t, v in q.items()]) / cap
-            if 0.1 in q and 0.9 in q:
-                row["picp80"] = np.mean((y >= q[0.1]) & (y <= q[0.9]))
-        rows.append(row)
-    if not rows:
-        raise SystemExit(f"no prediction files in {args.pred_dir}")
-    df = pd.DataFrame(rows)
-    out = (df.groupby(["weather", "model"])
-             .agg(stations=("site", "nunique"), skill_cliper=("skill_cliper", "mean"),
-                  nrmse=("nrmse", "mean"), qs_c=("qs_c", "mean"), picp80=("picp80", "mean"))
-             .sort_values(["weather", "skill_cliper"], ascending=[True, False]))
-    with pd.option_context("display.width", 120):
-        print(out.round(4).to_string())
+        skill, picp = boot.skill(model, setting), boot.picp(model, setting)
+        timing = (medians.loc[(model, setting)] if (model, setting) in medians.index
+                  else pd.Series(math.nan, index=medians.columns))
+        rows.append({
+            "model": model, "label": _label(panel, model),
+            "setting": R.setting_label(setting),
+            "stations": summary.n_stations(model, setting, R.skill_metric()),
+            "skill_cliper": skill.point, "skill_lo": skill.interval[0],
+            "skill_hi": skill.interval[1],
+            "nrmse": summary.stat(model, setting, "nrmse"),
+            "qs_c": summary.stat(model, setting, "ncrps") / 2.0,
+            "picp_80": picp.point, "picp_80_lo": picp.interval[0],
+            "picp_80_hi": picp.interval[1],
+            "window_s": timing["window_s"],
+            "max_peak_rss_gb": timing["max_peak_rss_mb"] / R.MB_PER_GB,
+            "_skill": skill, "_picp": picp})
+
+    comparisons = []
+    for cid, a, b in DECLARED:
+        a, b = R.tested_side(panel, *a), R.tested_side(panel, *b)
+        est = (boot.skill_difference(a, b)
+               if R.complete(panel, *a) and R.complete(panel, *b) else R.NOT_AVAILABLE)
+        comparisons.append({"id": cid, "model_a": a[0], "setting_a": a[1], "model_b": b[0],
+                            "setting_b": b[1], "available": est.available,
+                            "skill_diff": est.point, "skill_diff_lo": est.interval[0],
+                            "skill_diff_hi": est.interval[1], "_est": est})
+
+    table = pd.DataFrame([{
+        "Model": r["label"], "Setting": r["setting"], "Stations": r["stations"],
+        "Skill vs CLIPER [95 %]": R._interval_cell(r["_skill"]), "nRMSE": R._num(r["nrmse"]),
+        "QS / C": R._num(r["qs_c"], 4), "PICP-80 [95 %]": R._interval_cell(r["_picp"]),
+        "s / window": R._num(r["window_s"], 1), "Max GB": R._num(r["max_peak_rss_gb"], 1)}
+        for r in rows])
+    diffs = pd.DataFrame([{
+        "Id": c["id"],
+        "A": f"{_label(panel, c['model_a'])} ({R.setting_label(c['setting_a'])})",
+        "B": f"{_label(panel, c['model_b'])} ({R.setting_label(c['setting_b'])})",
+        "Skill A - B [95 %]": R._interval_cell(c["_est"]) if c["available"] else "not available"}
+        for c in comparisons])
+    with pd.option_context("display.width", 200, "display.max_colwidth", 60):
+        print(table.to_string(index=False))
+        print()
+        print(diffs.to_string(index=False))
+
+    out = Path(args.out_dir) if args.out_dir else root / "results" / "covariates"
+    if out.is_dir():
+        pd.DataFrame(rows).drop(columns=["_skill", "_picp"]).to_csv(
+            out / "covariate_summary_rows.csv", index=False)
+        pd.DataFrame(comparisons).drop(columns=["_est"]).to_csv(
+            out / "covariate_summary_comparisons.csv", index=False)
+        print(f"\nwrote {out / 'covariate_summary_rows.csv'} and "
+              f"{out / 'covariate_summary_comparisons.csv'}")
 
 
 if __name__ == "__main__":
