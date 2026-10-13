@@ -49,7 +49,7 @@ reproduce: # regenerate every result from raw data: checkpoints -> panel -> resc
 rescore: # rebuild every metric row of results/results.parquet from results/predictions (current scoring rules); preview: python experiments/rescore.py --dry-run
 	python experiments/rescore.py
 
-report: # build thesis tables + figures from results/predictions and results/extra/predictions (timing and memory from both results stores)
+report: # build thesis tables + figures from results/predictions, results/extra/predictions and results/covariates/predictions (timing and memory from the three results stores)
 	python experiments/report.py
 
 manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc + tectonic)

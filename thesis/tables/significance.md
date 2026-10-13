@@ -1,7 +1,7 @@
-: Pairwise comparisons. Skill difference: skill over CLIPER of A minus that of B (positive: A more accurate), with its 95 % interval from a 7-day moving-block bootstrap over the test days (10,000 resamples, the same days for all stations). P1–P11 were fixed before the main run, after a first run on the same test days had been examined: Diebold-Mariano test on daily squared-error losses, Holm-adjusted over the 11 comparisons; verdict at Holm p < 0.05 (n.s.: no significant difference). E1–E5 are post hoc (they involve configurations added after the main run) and are reported with intervals only. Full test statistics: @tbl:significance-detail. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. ‡ Post hoc: added after the results of the main run had been seen. {#tbl:significance}
+: Pairwise comparisons. Skill difference: skill over CLIPER of A minus that of B (positive: A more accurate), with its 95 % interval from a 7-day moving-block bootstrap over the test days (10,000 resamples, the same days for all stations). P1–P11 were fixed before the main run, after a first run on the same test days had been examined: Diebold-Mariano test on daily squared-error losses, Holm-adjusted over the 11 comparisons; verdict at Holm p < 0.05 (n.s.: no significant difference). E1–E15 are post hoc (they involve configurations added after the main run) and are reported with intervals only. Full test statistics: @tbl:significance-detail. † No covariates: the forecasts are identical in both weather settings, so the model is reported once, under No weather. TimesFM-max takes no covariates and was run under No weather only. ‡ Post hoc: added after the results of the main run had been seen. {#tbl:significance}
 
 | ID  | Comparison (A vs B)                         | Skill difference (A − B) | Holm p | Verdict  |
-|:---------|:----------------------------------------|--------------------------------------:|-----------------:|:-------------------|
+|:---------|:-----------------------------------------|-------------------------------------------:|-----------------:|:-------------------|
 | P1  | NWP: LightGBM vs Chronos-S                  |     0.162 [0.111, 0.210] | <0.001 | A better |
 | P2  | NWP: LightGBM vs Chronos-S-FT               |    0.023 [−0.021, 0.065] |  1.000 | n.s.     |
 | P3  | NWP: Chronos-S-FT vs SARIMA                 |     0.058 [0.015, 0.099] |  0.040 | A better |
@@ -18,3 +18,13 @@
 | E3  | NWP: Chronos-S-FT vs Chronos-S-long ‡       |     0.046 [0.003, 0.087] |      — | post hoc |
 | E4  | NWP: LightGBM vs Chronos-B-long ‡           |    0.007 [−0.029, 0.041] |      — | post hoc |
 | E5  | NWP: Chronos-S-FT vs Chronos-B-long ‡       |   −0.016 [−0.051, 0.018] |      — | post hoc |
+| E6  | NWP: TiRex-XReg ‡ vs Chronos-B-long ‡       |   −0.027 [−0.057, 0.005] |      — | post hoc |
+| E7  | NWP: TiRex-XReg ‡ vs LightGBM               |  −0.034 [−0.057, −0.009] |      — | post hoc |
+| E8  | TiRex-XReg ‡, NWP vs TiRex-long ‡ †         |     0.245 [0.177, 0.307] |      — | post hoc |
+| E9  | NWP: TimesFM-XReg ‡ vs Chronos-B-long ‡     |   −0.032 [−0.065, 0.002] |      — | post hoc |
+| E10 | NWP: TimesFM-XReg ‡ vs LightGBM             |  −0.038 [−0.064, −0.013] |      — | post hoc |
+| E11 | TimesFM-XReg ‡, NWP vs TimesFM-max ‡ †      |     0.249 [0.188, 0.307] |      — | post hoc |
+| E12 | TimesFM-max ‡ † vs Chronos-B-long ‡, NWP    |  −0.280 [−0.332, −0.226] |      — | post hoc |
+| E13 | TimesFM-max ‡ † vs LightGBM, NWP            |  −0.287 [−0.342, −0.229] |      — | post hoc |
+| E14 | NWP: Chronos-B-max ‡ vs Chronos-B-long ‡    |   −0.005 [−0.014, 0.005] |      — | post hoc |
+| E15 | NWP: Chronos-B-max ‡ vs LightGBM            |   −0.011 [−0.047, 0.026] |      — | post hoc |
