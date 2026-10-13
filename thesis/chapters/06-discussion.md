@@ -53,8 +53,7 @@ and the LSTM was configured once, so neither shows the best its family can reach
 fine-tuning is light, 60 to 150 optimiser steps at a single context, against 1,000 in the
 official example. Three fine-tuning seeds agree closely, but the LSTM was run with one.
 
-The dataset was public before every checkpoint used here was released, and four of the
-stations later entered a public benchmark; no model card names it, but an overlap would
+The dataset was public before every checkpoint used here was released, and it was later used in a public benchmark; no model card names it, but an overlap would
 favour the zero-shot models. Finally, the six stations were selected on the whole record,
 test period included, for complete and stable data, so the results may be optimistic for
 less well-kept installations.

@@ -63,8 +63,7 @@ results had been seen. Without weather forecasts, no model beats CLIPER; TimesFM
 take no weather inputs in the software used here, are tested in this setting only. With weather
 forecasts, fine-tuning adds 0.14 in skill at the short context fixed in advance; a longer context
 alone gives about two thirds of that gain without training (fine-tuning at a long context did not
-fit in 16 GB at the batch size used). The best zero-shot configuration forecasts 30 days in 12
-seconds, against about three minutes to fit LightGBM or to fine-tune Chronos-2. The archived weather
+fit in 16 GB at the batch size used). The best zero-shot configuration forecasts 30 days for one station in 12 seconds, against about three minutes to fit LightGBM or to fine-tune Chronos-2. The archived weather
 forecasts come from weather-model runs not yet available when the power forecasts are issued, so the
 gains from them are an upper bound. On these data, the weather input matters more than the model
 class, and a zero-shot foundation model given weather forecasts and a long context is a competitive

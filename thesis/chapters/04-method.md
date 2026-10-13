@@ -217,7 +217,7 @@ from its context window without training on it. *Chronos-2* [@ansari2025chronos2
 is an encoder-only transformer whose group attention relates the target to its
 covariates, so it can use covariates without task-specific training. It comes in a small
 and a base checkpoint (28 M and 120 M parameters). The main run uses the small one,
-*Chronos-S*, chosen for its cost on the laptop, with a 336-hour context, zero-shot and
+*Chronos-S*, chosen because the base checkpoint might not fit in the laptop's memory, especially for fine-tuning, with a 336-hour context, zero-shot and
 fine-tuned (*Chronos-S-FT*, below). *TimesFM* (version 2.5, September 2025)
 [@das2024timesfm] is a decoder-only transformer with about 200 M parameters, and *TiRex*
 [@auer2025tirex] a recurrent model with 35 M parameters based on xLSTM, an extended LSTM
@@ -231,14 +231,11 @@ the longer contexts were given 90 days of history instead of 60
 (@tbl:chronos2-configs). Chronos-B-long is the best zero-shot configuration tested. The
 comparisons that involve these runs are post hoc (@sec:method-tests).
 
-<!-- TODO(Lorenzo): confirm that speed and memory on the laptop were the reasons for the small Chronos-2 checkpoint; otherwise state the actual reason. -->
-
 The dataset has been public since 2 April 2024 [@lin2024hkustdata], before any of the
 checkpoints used here was released; no pretraining corpus named on their model cards
 includes it, but an overlap cannot be excluded and would favour the zero-shot models.
-Four of the six panel stations have also been part of a public foundation-model
-benchmark, FETS, since April 2026 [@obermeier2026fets], after all the checkpoints.
-<!-- TODO(Lorenzo): the FETS paper names only "PV Hong Kong"; "four of the six" rests on the file list of the FETS dataset release. Cite or keep that evidence. -->
+Since April 2026 the dataset has also been used in a public foundation-model benchmark, FETS
+[@obermeier2026fets], released after all the checkpoints.
 Newer versions with covariate support,
 TiRex-2 (July 2026) [@podest2026tirex2] and TimesFM 3.0 (August 2026),^[TimesFM
 repository, README, "Update — August 2026"; <https://github.com/google-research/timesfm>,
