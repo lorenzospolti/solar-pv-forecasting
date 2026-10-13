@@ -24,11 +24,10 @@ references, RQ2 fine-tuned with zero-shot Chronos-2, RQ3 the two weather setting
 RQ4 the calibration and the cost of every model.
 
 The results come from one complete run of this design, the *main run*: 144 runs, one per
-station, weather setting and model, each over the nine folds. Seven further
-configurations of Chronos-2 and TiRex, which vary context length, checkpoint size and
-seed, were run afterwards on the same folds with the same code, after the main results
-had been seen; they are post hoc and marked ‡ in every table and figure. An earlier
-complete run on the same test days is not reported. @Tbl:decisions in Appendix
+station, weather setting and model, each over the nine folds. Eleven further
+configurations of Chronos-2, TimesFM and TiRex, which vary context length, checkpoint size
+and seed or add a weather regression, were run on the same folds after the main results had
+been seen; they are post hoc and marked ‡ in every table and figure. An earlier complete run on the same test days is not reported. @Tbl:decisions in Appendix
 [-@sec:appendix-repro] dates every choice and states what had been seen when it was made.
 
 ## Forecasting task {#sec:method-task}
@@ -118,11 +117,21 @@ on their quality.
 @Tbl:method-models lists the covariates that each model receives. TimesFM and TiRex
 receive none, because their darts wrappers do not accept covariates; their forecasts are
 the same in both settings and are reported once, under the no-weather setting. Among the
-foundation models, only Chronos-2 thus uses the weather forecasts. For TimesFM this
+foundation models, only Chronos-2 thus reads the weather forecasts natively. For TimesFM this
 is a limit of the darts version used (Appendix [-@sec:appendix-repro]), which does not
 expose the separate covariate regression of the model's own package;^[TimesFM repository,
 README, update of 29 October 2025; <https://github.com/google-research/timesfm>, accessed 2
-October 2026.] the TiRex version used here takes none.
+October 2026.] the TiRex version used here takes none. After the main run, this regression
+("XReg") was re-implemented for both models (*TiRex-XReg* ‡, *TimesFM-XReg* ‡). Before
+each forecast, a ridge regression (penalty 1, intercept not penalised) of the clear-sky
+index on the nine covariates of the NWP setting and the NWP clear-sky index, the
+forecast irradiance divided by $G^{\mathrm{cs}}_t$ (@sec:data-clearsky), is fitted on the
+daytime hours of the last 8,192 hours; the foundation model, still univariate,
+forecasts the residual, and the regression's forecast, 0 at night, is added to every
+quantile. Both run in the NWP setting only: without weather the regression would read
+only the template and the calendar. The NWP clear-sky index adds no data: it transforms
+inputs of that setting. The regression's settings were fixed on development days before
+the first test day.
 
 ## Models {#sec:method-models}
 
@@ -228,7 +237,11 @@ alternatives. After the main run had been seen, zero-shot Chronos-2 was also run
 longer contexts of 1,024 and 2,048 hours (suffixes *-mid* and *-long*), with the base
 checkpoint (*Chronos-B*, *Chronos-B-long*) and TiRex with 2,048 hours (*TiRex-long*);
 the longer contexts were given 90 days of history instead of 60
-(@tbl:chronos2-configs). Chronos-B-long is the best zero-shot configuration tested. The
+(@tbl:chronos2-configs). Later, the base checkpoint and TimesFM were run at their maximum
+contexts, 8,192 hours (*Chronos-B-max* ‡) and all history up to 16,360 hours
+(*TimesFM-max* ‡, no-weather setting only); TiRex-XReg ‡ and
+TimesFM-XReg ‡ (@sec:method-covariates) use the contexts of TiRex-long ‡ and
+TimesFM-max ‡. Chronos-B-long ‡ is the best zero-shot configuration tested. The
 comparisons that involve these runs are post hoc (@sec:method-tests).
 
 The dataset has been public since 2 April 2024 [@lin2024hkustdata], before any of the
@@ -323,7 +336,8 @@ February), by the majority of a window's days.
 ### Fitting and issuing
 
 Each model is fitted once per fold, on the training window, and then issues the 30 daily
-forecasts of the test window without being re-fitted. Its inputs at each issue time run
+forecasts of the test window without being re-fitted (the XReg regression excepted,
+@sec:method-covariates). Its inputs at each issue time run
 up to local midnight, including the embargo day and the earlier test days: the embargo
 separates the last training target from the first test day but withholds no input data,
 as for a forecaster that is re-trained now and then but run every day.
@@ -497,18 +511,21 @@ the family was fixed before the main run but after the first run had been examin
 family at or below 5% (@tbl:significance).
 
 Comparisons that involve the post hoc configurations are themselves post hoc: E1–E3
-were chosen after their results had been seen, E4 and E5 before the last run
-(@tbl:decisions). They are reported as paired skill differences $A - B$ over CLIPER with
-95% intervals, without tests (@tbl:significance, second block), all in the NWP setting:
+were chosen after their results had been seen, E4 and E5 before Chronos-B-long ‡ was run,
+E6–E15 before the last four configurations were run (@tbl:decisions). They are reported as
+paired skill differences $A - B$ over CLIPER with 95% intervals, without tests
+(@tbl:significance, second block), in the NWP setting unless stated:
 
-- **E1.** Chronos-S-long vs Chronos-S;
-- **E2.** LightGBM vs Chronos-S-long;
-- **E3.** Chronos-S-FT vs Chronos-S-long;
-- **E4.** LightGBM vs Chronos-B-long;
-- **E5.** Chronos-S-FT vs Chronos-B-long.
+- **E1.** Chronos-S-long ‡ vs Chronos-S;
+- **E2.** LightGBM vs Chronos-S-long ‡;
+- **E3.** Chronos-S-FT vs Chronos-S-long ‡;
+- **E4.** LightGBM vs Chronos-B-long ‡;
+- **E5.** Chronos-S-FT vs Chronos-B-long ‡;
+- **E6–E15.** the XReg configurations, TimesFM-max ‡ and Chronos-B-max ‡ each vs
+  Chronos-B-long ‡ and LightGBM; each XReg configuration vs its univariate counterpart.
 
 RQ1 is answered with the best zero-shot configuration tested, a post hoc selection that
-favours the zero-shot models.
+favours the zero-shot models; the last four configurations do not reopen that choice.
 
 ## Compute measurement {#sec:method-compute}
 

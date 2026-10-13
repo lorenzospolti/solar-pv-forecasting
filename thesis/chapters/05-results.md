@@ -29,13 +29,13 @@ CLIPER (@tbl:master-skill): on a 55 kW roof, a typical hourly error of about 6 k
 Zero-shot accuracy depends on the configuration more than on the model family
 (@tbl:chronos2-configs): a longer context lifts the small checkpoint from 0.12 to 0.21, and the
 base checkpoint with the same long context reaches 0.27. Chronos-B-long was picked as the best of
-five zero-shot configurations tried after the main run, on the same test days, so this comparison
-favours the zero-shot model.
+five zero-shot configurations first tried after the main run, on the same test days, so this comparison
+favours the zero-shot model. Chronos-B-max ‡, at its maximum context of 8,192 hours, adds nothing over Chronos-B-long ‡ (−0.005 [−0.014, 0.005]) and takes about four times as long.
 
 Without weather forecasts, the best models stay within 0.01 of CLIPER, with intervals that contain
 zero, and none beats it. TiRex and TimesFM, which take no covariates, are in the same position:
-TiRex at 0.00 and TimesFM at −0.05. The LSTM (−0.09) and Smart persistence (−0.13) are worse than
-CLIPER.
+TiRex at 0.00 and TimesFM at −0.05, or −0.01 at its longest context (TimesFM-max ‡). The LSTM
+(−0.09) and Smart persistence (−0.13) are worse than CLIPER.
 
 ![Weather forecasts supply nearly all the skill: with them (solid bars), three models reach about
 0.27; without them (hatched), no model beats CLIPER, the zero line. Skill over CLIPER of the models
@@ -77,26 +77,32 @@ tables/chronos2_configs.md
 
 Weather forecasts add about 0.27 to LightGBM and to Chronos-B-long ‡, 0.25 to Chronos-S-FT and
 0.12 to Chronos-S; the two gains that were tested, for LightGBM and Chronos-S, are significant
-(@tbl:significance). TimesFM and TiRex cannot use weather forecasts through their wrappers
-(@sec:method-covariates), so they gain nothing from them. These gains are an upper
+(@tbl:significance). Given the weather forecasts through a regression added after the main run
+(@sec:method-covariates), TiRex-XReg ‡ and TimesFM-XReg ‡ reach 0.25 and 0.24, about 0.25 above
+the univariate models at the same context (0.245 [0.177, 0.307] and 0.249 [0.188, 0.307];
+regression and weather together). They stay behind LightGBM (−0.034 [−0.057, −0.009] and
+−0.038 [−0.064, −0.013]) and about 0.03 behind Chronos-B-long ‡, with intervals that reach
+zero. These gains are an upper
 bound: the archived weather forecasts reach the scored hours at shorter lead times than a forecast
 issued at midnight could use (@sec:data-weather).
 
 ## Calibration and compute (RQ4) {#sec:results-calibration}
 
 **With weather forecasts, the fine-tuned model's forecast intervals are the closest to calibrated: LightGBM's are too
-narrow and the zero-shot models' too wide. The three leading models score the same on the
+narrow and the zero-shot Chronos-2 models' too wide. The three leading models score the same on the
 quantile score, and all of them run comfortably on the laptop.**
 
 A central 80% interval should contain 80% of the observations. With weather forecasts, LightGBM's
-contains 71% [67%, 74%], so it is too narrow; those of Chronos-S and Chronos-B-long ‡ contain
+contains 71% [67%, 74%], so it is too narrow, as are those of TiRex-XReg ‡ (70%) and
+TimesFM-XReg ‡ (66%); those of Chronos-S and Chronos-B-long ‡ contain
 about 85%, too wide; Chronos-S-FT's contains 77% [74%, 80%] (@tbl:probabilistic).
 @Fig:reliability shows that the miscalibration lies in the outer quantiles. On the quantile score, which
 rewards both accuracy and calibration, Chronos-B-long ‡, Chronos-S-FT and LightGBM tie at 0.029 of
 capacity, so none of them wins the probabilistic comparison.
 
-![The fine-tuned model is the closest to the diagonal of perfect calibration; LightGBM's outer
-quantiles are too close to the median and the zero-shot models' too far from it. Observed share of
+![The fine-tuned model is the closest to the diagonal of perfect calibration; the outer quantiles
+of LightGBM, TiRex-XReg ‡ and TimesFM-XReg ‡ are too close to the median and those of the
+zero-shot Chronos-2 models too far from it. Observed share of
 scored hours at or below each forecast quantile against its nominal level, for the probabilistic
 models of @tbl:probabilistic. ‡ Post hoc.](figures/reliability.pdf){#fig:reliability width=100%}
 
@@ -148,4 +154,4 @@ hoc.](figures/skill_by_fold.pdf){#fig:skill-by-fold width=100%}
 | RQ1. Zero-shot accuracy | Without weather forecasts, no better than CLIPER. With them, the best zero-shot configuration (post hoc) matches LightGBM and the fine-tuned model; the configuration fixed in advance trails them. | @fig:skill-by-model; Tables [-@tbl:master-skill]–[-@tbl:chronos2-configs] |
 | RQ2. Fine-tuning | Adds 0.14 at the short context; a longer context gives two thirds of that without training. Costs about three minutes per window, like LightGBM. | Tables [-@tbl:significance], [-@tbl:chronos2-configs], [-@tbl:compute] |
 | RQ3. Weather forecasts | Nearly all the skill over CLIPER, for the models that can use them; an upper bound. | @fig:skill-by-model; @tbl:master-skill |
-| RQ4. Calibration and compute | With weather forecasts, fine-tuned closest to calibrated, LightGBM too narrow, zero-shot too wide; equal quantile scores. Every model fits in 16 GB; at most four minutes per window. | Figures [-@fig:reliability], [-@fig:skill-vs-compute]; Tables [-@tbl:probabilistic], [-@tbl:compute] |
+| RQ4. Calibration and compute | With weather forecasts, fine-tuned closest to calibrated, LightGBM too narrow, zero-shot Chronos-2 too wide; equal quantile scores. Every model fits in 16 GB; at most four minutes per window. | Figures [-@fig:reliability], [-@fig:skill-vs-compute]; Tables [-@tbl:probabilistic], [-@tbl:compute] |

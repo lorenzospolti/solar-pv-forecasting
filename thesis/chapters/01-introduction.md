@@ -37,7 +37,7 @@ needs are measured on consumer hardware.
 The thesis asks whether time-series foundation models, zero-shot or fine-tuned, can match or beat
 purpose-trained models and simple reference forecasts for day-ahead hourly PV power on consumer
 hardware, and at what compute cost. Three foundation models are tested zero-shot: Chronos-2, TimesFM
-and TiRex. Only Chronos-2 is also fine-tuned, because it is the only one of the three that can take weather forecasts as inputs through the software used here (@sec:method-covariates). Four research questions break this
+and TiRex. Only Chronos-2 is also fine-tuned, because it is the only one of the three that reads weather forecasts natively in the software used here (@sec:method-covariates). Four research questions break this
 down:
 
 - **RQ1.** How accurate are zero-shot foundation models for day-ahead hourly PV power, compared

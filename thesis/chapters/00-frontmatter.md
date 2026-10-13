@@ -60,8 +60,9 @@ forecasts as inputs, three models lead and cannot be told apart: LightGBM at def
 0.28), the small Chronos-2 checkpoint fine-tuned on each station (0.26) and zero-shot Chronos-2 with
 its larger checkpoint and a long context window (0.27), a configuration chosen after the main
 results had been seen. Without weather forecasts, no model beats CLIPER; TimesFM and TiRex, which
-take no weather inputs in the software used here, are tested in this setting only. With weather
-forecasts, fine-tuning adds 0.14 in skill at the short context fixed in advance; a longer context
+take no weather inputs in the software used here, reach about 0.25 when given them through a linear
+regression added after the main run, behind LightGBM. With weather forecasts, fine-tuning adds
+0.14 in skill at the short context fixed in advance; a longer context
 alone gives about two thirds of that gain without training (fine-tuning at a long context did not
 fit in 16 GB at the batch size used). The best zero-shot configuration forecasts 30 days for one station in 12 seconds, against about three minutes to fit LightGBM or to fine-tune Chronos-2. The archived weather
 forecasts come from weather-model runs not yet available when the power forecasts are issued, so the
