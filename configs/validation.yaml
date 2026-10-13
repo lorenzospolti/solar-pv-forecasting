@@ -1,0 +1,73 @@
+# Inner windows of the real-time selection of the zero-shot Chronos-2 configuration
+# (DECISIONS.md, 13 Oct 2026; VALIDATION.md). NOT test days: the 29 local days between
+# two test windows, ending the day before each fold's embargo day:
+#
+#   fold k: inner window 5 Jun 2022 + 60k ... 3 Jul 2022 + 60k   (29 days, this config)
+#           embargo day   4 Jul 2022 + 60k                        (never scored)
+#           test window   5 Jul 2022 + 60k ... 3 Aug 2022 + 60k   (30 days, the panel)
+#
+# The day-ahead protocol is the test one unchanged (runner, issue at local midnight,
+# daytime mask, scoring); only the windows move. The eight candidates and CLIPER (the
+# criterion's reference) carry the params of their test runs exactly
+# (tests/test_select_zero_shot.py checks this). Results go to their own store, which
+# experiments/report.py refuses to read; experiments/select_zero_shot.py reads it:
+#
+#   python experiments/run_panel.py --config configs/validation.yaml \
+#       --results results/validation/results.parquet \
+#       --predictions-dir results/validation/predictions --logs-dir results/validation/logs
+#
+# initial_train_days: the splitter's guard on the first fold's training days. The test
+# config's 365 is the clear-sky template year (fitted once per station in the ETL, not per
+# fold); 30 days earlier the latest-starting station (SQ567, from 1 Jul 2021) has 338
+# training days, so the guard is lowered. It changes no forecast: zero-shot models do not
+# train, and CLIPER fits on whatever training window the fold has, as in real time.
+seed: 0
+data:
+  dataset: hkust_rooftop_pv
+  etl_version: 4
+  site_id: CYT (Station 2)
+  panel: [LSK North, SQ1, SQ567, UG Hall6, CYT (Station 2), SQ15]
+  synthetic_days: 540
+  target: power
+  weather_mode: nwp
+  capacity_kw: null
+splits:
+  initial_train_days: 330
+  first_test_day: '2022-06-05'
+  test_days: 29
+  embargo_days: 1
+  step_days: 60
+  max_folds: 9
+  day_tz: Asia/Hong_Kong
+evaluation:
+  daytime_only: true
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence
+models:
+- name: cliper                          # the criterion's reference (configs/experiment.yaml)
+- name: chronos2                        # Chronos-S, 336 h (configs/experiment.yaml)
+  params: {input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+           hub_model_name: "autogluon/chronos-2-small"}
+- name: chronos2_ctx1024                # configs/extras.yaml
+  params: {input_chunk_length: 1024, output_chunk_length: 24, quantile: true,
+           hub_model_name: autogluon/chronos-2-small, arch: chronos2, context_days: 90}
+- name: chronos2_ctx2048                # configs/extras.yaml
+  params: {input_chunk_length: 2048, output_chunk_length: 24, quantile: true,
+           hub_model_name: autogluon/chronos-2-small, arch: chronos2, context_days: 90}
+- name: chronos2_ctx8192                # configs/grid.yaml
+  params: {arch: chronos2, hub_model_name: autogluon/chronos-2-small,
+           input_chunk_length: [2048, 8192], output_chunk_length: 24, quantile: true,
+           context_days: 345}
+- name: chronos2_base                   # configs/extras.yaml
+  params: {input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+           hub_model_name: amazon/chronos-2, arch: chronos2}
+- name: chronos2_base_ctx1024           # configs/grid.yaml
+  params: {input_chunk_length: 1024, output_chunk_length: 24, quantile: true,
+           hub_model_name: amazon/chronos-2, arch: chronos2, context_days: 90}
+- name: chronos2_base_ctx2048           # configs/extras.yaml
+  params: {input_chunk_length: 2048, output_chunk_length: 24, quantile: true,
+           hub_model_name: amazon/chronos-2, arch: chronos2, context_days: 90}
+- name: chronos2_base_ctx8192           # configs/covariates.yaml
+  params: {arch: chronos2, hub_model_name: amazon/chronos-2, input_chunk_length: [2048, 8192],
+           output_chunk_length: 24, quantile: true, context_days: 345}

@@ -8,7 +8,7 @@ This appendix lists what is needed to rebuild every result of the thesis from th
 data; @sec:method-repro summarises the measures that make the runs traceable. All
 reported results come from the main run, called panel v2 in the repository, run with the
 code at tag `v0.7-panel-v2` (commit `55bd778`) on frames of data-processing version 4
-(ETL v4, for the fourth version of the extract–transform–load pipeline), and from the extra runs, made with the same model and data code (`src/`), extended for the last four configurations (commit `ef5833e`).
+(ETL v4, for the fourth version of the extract–transform–load pipeline), and from the extra runs, made with the same model and data code (`src/`), extended for the XReg and maximum-context configurations (commit `ef5833e`, unchanged for the grid and inner-window runs at commit `5a1fecd`).
 
 ## What was fixed when
 
@@ -33,6 +33,7 @@ the time. {#tbl:decisions}
 | 4 Oct | CLIPER as headline reference; intervals as uncertainty; E1–E5 without tests; RQ1 answered by the best zero-shot configuration; one last run declared | The main run and the extra runs |
 | 4 Oct | Chronos-B-long shown in the main table and figures | All runs, including the last |
 | 12–13 Oct | TiRex-XReg, TimesFM-XReg, Chronos-B-max, TimesFM-max (‡) declared before they ran; E6–E15 without tests; TimesFM 3.0 and TiRex-2 declared, not run (licence steps not done) | All earlier runs; regression settings fixed on days before the first test day |
+| 13 Oct | Real-time selection of the zero-shot configuration (Chronos-sel ‡): rule, eight candidates, inner windows, V1–V4 without tests, reporting; Chronos-S-max and Chronos-B-mid (‡) run to complete the grid; no learning-rate search | All earlier runs; no inner-window forecast |
 
 ## Where each step is implemented
 
@@ -52,7 +53,8 @@ the time. {#tbl:decisions}
 | Issue times; target removed from the future frame | [-@sec:method-task] | `pvfc.runner` |
 | Gap filling of the model inputs | [-@sec:method-target] | `pvfc.normalize.fill_index_gaps` |
 | Weather regression of TiRex and TimesFM | [-@sec:method-covariates] | `pvfc.models.xreg` |
-| Model settings | [-@sec:method-models] | `configs/experiment.yaml`, `configs/extras.yaml`, `configs/covariates.yaml` |
+| Model settings | [-@sec:method-models] | `configs/experiment.yaml`, `configs/extras.yaml`, `configs/covariates.yaml`, `configs/grid.yaml` |
+| Inner windows; selection of the zero-shot configuration; optimism estimates | [-@sec:method-selection] | `configs/validation.yaml`, `experiments/select_zero_shot.py` |
 | Metrics, intervals, tests, tables and figures | [-@sec:method-metrics], [-@sec:method-tests] | `experiments/rescore.py`, `experiments/report.py` |
 | Peak memory | [-@sec:method-compute] | `pvfc.utils.peak_rss_mb` |
 | Batch of runs | [-@sec:method-compute] | `experiments/run_panel.py` |
@@ -159,16 +161,26 @@ so (`accept_license: true`, reviewed by the author on 1 October 2026).
   `results/logs/check_data__<station>.log` for the pre-flight checks,
   `results/logs/panel_ledger.csv` with the start time, status, exit code and wall time of
   every run, and `results/logs/panel.out` with the output of the batch.
-- **Extra runs.** Eleven configurations added after panel v2 had been seen
+- **Extra runs.** Thirteen configurations added after panel v2 had been seen
   (@sec:method-models), on the same data and folds. Seven are in `configs/extras.yaml`:
   zero-shot Chronos-2 at 1,024 and 2,048 hours of context (Chronos-S-mid, Chronos-S-long),
   the base checkpoint zero-shot at 336 and 2,048 hours (Chronos-B, Chronos-B-long), TiRex at
   2,048 hours (TiRex-long), and Chronos-S-FT with seeds 1 and 2 (NWP setting only). Four
   are in `configs/covariates.yaml`: Chronos-B-max, TimesFM-max (no-weather setting only),
-  TiRex-XReg and TimesFM-XReg (NWP setting only; @sec:method-covariates). Their results are in `results/extra/` and `results/covariates/` (results
-  store, saved forecasts and logs), which `experiments/report.py` reads together with the
-  panel. `DECISIONS.md` in the repository dates every protocol choice and states what had
-  been seen when it was made (@tbl:decisions).
+  TiRex-XReg and TimesFM-XReg (NWP setting only; @sec:method-covariates). Two are in
+  `configs/grid.yaml`: Chronos-S-max and Chronos-B-mid. Their results are in
+  `results/extra/`, `results/covariates/` and `results/grid/` (results store, saved forecasts
+  and logs), which `experiments/report.py` reads together with the panel.
+- **Inner windows and the selected row.** `configs/validation.yaml` runs CLIPER and the
+  eight candidates of @sec:method-selection on the nine 29-day inner windows, with the
+  test procedure; the results are in `results/validation/`, which `experiments/report.py`
+  refuses to read as test forecasts. `experiments/select_zero_shot.py` applies the rule,
+  writes the selection path (@tbl:selection-path), assembles Chronos-sel from the
+  candidates' test forecasts into `results/validation/selected/`, which the report reads,
+  and computes the three optimism estimates. `results/validation/PREREGISTRATION.txt`
+  holds the SHA-256 hashes of the rule's files, written before the first of these runs.
+  `DECISIONS.md` in the repository dates every protocol choice and states what had been
+  seen when it was made (@tbl:decisions).
 - **Data-processing versions.** ETL v3 fixed four defects found in an audit of ETL v2:
   negative meter errors kept as zeros, zeros interpolated into long gaps, an unwrapped hour
   angle and a weather cache that began after SQ15's first 993 hours. ETL v4 returned from

@@ -37,9 +37,12 @@ corrected after a wiring bug showed on a test fold; the point-forecast rule and 
 family of comparisons, after the first run, which covered the same test days; the extra
 contexts, the base checkpoint and the extra seeds, after the main run; the XReg runs and the
 longest contexts, after those but declared before they ran; and CLIPER as the
-headline reference (@tbl:decisions). Reporting RQ1 with the best zero-shot configuration favours the
-zero-shot models. The comparisons that involve the later runs are reported without
-tests.
+headline reference (@tbl:decisions). The zero-shot configuration of RQ1 is selected in real
+time, on days before each test window (@sec:method-selection), which removes the choice made
+on the test days but not the fact that the eight candidates were drawn up after the main run
+had been seen. Only the zero-shot side received such a selection: LightGBM and the LSTM kept
+the settings fixed before the first run, an asymmetry that favours the zero-shot models. The
+comparisons that involve the later runs are reported without tests.
 
 The test sample is small. It holds 270 days in nine 30-day windows, with no test day in
 February or April, and all six stations share one campus: their errors correlate at

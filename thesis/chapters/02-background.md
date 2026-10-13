@@ -1,5 +1,11 @@
 # Background and Related Work {#sec:background}
 
+<!-- TODO(Lorenzo): on 13 Oct 2026 Claude revised in Section 2.1, after your review
+(~/Thesis/Thesis Review 2026-10-13 - Assessment ...md): the template sentence (a physical clear-sky
+model combined with a ratio learned from the clearest hours, and what "template" means), "overcast",
+"most of" the cycle and "(panels)". Rewrite in your own words before submission (UniPV AI
+guidelines). -->
+
 *Scope note: (a) probabilistic scoring in solar forecasting [yang2019ropes;
 lauret2017probabilistic]; (b) purpose-trained models — SARIMA, gradient boosting
 [ke2017lightgbm], LSTM [hochreiter1997lstm]; (c) time-series foundation models
@@ -29,21 +35,23 @@ in which $P^{\mathrm{cs}}_t$ carries the sun's path and $k_t$ the effect of the 
 The *clear-sky power* $P^{\mathrm{cs}}_t$ (kW) is the power that a given station would
 deliver in hour $t$ under a cloudless sky. It combines the clear-sky irradiance, the
 power of sunlight per square metre (W/m²) that would reach the ground without clouds,
-with the characteristics of the station's array of PV modules (panels): its size, tilt,
+with the characteristics of the station's array of PV modules: its size, tilt,
 orientation and shading. It can be simulated with a physical model of the array
-[@engerer2014kpv] or learned statistically from the station's clearest hours, with the
-measured power as the only input [@bacher2009online]. This thesis takes the second route
-(@sec:data-clearsky) and calls the result the *template* for short.
+[@engerer2014kpv] or learned statistically from the measured power alone
+[@bacher2009online]. This thesis combines the two (@sec:data-clearsky): a physical model
+of the cloudless atmosphere gives the clear-sky irradiance, and a ratio learned from each
+station's clearest hours turns it into power. The result is called the *template* for
+short: the station's cloudless-day power curve, which the weather then scales down.
 
 The *clear-sky index* is the share of its clear-sky power that a station delivers,
-$k_t = P_t / P^{\mathrm{cs}}_t$. It is about 1 in a clear hour and low in an overcast
-one, and it can exceed 1 under *cloud enhancement*, when broken clouds briefly push
+$k_t = P_t / P^{\mathrm{cs}}_t$. It is about 1 in a clear hour and low under a fully
+clouded (overcast) sky, and it can exceed 1 under *cloud enhancement*, when broken clouds briefly push
 irradiance above its clear-sky value (@sec:data-clearsky). Solar papers also define a
 clear-sky index for irradiance, written $\kappa$, and $k_t$ usually denotes another
 quantity, the *clearness index*, the ratio of the irradiance at the ground to that at
 the top of the atmosphere [@yang2020verification]; in this thesis $k_t$ always denotes
 the clear-sky index of power. Most models here forecast $k_t$ rather than power:
-dividing by $P^{\mathrm{cs}}_t$ removes the known daily and seasonal cycle and leaves a
+dividing by $P^{\mathrm{cs}}_t$ removes most of the known daily and seasonal cycle and leaves a
 series that is closer to stationary, which classical time-series models assume
 [@bacher2009online]. The forecast index is multiplied back by $P^{\mathrm{cs}}_t$, and
 every model is scored on power (@sec:method-target).

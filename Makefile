@@ -1,5 +1,5 @@
 # Convenience targets. Assumes the `pv` conda env is active.
-.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel manuscript rescore
+.PHONY: help env install checkpoints check test smoke lint clean reproduce data nwp-cache check-data report lock panel manuscript rescore select
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?# .*$$' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?# "}{printf "  %-12s %s\n", $$1, $$2}'
@@ -49,7 +49,10 @@ reproduce: # regenerate every result from raw data: checkpoints -> panel -> resc
 rescore: # rebuild every metric row of results/results.parquet from results/predictions (current scoring rules); preview: python experiments/rescore.py --dry-run
 	python experiments/rescore.py
 
-report: # build thesis tables + figures from results/predictions, results/extra/predictions and results/covariates/predictions (timing and memory from the three results stores)
+select: # real-time selection of the zero-shot Chronos-2 configuration (VALIDATION.md): selection path, the selected row, optimism estimates; needs the grid and inner-window runs
+	python experiments/select_zero_shot.py
+
+report: # build thesis tables + figures from results/predictions, results/extra, results/covariates, results/grid and results/validation/selected (timing and memory from their results stores)
 	python experiments/report.py
 
 manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc + tectonic)

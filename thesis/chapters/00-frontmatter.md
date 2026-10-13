@@ -42,33 +42,33 @@ Numbers, tables and figures come from thesis/tables/ and thesis/figures/
 
 # Abstract {.unnumbered}
 
-<!-- TODO(Lorenzo): drafted with Claude on 5 Oct 2026 and revised with Claude on 12 Oct 2026 after the
-review (~/Thesis/Thesis Review 2026-10-12 - Cover, Abstract, Chapter 1.md); rewrite it in your own words
-before submission (UniPV AI guidelines). Every number is in Tables 5.1-5.5. The LaTeX copy is
-~/Thesis/BAI_Thesis_Spolti/content/abstract.tex: keep the two in step. -->
+<!-- TODO(Lorenzo): drafted with Claude on 5 Oct 2026, revised with Claude on 12 Oct 2026 and
+restructured with Claude on 13 Oct 2026 after your review (~/Thesis/Thesis Review 2026-10-13 -
+Assessment of Lorenzo's comments (Abstract to Section 4.4).md, Section 3: hook, what was done,
+findings, caveat, takeaway; fewer numbers and names; the two hedges kept). Rewrite it in your own
+words before submission (UniPV AI guidelines). Every number is in Tables 5.1-5.5. The LaTeX copy is
+~/Thesis/BAI_Thesis_Spolti/content/abstract.tex: keep the two in step. The sentence on TimesFM-XReg
+and TiRex-XReg comes from the covariate runs (PR #1, merged 13 Oct 2026); both copies have it. -->
 
-Solar output follows the weather, so the next day's production has to be forecast for grid
-scheduling and day-ahead markets. Time-series foundation models promise such forecasts with no
-training on the site's own data. This thesis tests that promise on six rooftop photovoltaic stations
-in Hong Kong, forecasting their hourly power one day ahead on a 16 GB laptop. Three foundation
-models (Chronos-2, TimesFM and TiRex) are used zero-shot, and Chronos-2 is also fine-tuned on each
-station's history. They are compared with three purpose-trained models (SARIMA, LightGBM and an
-LSTM) and with simple reference forecasts, all scored on the same 270 test days. Accuracy is
-measured as RMSE skill, the relative reduction in RMSE against CLIPER, a reference that blends the
-long-term average with yesterday's value, with bootstrap confidence intervals. With archived weather
-forecasts as inputs, three models lead and cannot be told apart: LightGBM at default settings (skill
-0.28), the small Chronos-2 checkpoint fine-tuned on each station (0.26) and zero-shot Chronos-2 with
-its larger checkpoint and a long context window (0.27), a configuration chosen after the main
-results had been seen. Without weather forecasts, no model beats CLIPER; TimesFM and TiRex, which
-take no weather inputs in the software used here, reach about 0.25 when given them through a linear
-regression added after the main run, behind LightGBM. With weather forecasts, fine-tuning adds
-0.14 in skill at the short context fixed in advance; a longer context
-alone gives about two thirds of that gain without training (fine-tuning at a long context did not
-fit in 16 GB at the batch size used). The best zero-shot configuration forecasts 30 days for one station in 12 seconds, against about three minutes to fit LightGBM or to fine-tune Chronos-2. The archived weather
-forecasts come from weather-model runs not yet available when the power forecasts are issued, so the
-gains from them are an upper bound. On these data, the weather input matters more than the model
-class, and a zero-shot foundation model given weather forecasts and a long context is a competitive
-option that needs no forecasting model to be trained.
+Solar output follows the weather, so the next day's production must be forecast for grid
+scheduling and electricity markets. Time-series foundation models, pretrained on many series,
+promise such forecasts for a new station with no model to train, but recent studies disagree on
+whether they deliver. This thesis tests that promise on six rooftop photovoltaic stations in Hong
+Kong, forecasting hourly power a day ahead on a 16 GB laptop. Three foundation models (Chronos-2,
+TimesFM, TiRex) are used zero-shot, and Chronos-2 is also fine-tuned; they are compared with three
+purpose-trained models (SARIMA, LightGBM, an LSTM) and simple reference forecasts on the same 270
+test days. With weather forecasts as inputs, three models lead and cannot be told apart, their RMSE
+26–28% below that of a reference blending the long-term average with yesterday's value: LightGBM,
+fine-tuned Chronos-2 and, in a configuration chosen after seeing the results, the larger Chronos-2
+model used zero-shot with a long context window. Without weather forecasts, no model beats that
+reference. With them, fine-tuning lets the small Chronos-2 model join the leaders, and a longer
+context alone gives about two thirds of that gain. TimesFM and TiRex, which take no weather
+inputs in the software used here, reach an RMSE 24–25% below the reference when given them
+through a linear regression added after the main run, behind LightGBM. The zero-shot leader
+forecasts 30 days for one station in 12 seconds, against about three minutes to train LightGBM. The archived weather
+forecasts were fresher than any a midnight forecast could use, so their gain is an upper bound. On
+these data, the weather input matters more than the model class, and a zero-shot foundation model
+with weather forecasts and a long context is a competitive option that needs no training.
 
 **Keywords:** Photovoltaic power forecasting, Day-ahead forecasting, Time-series foundation models,
 Zero-shot forecasting, Fine-tuning, Numerical weather prediction, Forecast verification
@@ -116,7 +116,6 @@ Abbreviations used only once, or only in an appendix, are spelled out where they
 | nRMSE | RMSE divided by the nameplate capacity |
 | NWP | Numerical weather prediction |
 | PICP | Prediction interval coverage probability |
-| PR | Performance ratio: the capacity factor $P_t/C$ divided by the clear-sky irradiance in units of $G_0$ |
 | PV | Photovoltaic |
 | QS | Quantile score |
 | RMSE | Root mean squared error |

@@ -38,3 +38,7 @@ results/archive/
 results/extra/
 # covariate runs (configs/covariates.yaml); same layout as results/extra/
 results/covariates/
+# grid runs and inner-window (validation) runs of the real-time selection
+# (configs/grid.yaml, configs/validation.yaml; VALIDATION.md); same layout, also large
+results/grid/
+results/validation/

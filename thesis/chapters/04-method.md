@@ -1,7 +1,14 @@
 # Method {#sec:method}
 
+<!-- TODO(Lorenzo): on 13 Oct 2026 Claude revised, after your review (~/Thesis/Thesis Review
+2026-10-13 - Assessment ...md) and with the 12 Oct must-fixes: the opening sentence; 4.1 the double
+dagger and the first run; 4.2 "covariates" and the two simplifications; 4.3 the quantile gloss; 4.4
+the first paragraph; 4.5 which model choices drew on test results and the covariates of the two
+references in Table 4.2; 4.8 the purpose and reading of the bootstrap intervals and their scope.
+Rewrite in your own words before submission (UniPV AI guidelines). -->
+
 This chapter describes how the forecasts were produced and scored; all models run
-through the same code, and the data are described in Chapter [-@sec:data].
+through the same code.
 
 ## Design overview and research questions {#sec:method-overview}
 
@@ -24,10 +31,13 @@ references, RQ2 fine-tuned with zero-shot Chronos-2, RQ3 the two weather setting
 RQ4 the calibration and the cost of every model.
 
 The results come from one complete run of this design, the *main run*: 144 runs, one per
-station, weather setting and model, each over the nine folds. Eleven further
+station, weather setting and model, each over the nine folds. Thirteen further
 configurations of Chronos-2, TimesFM and TiRex, which vary context length, checkpoint size
 and seed or add a weather regression, were run on the same folds after the main results had
-been seen; they are post hoc and marked ‡ in every table and figure. An earlier complete run on the same test days is not reported. @Tbl:decisions in Appendix
+been seen; they are post hoc and marked with a double dagger (‡) in every table and
+figure, as is *Chronos-sel*, which takes, for each fold, one of eight zero-shot Chronos-2
+configurations selected on earlier days (@sec:method-selection). An earlier complete run on the same test days, the *first run*, is not reported, but
+some choices were made after it had been seen: @tbl:decisions in Appendix
 [-@sec:appendix-repro] dates every choice and states what had been seen when it was made.
 
 ## Forecasting task {#sec:method-task}
@@ -39,19 +49,20 @@ to 23:00. The daytime mask (@sec:data-clearsky) keeps only the hours labelled 06
 18:00 in the test windows, so the scored hours lie 6 to 19 hours after the issue time.
 
 At the issue time a model receives the *history*, every observation strictly before
-local midnight (power $P_t$, clear-sky index $k_t$ and covariates), and the *future
+local midnight (power $P_t$, clear-sky index $k_t$ and, for the models that take them,
+covariates), and the *future
 frame*, the 24 target timestamps with the covariates known in advance
 (@sec:method-covariates). The runner deletes power and clear-sky index from the future
 frame, so a model cannot read the values it must predict.
 
-Two simplifications make the task easier than in operation. First, the last hour before
-midnight is assumed to be available at the issue time, whereas an operator who submits a
-schedule earlier in the day forecasts further ahead [@yang2020verification]. Second, the
-archived weather forecasts are not frozen at the issue time (@sec:data-weather): most
-scored hours come from model runs that start after it, at lead times of about 0–12 hours,
-whereas a forecast issued at midnight would rely on runs with lead times of 16–28 hours
-(@fig:data-leadtime). The NWP setting therefore gives an upper bound on what these
-forecasts can add.
+Two simplifications make the task easier than in operation. First, every measurement up to
+midnight is available at the issue time, including the previous afternoon's, whereas an
+operator who must submit a schedule earlier in the day forecasts further ahead without them
+[@yang2020verification]. Second, the weather forecasts for the target day come from
+weather-model runs that were not yet available at the issue time, most of them started eight
+hours after it, so they are fresher than any forecast that could be used at midnight
+(@sec:data-weather, @fig:data-leadtime); the NWP setting therefore gives an upper bound on
+what weather forecasts can add.
 
 ## Forecasting in clear-sky-index space {#sec:method-target}
 
@@ -71,8 +82,10 @@ with $\varepsilon = 10^{-6}$ kW. Dividing by the template removes most of the
 deterministic daily and seasonal cycle and leaves the weather-driven part to the models
 [@yang2020verification]; the clip at 1.3 bounds the ratio at sunrise and sunset, when
 the template is small. The index is 0 at night and missing wherever daytime power is
-missing. A forecast $\hat{k}_t$, like each quantile forecast $\hat{q}_{\tau,t}$, is
-converted back to power with
+missing. The probabilistic models forecast not one value per hour but nine quantiles: the
+$\tau$-quantile is the value that the outcome should fall below with probability $\tau$, for
+$\tau = 0.1, 0.2, \dots, 0.9$ (@sec:method-metrics). A forecast $\hat{k}_t$ of the index, like
+each of its quantiles, is converted back to power with
 
 $$
 \hat{P}_t = \max\left\{\hat{k}_t,\ 0\right\} P^{\mathrm{cs}}_t ,
@@ -81,8 +94,8 @@ $$ {#eq:reconstruct}
 which is 0 at night, applies no upper clip and preserves the order of the quantiles.
 
 The models built with the darts library [@herzen2022darts], all except the references,
-need a series without gaps. A missing hour of the index (a feed gap or an outage hour,
-@sec:data-qc) therefore takes the value of the same hour on the most recent earlier day
+need a series without gaps. A missing hour of the index (a gap in the data or an outage
+hour, @sec:data-qc) therefore takes the value of the same hour on the most recent earlier day
 that has one, at most seven days back, the rule of the references (@sec:method-models);
 an hour still missing, on the first day of a series or in a longer gap, takes the
 series' mean daytime index, or 0 outside the daytime mask. Filled hours are inputs
@@ -92,8 +105,10 @@ only, never scored.
 
 All covariates are *future* covariates: their values for the 24 target hours are treated
 as known at the issue time, so models may use them over the horizon as well as over the
-context (@tbl:method-covariates). This is exact for the template and the calendar and,
-for the weather forecasts, the optimistic approximation of @sec:method-task.
+context (@tbl:method-covariates). This is exactly true for the template and the calendar,
+which follow from the date and the sun's position. For the weather forecasts it is the
+optimistic assumption of @sec:method-task: in operation, the values for the target hours
+would come from an older weather-model run.
 
 : Covariates supplied for the context window and the 24 target hours, by weather
 setting, with their names in the code. {#tbl:method-covariates}
@@ -136,10 +151,10 @@ the first test day.
 ## Models {#sec:method-models}
 
 @tbl:method-models summarises the models and defines the short names used from here on.
-Their settings were fixed in one configuration file before the first run and were not
-tuned. Two settings drew on a test fold: the fine-tuning recipe, discussed below, and the
-lag inputs of LightGBM, corrected after a check on a test fold exposed a wiring bug that
-a regression test now guards against (@tbl:decisions).
+The settings of the main-run models were fixed in one configuration file and were not
+tuned. Three model choices drew on test results (@tbl:decisions): Climatology and CLIPER
+were added after the first run, and the fine-tuning recipe, discussed below, and the lag
+inputs of LightGBM, corrected for a coding error, were checked on a test fold.
 
 ### Reference forecasts
 
@@ -241,8 +256,12 @@ the longer contexts were given 90 days of history instead of 60
 contexts, 8,192 hours (*Chronos-B-max* ‡) and all history up to 16,360 hours
 (*TimesFM-max* ‡, no-weather setting only); TiRex-XReg ‡ and
 TimesFM-XReg ‡ (@sec:method-covariates) use the contexts of TiRex-long ‡ and
-TimesFM-max ‡. Chronos-B-long ‡ is the best zero-shot configuration tested. The
-comparisons that involve these runs are post hoc (@sec:method-tests).
+TimesFM-max ‡. Two last runs complete a grid of both checkpoints at four contexts for the
+selection of @sec:method-selection: the small checkpoint at 8,192 hours (*Chronos-S-max* ‡)
+and the base checkpoint at 1,024 hours (*Chronos-B-mid* ‡). With weather forecasts,
+Chronos-B-long ‡ is the most accurate zero-shot configuration on the test days, a choice
+made on those days; *Chronos-sel* ‡ is the one selected without them. The comparisons that
+involve these runs are post hoc (@sec:method-tests).
 
 The dataset has been public since 2 April 2024 [@lin2024hkustdata], before any of the
 checkpoints used here was released; no pretraining corpus named on their model cards
@@ -268,19 +287,21 @@ The official Chronos-2 quickstart also fine-tunes all weights at a learning rate
 $10^{-5}$ with batches of 32, but for 1,000 optimiser steps.^[chronos-forecasting
 repository, notebook `chronos-2-quickstart.ipynb`, section "Fine-Tuning";
 <https://github.com/amazon-science/chronos-forecasting>, accessed 4 October 2026. The
-default rate of `Chronos2Pipeline.fit` (chronos-forecasting 2.2.2) is $10^{-6}$; AutoGluon
-1.6.1 uses $10^{-5}$ for its default low-rank adapters
-(<https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html>, accessed 2
+default rate of `Chronos2Pipeline.fit` (chronos-forecasting 2.2.2), which fine-tunes all
+weights by default, is $10^{-6}$; AutoGluon 1.6.1 uses $10^{-5}$ for its default low-rank
+adapters and recommends a lower rate, such as $10^{-6}$, for fine-tuning all weights
+(<https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html>, accessed 13
 October 2026).] The recipe was chosen in a smoke test on one test fold of one station,
-where it beat the zero-shot model and Adam's default learning rate of $10^{-3}$
-(@tbl:decisions); no other learning rate was tried, including the library default of
-$10^{-6}$. No other station-fold influenced the recipe, and excluding that fold
+where it beat the zero-shot model and the default learning rate of darts, $10^{-3}$
+(@tbl:decisions); no other learning rate was tried, including $10^{-6}$, the default of
+chronos-forecasting's own fine-tuning routine. No other station-fold influenced the recipe, and excluding that fold
 (@tbl:p2-robustness) or that station leaves the comparison with LightGBM unchanged.
 
 : The models of the main tables and their short names. Chronos-S and Chronos-B are the
 small and base checkpoints of Chronos-2; *-long* marks a 2,048-hour context and *-FT* fine-tuning;
-the other configurations are in @tbl:chronos2-configs. ‡ Post hoc: added after the main run had
-been seen. *Size*: parameters, counted from the checkpoints for the foundation models
+Chronos-sel is, in each fold, one of eight zero-shot configurations selected on earlier days
+(@sec:method-selection); the other configurations are in @tbl:chronos2-configs. ‡ Post hoc: added
+after the main run had been seen. *Size*: parameters, counted from the checkpoints for the foundation models
 (TimesFM uses 203 M of the 231 M stored); the LSTM has 5,153 without weather inputs; SARIMA has at
 most ten autoregressive and moving-average terms plus regressor coefficients. *Context*: input
 window at the issue time. *All*: every covariate of the setting. *Training per fold*: what is
@@ -289,12 +310,13 @@ naive and Climatology are defined in the text. {#tbl:method-models}
 
 | Model | Family | Size | Context | Covariates | Output | Training per fold | Licence |
 |:-------------------|:--------------|:-----------|:---------|:--------------|:------------|:--------------|:----------------|
-| Smart persistence | Reference | -- | $k_{t-24\,\mathrm{h}}$ | $P^{\mathrm{cs}}$ | Point | -- | -- |
-| CLIPER | Reference | 2 | $k_{t-24\,\mathrm{h}}$ | $P^{\mathrm{cs}}$ | Point | $\bar{k}$ and $\rho$ | -- |
+| Smart persistence | Reference | -- | $k_{t-24\,\mathrm{h}}$ | None | Point | -- | -- |
+| CLIPER | Reference | 2 | $k_{t-24\,\mathrm{h}}$ | None | Point | $\bar{k}$ and $\rho$ | -- |
 | SARIMA | Statistical | ≤ 10 terms | 60 days | All | Quantiles | Order search and fit | -- |
 | LightGBM | Boosted trees | 216 × 100 trees | 24 h | All | Quantiles | 216 boosters | -- |
 | LSTM | Recurrent network | 5,665 | 168 h | All | Point | 30 epochs | -- |
 | Chronos-S | Foundation (encoder) | 28 M | 336 h | All | Quantiles | None | Apache-2.0 |
+| Chronos-sel ‡ | Foundation (encoder) | 28 or 120 M | 336–8,192 h | All | Quantiles | None | Apache-2.0 |
 | Chronos-B-long ‡ | Foundation (encoder) | 120 M | 2,048 h | All | Quantiles | None | Apache-2.0 |
 | Chronos-S-FT | Foundation (encoder) | 28 M | 336 h | All | Quantiles | 5 epochs | Apache-2.0 |
 | TimesFM | Foundation (decoder) | 203 M | 512 h | None | Quantiles | None | Apache-2.0 |
@@ -355,6 +377,42 @@ predictions miss any hour of a test window, and the reporting script excludes an
 whose scored hours differ from those of the station's other runs, so every model is
 scored on exactly the same timestamps. Each run has its own operating-system process,
 which isolates crashes and memory measurements.
+
+### Selecting the zero-shot configuration {#sec:method-selection}
+
+Choosing the best of several configurations by their skill on the test days overstates
+the skill of the one chosen [@cawley2010overfitting]; settings should be chosen in advance,
+on days that the test never touches [@lago2021forecasting]. The longer contexts and the
+base checkpoint were tried only after the main run had been seen, so a zero-shot
+configuration of Chronos-2 is also selected in real time, once per fold, from a grid of
+eight: the small and the base checkpoint, each with 336, 1,024, 2,048 and 8,192 hours of
+context. The 30 days before each test window hold the fold's embargo day and, before it, a
+29-day *inner window* (5 June to 3 July 2022 for the first fold); from the second fold on
+they lie between two test windows. Every candidate and CLIPER forecast the inner windows
+exactly as test windows. Before each fold, the candidates are scored on all earlier inner
+and test windows, 29 days for the first fold and 501 for the last, all of them past at the
+fold's first issue time, as in recursive model selection [@pesaran1995predictability]; a
+fold's own test window never enters its choice. The score is the skill over CLIPER of
+@sec:method-metrics on those days. A candidate counts as tied with the best if their skills
+differ by at most one bootstrap standard error of their paired difference (seven-day
+blocks over the scored days, as in @sec:method-tests), and the first tied candidate is taken
+in a fixed order: the small checkpoint before the base one, then the shorter context. The
+order leans away from the configurations that did best on the test days. The forecasts of
+each fold's choice form the row *Chronos-sel* ‡, separately in each weather setting. Its
+weights are never trained on a station; only its inference settings are chosen, on earlier
+days. The rule was recorded before any inner-window forecast was made (@tbl:decisions), but
+the candidates were chosen after the main run, so the row stays post hoc and untested.
+
+With weather forecasts, Chronos-B-long ‡ is the most accurate zero-shot configuration on the
+test days, but it was picked on them, which flatters its score. Three estimates bracket that
+optimism; none is exact. The first, after @tibshirani2009bias, averages over the nine test
+windows the best window skill among the eight candidates minus the window skill of the
+configuration best over all test days; it is about twice too large when the candidates are
+close, and it also counts real differences between windows. The second,
+$\mathrm{sd}(D)/\sqrt{2\pi}$, is the expected excess of the better of two equally skilful
+configurations whose skill difference $D$ over the test days has the bootstrap standard
+deviation $\mathrm{sd}(D)$; it applies to a choice between two. The third is the mean excess
+of the winner over its own skill across the paired bootstrap resamples of the test days.
 
 ## Metrics {#sec:method-metrics}
 
@@ -479,14 +537,19 @@ small-sample correction of @harvey1997testing and a p-value from Student's t
 distribution; a moving-block bootstrap gives a second p-value. The details are in
 @sec:appendix-results-tests.
 
-Every skill score, skill difference and PICP-80 in the Results carries a 95% interval
-from a moving-block bootstrap over the test days [@kunsch1989jackknife]. Blocks of seven
-consecutive test days, in date order, are drawn with replacement to form each of 10,000
-resamples of the 270 days (seed 0), and the same resampled days are used for every
-station and model, so differences between models are paired. In each resample the skill
-is recomputed per station on the hours of the resampled days and averaged over the
-stations; the interval runs from the 2.5th to the 97.5th percentile of the resampled
-values. The stations are not resampled, and the range across stations, which is not a
+A score measured on 270 particular days would come out differently on other days; a
+bootstrap estimates by how much, without new data, by recomputing the score on many
+resamples of the test days. Every skill score and skill difference over the 270 test days
+in the Results, and the PICP-80 of @tbl:probabilistic, carries a 95% interval, not adjusted
+for multiplicity, from a moving-block bootstrap over the test days [@kunsch1989jackknife].
+Blocks of seven consecutive test days, in date order, are drawn with replacement, so that
+neighbouring days, which share weather, stay together, to form each of 10,000 resamples of
+the 270 days (seed 0), and the same resampled days are used for every station and model, so
+differences between models are paired. In each resample the skill is recomputed per station
+on the hours of the resampled days and averaged over the stations; the interval runs from
+the 2.5th to the 97.5th percentile of the resampled values. An interval of a difference that
+contains zero means that the two models cannot be told apart on these test days, not that
+they are equal. The stations are not resampled, and the range across stations, which is not a
 measure of uncertainty, is given only in @tbl:master-skill-full.
 
 The tests form one family of eleven comparisons, each tied to a research question:
@@ -512,8 +575,9 @@ family at or below 5% (@tbl:significance).
 
 Comparisons that involve the post hoc configurations are themselves post hoc: E1–E3
 were chosen after their results had been seen, E4 and E5 before Chronos-B-long ‡ was run,
-E6–E15 before the last four configurations were run (@tbl:decisions). They are reported as
-paired skill differences $A - B$ over CLIPER with 95% intervals, without tests
+E6–E15 before the XReg and maximum-context configurations were run, and V1–V4 with the
+selection rule, before any inner-window forecast was made (@tbl:decisions). They are
+reported as paired skill differences $A - B$ over CLIPER with 95% intervals, without tests
 (@tbl:significance, second block), in the NWP setting unless stated:
 
 - **E1.** Chronos-S-long ‡ vs Chronos-S;
@@ -522,10 +586,19 @@ paired skill differences $A - B$ over CLIPER with 95% intervals, without tests
 - **E4.** LightGBM vs Chronos-B-long ‡;
 - **E5.** Chronos-S-FT vs Chronos-B-long ‡;
 - **E6–E15.** the XReg configurations, TimesFM-max ‡ and Chronos-B-max ‡ each vs
-  Chronos-B-long ‡ and LightGBM; each XReg configuration vs its univariate counterpart.
+  Chronos-B-long ‡ and LightGBM; each XReg configuration vs its univariate counterpart;
+- **V1.** LightGBM vs Chronos-sel ‡;
+- **V2.** Chronos-S-FT vs Chronos-sel ‡;
+- **V3.** Chronos-sel ‡ vs Chronos-B-long ‡: what choosing without the test days costs or
+  gains against the choice made on them, which is not the same as the optimism of that
+  choice (@sec:method-selection);
+- **V4.** Chronos-sel ‡ vs Chronos-S.
 
-RQ1 is answered with the best zero-shot configuration tested, a post hoc selection that
-favours the zero-shot models; the last four configurations do not reopen that choice.
+RQ1 is answered twice. Chronos-S, fixed before the main run, is the configuration that the
+tests of the family examine. Chronos-sel ‡ is the best-practice zero-shot result: its
+configuration is chosen without the test window it is scored on, but among candidates drawn
+up after the main run. Chronos-B-long ‡, the most accurate on the test days, is reported
+beside them as a choice made on those days.
 
 ## Compute measurement {#sec:method-compute}
 

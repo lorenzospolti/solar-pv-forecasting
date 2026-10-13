@@ -773,12 +773,15 @@ def test_post_hoc_comparisons_have_intervals_and_no_tests(report, chronos_inputs
     tables = tmp_path / "tables"
     t5 = pd.read_csv(tables / "significance.csv").set_index("id")
     post = t5[t5["block"] == "post hoc"]
-    assert list(post.index) == [f"E{i}" for i in range(1, 16)]
+    assert list(post.index) == [f"E{i}" for i in range(1, 16)] + [f"V{i}" for i in range(1, 5)]
     for col in ("p_dm", "p_holm", "p_bootstrap", "dm_stat"):
         assert post[col].isna().all()
     assert post.loc[["E1", "E2", "E3"], "available"].all()
     assert not post.loc[["E4", "E5"], "available"].any()      # no base checkpoint run
     assert not post.loc[[f"E{i}" for i in range(6, 16)], "available"].any()  # no covariate runs
+    assert not post.loc[[f"V{i}" for i in range(1, 5)], "available"].any()   # no selected row
+    caption = (tables / "significance.md").read_text(encoding="utf-8").splitlines()[0]
+    assert "E1–E15 and V1–V4 are post hoc" in caption
     # the Holm family is the tested comparisons only
     fixed = t5[t5["block"] != "post hoc"]
     assert t5["p_holm"].notna().sum() == fixed["p_dm"].notna().sum() > 2

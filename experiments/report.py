@@ -43,7 +43,10 @@ Definitions (the Method chapter cites them; each function's docstring has its ow
   intervals only, no tests.
 
 Inputs. ``--predictions-dir`` and ``--results`` take one or more paths (default: the
-panel, the extra runs and the covariate runs); a missing path is skipped with a warning.
+panel, the extra runs, the covariate runs, the grid runs and the row selected in real
+time by ``experiments/select_zero_shot.py``); a missing path is skipped with a warning.
+The inner-window forecasts (``results/validation/predictions``) are refused: they are
+not test forecasts.
 
 Outputs. ``--tables-dir`` gets each table as CSV (full-precision numbers) and as a
 pandoc pipe table whose first line is its caption, the appendix tables in its
@@ -53,7 +56,7 @@ pandoc pipe table whose first line is its caption, the appendix tables in its
   T2 chronos2_configs     the Chronos-2 configurations: skill, PICP-80, time
   T3 probabilistic        quantile score / C, PICP-80 (95 % interval), width-80 / C
   T4 compute              median fit / predict seconds, maximum peak RSS
-  T5 significance         P1-P11 (skill difference, Holm p) and post hoc E1-E15
+  T5 significance         P1-P11 (skill difference, Holm p) and post hoc E1-E15, V1-V4
   appendix/master_skill_full    every model, skill over SP and CLIPER [min, max], nRMSE, nMBE
   appendix/significance_detail  the test statistics of P1-P11
   appendix/skill_by_fold        skill per test window
@@ -138,9 +141,12 @@ MODELS: tuple[tuple[str, str, str], ...] = (
     ("chronos2", "Chronos-S", FOUNDATION_ZS),
     ("chronos2_ctx1024", "Chronos-S-mid", FOUNDATION_ZS),
     ("chronos2_ctx2048", "Chronos-S-long", FOUNDATION_ZS),
+    ("chronos2_ctx8192", "Chronos-S-max", FOUNDATION_ZS),
     ("chronos2_base", "Chronos-B", FOUNDATION_ZS),
+    ("chronos2_base_ctx1024", "Chronos-B-mid", FOUNDATION_ZS),
     ("chronos2_base_ctx2048", "Chronos-B-long", FOUNDATION_ZS),
     ("chronos2_base_ctx8192", "Chronos-B-max", FOUNDATION_ZS),
+    ("chronos2_selected", "Chronos-sel", FOUNDATION_ZS),
     ("chronos2_ft", "Chronos-S-FT", FOUNDATION_FT),
     ("chronos2_ft_s1", "Chronos-S-FT, seed 1", FOUNDATION_FT),
     ("chronos2_ft_s2", "Chronos-S-FT, seed 2", FOUNDATION_FT),
@@ -158,20 +164,26 @@ CHRONOS2_SETUP: dict[str, tuple[str, int, str]] = {
     "chronos2": ("small", 336, "zero-shot"),
     "chronos2_ctx1024": ("small", 1024, "zero-shot"),
     "chronos2_ctx2048": ("small", 2048, "zero-shot"),
+    "chronos2_ctx8192": ("small", 8192, "zero-shot"),
     "chronos2_base": ("base", 336, "zero-shot"),
+    "chronos2_base_ctx1024": ("base", 1024, "zero-shot"),
     "chronos2_base_ctx2048": ("base", 2048, "zero-shot"),
     "chronos2_base_ctx8192": ("base", 8192, "zero-shot"),
+    # one of the eight above per test window, selected in real time
+    # (experiments/select_zero_shot.py; DECISIONS.md, 13 Oct 2026)
+    "chronos2_selected": ("per window", 0, "zero-shot, selected"),
     "chronos2_ft": ("small", 336, "fine-tuned"),
     "chronos2_ft_s1": ("small", 336, "fine-tuned, seed 1"),
     "chronos2_ft_s2": ("small", 336, "fine-tuned, seed 2"),
 }
 #: configurations run after the main run (panel v2) had been seen (configs/extras.yaml,
-#: configs/covariates.yaml; DECISIONS.md): every table and figure marks them with
-#: POST_HOC_MARK
+#: configs/covariates.yaml, configs/grid.yaml; DECISIONS.md), and the row selected among
+#: them in real time: every table and figure marks them with POST_HOC_MARK
 POST_HOC_MODELS = frozenset({
     "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base", "chronos2_base_ctx2048",
     "chronos2_ft_s1", "chronos2_ft_s2", "tirex_ctx2048",
-    "chronos2_base_ctx8192", "timesfm_ctx16k", "timesfm_xreg", "tirex_xreg"})
+    "chronos2_base_ctx8192", "timesfm_ctx16k", "timesfm_xreg", "tirex_xreg",
+    "chronos2_ctx8192", "chronos2_base_ctx1024", "chronos2_selected"})
 #: univariate configurations run under No weather only (DECISIONS.md, 12 Oct 2026): with
 #: one setting, ``detect_no_covariates`` has no pair to compare, so they are named here
 RUN_ONCE = frozenset({"timesfm_ctx16k"})
@@ -179,12 +191,13 @@ RUN_ONCE = frozenset({"timesfm_ctx16k"})
 #: the models of the main tables (T1, T3, T4) and figures, in this order
 MAIN_MODELS: tuple[str, ...] = (
     "smart_persistence", "cliper", "sarima", "lightgbm", "lstm", "chronos2",
-    "chronos2_base_ctx2048", "chronos2_ft", "timesfm", "timesfm_xreg", "tirex", "tirex_xreg")
+    "chronos2_selected", "chronos2_base_ctx2048", "chronos2_ft", "timesfm", "timesfm_xreg",
+    "tirex", "tirex_xreg")
 #: the Chronos-2 configurations of T2, in this order
 CHRONOS2_MODELS: tuple[str, ...] = (
-    "chronos2", "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base",
-    "chronos2_base_ctx2048", "chronos2_base_ctx8192", "chronos2_ft", "chronos2_ft_s1",
-    "chronos2_ft_s2")
+    "chronos2", "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_ctx8192", "chronos2_base",
+    "chronos2_base_ctx1024", "chronos2_base_ctx2048", "chronos2_base_ctx8192",
+    "chronos2_selected", "chronos2_ft", "chronos2_ft_s1", "chronos2_ft_s2")
 #: the reference of every main table and figure ("smart_persistence" switches them all)
 HEADLINE_REF = "cliper"
 
@@ -228,9 +241,12 @@ COMPARISONS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("P10", ("chronos2", "nwp"), ("chronos2", "none")),
     ("P11", ("cliper", "nwp"), ("smart_persistence", "nwp")),
 )
-#: Post hoc comparisons (T5 block 2; DECISIONS.md, E1-E5 on 4 Oct, E6-E15 on 12 Oct 2026):
-#: they involve the runs added after panel v2, so they get a paired skill difference
-#: with its interval and no test. Same layout as ``COMPARISONS``.
+#: Post hoc comparisons (T5 block 2; DECISIONS.md, E1-E5 on 4 Oct, E6-E15 on 12 Oct,
+#: V1-V4 on 13 Oct 2026): they involve the runs added after panel v2, so they get a paired
+#: skill difference with its interval and no test. Same layout as ``COMPARISONS``.
+#: V3 is the gap between the row selected in real time and the best configuration on
+#: the test days; it is not the selection bias (experiments/select_zero_shot.py
+#: estimates that).
 POST_HOC: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("E1", ("chronos2_ctx2048", "nwp"), ("chronos2", "nwp")),
     ("E2", ("lightgbm", "nwp"), ("chronos2_ctx2048", "nwp")),
@@ -247,7 +263,14 @@ POST_HOC: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("E13", ("timesfm_ctx16k", "none"), ("lightgbm", "nwp")),
     ("E14", ("chronos2_base_ctx8192", "nwp"), ("chronos2_base_ctx2048", "nwp")),
     ("E15", ("chronos2_base_ctx8192", "nwp"), ("lightgbm", "nwp")),
+    ("V1", ("lightgbm", "nwp"), ("chronos2_selected", "nwp")),
+    ("V2", ("chronos2_ft", "nwp"), ("chronos2_selected", "nwp")),
+    ("V3", ("chronos2_selected", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("V4", ("chronos2_selected", "nwp"), ("chronos2", "nwp")),
 )
+#: the store of the inner-window (validation) forecasts: same model labels as the test
+#: runs on other days, so it must never be read as test predictions
+INNER_WINDOW_DIR = "results/validation/predictions"
 #: the P2 pair whose robustness the appendix shows, and the fine-tuning seeds of its B side
 P2_PAIR = ("lightgbm", "chronos2_ft")
 FT_SEEDS = (("chronos2_ft", "seed 0"), ("chronos2_ft_s1", "seed 1"),
@@ -1638,9 +1661,12 @@ def table_chronos2_configs(panel: Panel, summary: Summary, boot: Bootstrap,
     shown = [m for m in _present(panel, CHRONOS2_MODELS) if display_name(m) not in left_out]
     caption = (
         "The Chronos-2 configurations. Names: S and B for the small and base checkpoints, "
-        "-mid and -long for contexts longer than the one fixed before the main run, -FT for "
-        "fine-tuning on each training window (repeated with seeds 1 and 2 in the NWP "
-        f"setting only). Skill over {reference_name()} on daytime hours as in "
+        "-mid, -long and -max for contexts longer than the one fixed before the main run, "
+        "-FT for fine-tuning on each training window (repeated with seeds 1 and 2 in the "
+        "NWP setting only). Chronos-sel: the zero-shot configuration selected in real time "
+        "for each test window (@tbl:selection-path); its time is that of the configuration "
+        "selected, without the cost of running the eight candidates for the selection. "
+        f"Skill over {reference_name()} on daytime hours as in "
         f"@tbl:master-skill, with its {_interval_note()}. PICP-80: share of hours inside "
         "the 10–90 % interval (nominal 0.8). Time: median over the station-folds of fit "
         f"+ predict seconds per {window_days(panel)}-day test window." + missing
@@ -1764,10 +1790,20 @@ def _difference_cell(r: dict) -> str:
     return _num_range(r["skill_diff"], r["skill_diff_lo"], r["skill_diff_hi"])
 
 
+def _id_ranges(ids: Iterable[str]) -> str:
+    """"E1–E15 and V1–V4": the first and last ID of each letter, in order of appearance."""
+    groups: dict[str, list[str]] = {}
+    for i in ids:
+        groups.setdefault(re.sub(r"\d+$", "", str(i)), []).append(str(i))
+    parts = [g[0] if len(g) == 1 else f"{g[0]}–{g[-1]}" for g in groups.values()]
+    return " and ".join(parts) if len(parts) <= 2 else ", ".join(parts[:-1]) + " and " + parts[-1]
+
+
 def table_significance(panel: Panel, sig: pd.DataFrame, post_hoc: pd.DataFrame) -> Table:
     """T5: the comparisons fixed before panel v2 (P1-P11: paired skill difference over
     ``HEADLINE_REF`` with its interval, Holm p, verdict) and the post hoc ones (E1-E15:
-    skill difference with its interval only, no test). ``sig`` comes from
+    skill difference with its interval only, no test; V1-V4 the same for the row selected
+    in real time). ``sig`` comes from
     ``add_skill_differences``; the test statistics are in ``significance_detail``."""
     columns = ["ID", "Comparison (A vs B)", f"Skill difference (A {MINUS} B)", "Holm p",
                "Verdict"]
@@ -1783,8 +1819,7 @@ def table_significance(panel: Panel, sig: pd.DataFrame, post_hoc: pd.DataFrame) 
             "post hoc" if r["available"] else "not available"])))
     n_tested = int(sig["p_holm"].notna().sum())
     first = f"{sig['id'].iloc[0]}–{sig['id'].iloc[-1]}" if len(sig) else "P"
-    later = (f"{post_hoc['id'].iloc[0]}–{post_hoc['id'].iloc[-1]}"
-             if len(post_hoc) else "E")
+    later = _id_ranges(post_hoc["id"]) if len(post_hoc) else "E"
     ref = reference_name()
     caption = (
         f"Pairwise comparisons. Skill difference: skill over {ref} of A minus that of B "
@@ -2644,12 +2679,16 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     ap.add_argument("--results", nargs="+",
                     default=[str(ROOT / "results" / "results.parquet"),
                              str(ROOT / "results" / "extra" / "results.parquet"),
-                             str(ROOT / "results" / "covariates" / "results.parquet")],
+                             str(ROOT / "results" / "covariates" / "results.parquet"),
+                             str(ROOT / "results" / "grid" / "results.parquet"),
+                             str(ROOT / "results" / "validation" / "selected" / "results.parquet")],
                     help="results stores (timing and memory only); missing ones are skipped")
     ap.add_argument("--predictions-dir", nargs="+",
                     default=[str(ROOT / "results" / "predictions"),
                              str(ROOT / "results" / "extra" / "predictions"),
-                             str(ROOT / "results" / "covariates" / "predictions")],
+                             str(ROOT / "results" / "covariates" / "predictions"),
+                             str(ROOT / "results" / "grid" / "predictions"),
+                             str(ROOT / "results" / "validation" / "selected" / "predictions")],
                     help="folders of per-run prediction parquets (the source of every "
                          "accuracy number); missing ones are skipped")
     ap.add_argument("--tables-dir", default=str(ROOT / "thesis" / "tables"))
@@ -2663,6 +2702,10 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     logging.getLogger("fontTools").setLevel(logging.WARNING)  # PDF font subsetting chatter
 
     results_paths = [Path(p) for p in args.results]
+    for p in args.predictions_dir:
+        if INNER_WINDOW_DIR in Path(p).resolve().as_posix():
+            raise SystemExit(f"{p}: inner-window forecasts (validation days) are not test "
+                             "forecasts; experiments/select_zero_shot.py reads them")
     runs = check_runs(load_predictions([Path(p) for p in args.predictions_dir],
                                        args.include_synthetic, stored_hashes(results_paths)))
     panel = Panel(runs=runs, capacity=load_capacities(runs, Path(args.processed_dir)))

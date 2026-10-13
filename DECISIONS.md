@@ -251,3 +251,104 @@ Times are local (Europe/Rome).
   - By the 12 Oct rule, RQ1 is still answered by Chronos-B-long.
 - **Thesis:** not changed yet. These rows are post hoc (‡) and go in only by Lorenzo's
   decision.
+
+## 13 Oct 2026, 13:30, written before the runs and the selection it declares
+
+- **Real-time selection of the zero-shot Chronos-2 configuration** (design and plan:
+  `VALIDATION.md`; code: `experiments/select_zero_shot.py`, `configs/validation.yaml`,
+  `configs/grid.yaml`).
+  - Post hoc: decided by Lorenzo on 13 Oct after all earlier runs had been seen, to
+    replace the choice of RQ1's best zero-shot configuration on the test days (4 Oct
+    entry) by a choice made in real time on earlier days. Further runs in the sense of
+    the 4 and 12 Oct entries, so they get this entry before they start.
+  - What it fixes: the selection on the test days. What it cannot fix: the candidates
+    were drawn up after the main run had been seen. Every candidate and the selected
+    row stay ‡ and get no test.
+- **The runs** (each x 6 stations x 9 folds; env pv, `HF_HUB_OFFLINE=1`, the checkpoint
+  revisions of the 12 Oct entry, `src/` as at 5a1fecd and not edited while a batch runs):
+
+  | Batch | Config | Windows | Configurations | Settings | Runs |
+  |---|---|---|---|---|---:|
+  | G | `configs/grid.yaml` | the nine 30-day test windows | `chronos2_ctx8192`, `chronos2_base_ctx1024` | NWP, No weather | 24 |
+  | V | `configs/validation.yaml` | the nine 29-day inner windows | CLIPER and the eight candidates | NWP, No weather | 108 |
+
+  - Candidates: Chronos-2 {small, base} x {336, 1,024, 2,048, 8,192} h, zero-shot; the
+    two new ones copy their grid neighbours' params with the other checkpoint.
+  - Inner window of fold k: the 29 days before fold k's embargo day, 5 Jun-3 Jul 2022
+    + 60k days; no inner day is a test or embargo day. Test procedure unchanged; the
+    splitter's first-fold guard is 330 days (SQ567 has 338).
+- **The rule, fixed now, before any inner-window forecast or validation score:**
+  - Pool of fold k: the inner windows of folds 0..k and the test windows of folds
+    0..k-1 (all days before fold k's embargo day; 29 days for fold 0, 501 for fold 8).
+  - Criterion: skill over CLIPER on daytime hours, per station pooled over the pool's
+    days, mean over the six stations; NWP and No weather separately.
+  - Tie-break: tied with the best = pooled skill within one standard error of the
+    paired difference (best - candidate), 7-day moving-block bootstrap over the pool's
+    days, 10,000 resamples, seed 0. Pick the first tied candidate in cost order: small
+    before base, then shorter context.
+  - Selected row `chronos2_selected` (Chronos-sel ‡): test window k from fold k's pick,
+    per station and setting, assembled from the existing forecasts.
+  - Sensitivity variants, reported in `results/validation/selection_summary.txt` and
+    in one sentence of the thesis whatever they show: argmax; the classic
+    one-standard-error rule (the best configuration's own standard error).
+- **Reporting rules, fixed before any result is seen:**
+  - Chronos-sel ‡ and the two new configurations are reported whatever they show, with
+    the selection path (appendix table `selection_path`).
+  - RQ1: Chronos-S remains the configuration fixed in advance (confirmatory; P1-P11
+    unchanged). The best zero-shot result is now Chronos-sel ‡, chosen without the test
+    days; Chronos-B-long ‡ stays in the main table and figures as the best configuration
+    on the test days, a hindsight pick, next to the estimated optimism of that pick.
+  - Optimism of the hindsight pick, test days only: Tibshirani & Tibshirani (2009)
+    adapted (mean over the nine windows of best window skill minus the window skill of
+    the configuration best over all test days; eight and the original six candidates)
+    and sd(D) / sqrt(2 pi) for the two best configurations.
+  - Paired skill differences, NWP, intervals, no tests: V1 LightGBM vs Chronos-sel,
+    V2 Chronos-S-FT vs Chronos-sel, V3 Chronos-sel vs Chronos-B-long, V4 Chronos-sel vs
+    Chronos-S. V3 is not called the selection bias.
+  - Time per window of Chronos-sel: that of the configuration picked; the cost of
+    running all eight candidates is stated next to it.
+- **Not done, by decision:** a learning-rate search for fine-tuning (10^-5 stays: the
+  AutoGluon `fine_tune_lr` default, applied there with low-rank adapters, and the rate of
+  the official quickstart; chronos-forecasting 2.2.2's `Chronos2Pipeline.fit` defaults
+  to 10^-6 for full fine-tuning and AutoGluon 1.6.1 recommends about 10^-6 for it; only
+  darts' 10^-3 was tried and rejected); a selection for LightGBM or the LSTM (the
+  asymmetry is stated as a limitation); a Model Confidence Set; the development period
+  as a validation set.
+- **Checks after the batches:** as listed in `VALIDATION.md`, section 9.
+- **Commands:** `VALIDATION.md`, section 8. The sha256 of this file, `VALIDATION.md`,
+  the two configs and the selection script are written to
+  `results/validation/PREREGISTRATION.txt` before batch G starts.
+
+## 13 Oct 2026, 13:39, amendment before any inner-window forecast exists
+
+- **Correction to the heading of the previous entry:** it says 13:30, but the entry was
+  last written at 13:17:30 (file time) and hashed at 13:18:41 in
+  `results/validation/PREREGISTRATION.txt`; batch G started at 13:18:42. The entry and
+  `VALIDATION.md` were not committed before the runs; the evidence is that file, the
+  batch manifests and the file times. Everything above this entry is byte for byte the
+  hashed file: its first 21,065 bytes have sha256
+  8ade9e272dd3aee871de213383420ef5115710dccd586dc7c04b93f61f579702.
+- **Written after an adversarial review of the code, while batch G (test windows) was
+  running and before batch V had produced any inner-window forecast; no validation score
+  existed.** The rule, the candidates, the runs and the reporting rules are unchanged.
+  Changes:
+  - The two optimism estimates are labelled for what they are and reported together as a
+    rough bracket, never as "the" optimism of the hindsight pick:
+    - Tibshirani & Tibshirani, adapted: conservative, about twice the optimism when the
+      candidates are near-equal (window skills are about three times noisier than pooled
+      ones), and it also counts real differences between windows;
+    - sd(D) / sqrt(2 pi): the two-way equal-skill case, an upper bound for a choice
+      between two, too low when three or more configurations are near-tied.
+  - Added: a third estimate on the same 10,000 paired resamples of the test days. Each
+    candidate's resampled skill is centred on its own skill; the estimate is the mean
+    excess of each resample's winner over its own skill, with the share of resamples each
+    candidate wins. Test days only.
+  - Wording for the thesis: "chosen without the test days" is "chosen without the fold's
+    own test window" (folds 1-8 pool earlier test windows); "cost order" is "smaller
+    checkpoint first, then shorter context" (Chronos-S-max may take longer per window
+    than Chronos-B); in No weather every candidate sits near zero, so the selection there
+    is close to noise.
+  - If a configuration other than Chronos-B-long is the best of the eight on the test
+    days, the text names it as the hindsight best and the optimism estimates use it as
+    c*; Chronos-B-long stays in the main table as the configuration that answered RQ1
+    on 4 Oct.

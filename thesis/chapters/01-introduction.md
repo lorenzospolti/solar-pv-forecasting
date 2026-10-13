@@ -4,7 +4,9 @@
 review (~/Thesis/Thesis Review 2026-10-12 - Cover, Abstract, Chapter 1.md); rewrite it in your own words
 before submission (UniPV AI guidelines: no unrevised AI-written paragraphs). Read the introduction of
 Antonanzas et al. (2016) before keeping that citation. Keep RQ1-RQ4 identical to the Results headings.
-The LaTeX copy is ~/Thesis/BAI_Thesis_Spolti/content/introduction.tex: keep the two in step. -->
+The LaTeX copy is ~/Thesis/BAI_Thesis_Spolti/content/introduction.tex: keep the two in step.
+On 13 Oct 2026 Claude added the glosses of "checkpoint" and "context window" in "In brief" after
+your review (~/Thesis/Thesis Review 2026-10-13 - Assessment ...md, item A2). -->
 
 The output of a photovoltaic (PV) system follows the weather. As the share of solar power grows,
 forecasting it becomes crucial for the stability of the grid and for deciding in advance which power
@@ -70,8 +72,9 @@ The thesis contributes:
 3. an account of the time and memory that each model needs on one 16 GB laptop.
 
 In brief, with weather forecasts three models lead and cannot be told apart: LightGBM at default
-settings, the fine-tuned Chronos-2 and the best zero-shot configuration of Chronos-2, its larger
-checkpoint with a long context window, which was chosen after the results had been seen. The
+settings, the fine-tuned Chronos-2 and the best zero-shot configuration of Chronos-2, chosen after
+the results had been seen: its larger checkpoint (the larger of the two released sets of pretrained
+weights) with a long context window (the stretch of recent history that the model reads). The
 zero-shot configuration fixed in advance, the small checkpoint with a short context, trails them.
 Fine-tuning adds 0.14 in skill to that configuration, enough to join the leaders; a longer context
 alone gives about two thirds of that gain without any training, and fine-tuning at a long context did

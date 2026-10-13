@@ -102,7 +102,7 @@ SQ15 had first been bridged as a short gap. {#tbl:data-outages}
 | Storm, 8 September 2023         |           |   3 |       |          |               3 |    3 |
 | Total                           |         0 | 105 |     0 |        0 |              17 |   73 |
 
-## Single events and outage days
+## Single events and gaps
 
 The meter-error rules of @sec:data-qc removed three values on the panel, all at SQ15. No reading
 exceeds 1.1 $C$; legitimate readings reach 1.005 $C$. Two readings lie below −0.05 $C$, of −111 $C$
@@ -117,9 +117,7 @@ Hall6; the outage rule removes them only where a station read at most 0.1% of $C
 other 15-minute stations, because the energy column it read is zero in many such quarter hours.
 
 At the hourly stations the gaps longer than two hours are mostly days on which the feed holds no
-value from 07:00 to 17:00: 28 days at CYT (Station 2) and 37 at SQ15. Counting as outage days the
-days with at least half of the daytime hours missing, there are 9 at SQ1, 29 at CYT (Station 2) and
-46 at SQ15, of which 9, 10 and 13 lie in test windows (@fig:data-coverage).
+value from 07:00 to 17:00: 28 days at CYT (Station 2) and 37 at SQ15.
 
 Short gaps were bridged in 18 hours: 17 at SQ15, including the three values removed above, and one
 at UG Hall6; five of them are daytime hours in test windows and are scored. Zero readings at the
