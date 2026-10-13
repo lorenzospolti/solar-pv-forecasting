@@ -8,8 +8,8 @@ nothing beats CLIPER. (2) Zero-shot or fine-tuned: a longer context gives the sm
 model about two thirds of what fine-tuning adds, and Chronos-B-long cannot be told apart from
 Chronos-S-FT; fine-tuning at a long context is untested (at the recipe's batch size it does
 not fit the laptop's memory). (3) What weather adds: almost all the skill over CLIPER, for the
-models that take covariates, as an upper bound. (4) Calibration: LightGBM too narrow,
-zero-shot too wide. Then the threats to validity.*
+models that take covariates, as an upper bound. (4) Calibration: LightGBM and XReg too narrow,
+zero-shot Chronos-2 too wide. Then the threats to validity.*
 
 <!-- TODO(Lorenzo): write this chapter yourself; it is where your own interpretation counts.
 Points raised by the 12 Oct review of Chapter 1, for you to cover in your own words: (a) Chapter 1's
@@ -35,7 +35,8 @@ Several choices were made after test results had been seen, and each is stated w
 applies: the fine-tuning recipe, chosen on one test fold; the lag inputs of LightGBM,
 corrected after a wiring bug showed on a test fold; the point-forecast rule and the
 family of comparisons, after the first run, which covered the same test days; the extra
-contexts, the base checkpoint and the extra seeds, after the main run; and CLIPER as the
+contexts, the base checkpoint and the extra seeds, after the main run; the XReg runs and the
+longest contexts, after those but declared before they ran; and CLIPER as the
 headline reference (@tbl:decisions). Reporting RQ1 with the best zero-shot configuration favours the
 zero-shot models. The comparisons that involve the later runs are reported without
 tests.
@@ -52,9 +53,11 @@ Two purpose-trained baselines were not tuned: LightGBM runs with its default set
 and the LSTM was configured once, so neither shows the best its family can reach. The
 fine-tuning is light, 60 to 150 optimiser steps at a single context, against 1,000 in the
 official example. Three fine-tuning seeds agree closely, but the LSTM was run with one.
+TiRex-XReg ‡ and TimesFM-XReg ‡ have no run without weather, so their gain over the
+univariate models mixes the regression and the weather; their intervals ignore the
+regression's own error and are too narrow (@tbl:probabilistic).
 
-The dataset was public before every checkpoint used here was released, and four of the
-stations later entered a public benchmark; no model card names it, but an overlap would
+The dataset was public before every checkpoint used here was released, and it was later used in a public benchmark; no model card names it, but an overlap would
 favour the zero-shot models. Finally, the six stations were selected on the whole record,
 test period included, for complete and stable data, so the results may be optimistic for
 less well-kept installations.

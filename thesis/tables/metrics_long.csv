@@ -6527,6 +6527,630 @@ chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,none,UG Hall6,25
 chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_climatology,0.16094528881578696
 chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_cliper,0.008667679694994046
 chronos2_base_ctx2048,Chronos-B-long,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_sp,0.12375665001017155
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.1,0.523757252626627
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.2,0.564842402383566
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.3,0.6053002979457425
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.4,0.6540693115885212
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.5,0.7067586639485651
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.6,0.7668182530970676
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.7,0.8333071977418849
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.8,0.9008938372275365
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.9,0.9452720715069782
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps,0.7684469978240158
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps_skill_sp,0.47550165221835194
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mae,0.9998380913098838
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mbe,-0.1138332594002706
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,n_hours,6377.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,ncrps,0.030737879912960633
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmae,0.03999352365239535
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmbe,-0.0045533303760108244
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nrmse,0.0856631208462872
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nwidth_80,0.14203134449182112
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,picp_80,0.8944644817312216
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,r2,0.8810757919616163
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse,2.14157802115718
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse_sp,3.31783978608236
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_climatology,0.38591292653394216
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_cliper,0.2713527882932143
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_sp,0.3545263908942652
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.1,0.07237512742099898
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.2,0.15562351342167857
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.3,0.23921168875297316
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.4,0.33775059463132856
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.5,0.4454638124362895
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.6,0.5691471287801563
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.7,0.7037037037037037
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.8,0.8386000679578661
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.9,0.926945293917771
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps,1.6576793180945728
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps_skill_sp,0.475812480144022
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mae,2.1569182776829816
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mbe,-0.24541597467700993
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,n_hours,2943.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,ncrps,0.0663071727237829
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmae,0.08627673110731926
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmbe,-0.009816638987080397
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nrmse,0.12608481011780334
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nwidth_80,0.30680304258415697
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,picp_80,0.8555895344886171
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,r2,0.7850374539362389
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse,3.1521202529450836
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse_sp,4.883543583839771
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_climatology,0.3859362945015705
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_cliper,0.27137406119144936
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_sp,0.3545424139602591
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.1,0.5041666666666667
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.2,0.5489197530864197
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.3,0.5925925925925926
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.4,0.645679012345679
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.5,0.6984567901234567
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.6,0.7637345679012346
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.7,0.8311728395061728
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.8,0.8925925925925926
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.9,0.9398148148148148
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps,1.6945501539820604
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps_skill_sp,0.47845988434469566
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mae,2.2043651708874243
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mbe,-0.12310072367198399
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,ncrps,0.030810002799673827
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmae,0.040079366743407716
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmbe,-0.0022381949758542544
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nrmse,0.08460227482045027
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nwidth_80,0.1448311967306129
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,picp_80,0.8933641975308642
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,r2,0.8786650574228634
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse,4.653125115124765
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse_sp,7.208667434340293
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_climatology,0.38065859512696876
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_cliper,0.26831888455479536
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_sp,0.3545096708223162
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.1,0.071686945083854
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.2,0.15948701085169353
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.3,0.24432752384084183
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.4,0.3498849062808287
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.5,0.45511344952318317
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.6,0.5853337717855969
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.7,0.7208155212101283
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.8,0.8431437027293653
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.9,0.9355475172640578
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps,3.5939576692285726
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps_skill_sp,0.4787502910746363
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mae,4.675473119551685
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mbe,-0.2583653997992425
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,ncrps,0.06534468489506495
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmae,0.085008602173667
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmbe,-0.004697552723622591
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nrmse,0.12348508765060523
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nwidth_80,0.3076389084217819
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,picp_80,0.8645182505754686
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,r2,0.7795134302690565
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse,6.791679820783288
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse_sp,10.52191749855498
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_climatology,0.38067716965397946
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_cliper,0.2683332656987565
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_sp,0.3545207114847633
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.1,0.5310442144873001
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.2,0.5747883349012229
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.3,0.6216682345562873
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.4,0.6705863907180935
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.5,0.7231106930072123
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.6,0.7823769206647851
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.7,0.847914706804641
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.8,0.9073377234242709
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.9,0.955785512699906
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps,0.7844342995064582
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps_skill_sp,0.47683463266770953
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mae,1.0345244797490312
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mbe,-0.030674843538803814
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,n_hours,6378.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,ncrps,0.0284215325908137
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmae,0.03748277100539968
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmbe,-0.001111407374594341
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nrmse,0.0800998929768245
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nwidth_80,0.13491586012742213
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,picp_80,0.9057698338037002
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,r2,0.8890320927536172
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse,2.2107570461603565
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse_sp,3.421051338581982
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_climatology,0.39803425069145304
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_cliper,0.27361853658420243
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_sp,0.3537784653425545
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.1,0.07417488941816945
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.2,0.1640013610071453
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.3,0.2585913576046274
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.4,0.35964613814222524
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.5,0.46750595440626064
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.6,0.5876148349778836
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.7,0.7237155495066349
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.8,0.8445049336509016
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.9,0.9431779516842463
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps,1.6943824137877366
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps_skill_sp,0.4771472726397763
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mae,2.2346849111172973
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mbe,-0.0659648084979309
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,n_hours,2939.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,ncrps,0.06139066716622234
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmae,0.08096684460569917
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmbe,-0.0023900292934032935
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nrmse,0.11798461582168267
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nwidth_80,0.29185945806310415
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,picp_80,0.874106839060905
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,r2,0.7987717791896187
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse,3.256375396678442
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse_sp,5.039204832332722
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_climatology,0.3980564330094929
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_cliper,0.27363673825987667
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_sp,0.3537918173548389
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.1,0.5293005671077504
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.2,0.5710459987397606
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.3,0.6145242596093258
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.4,0.6669817265280403
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.5,0.7170762444864525
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.6,0.7739445494643983
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.7,0.8286074354127284
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.8,0.8909892879647133
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.9,0.9382482671707625
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps,0.6875262041377829
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps_skill_sp,0.46345926647339697
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mae,0.9042491537872608
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mbe,-0.06530518461423557
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,n_hours,6348.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,ncrps,0.020652634549047248
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmae,0.027162786235724264
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmbe,-0.00196170575590975
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nrmse,0.059110648825934725
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nwidth_80,0.09401225376671432
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,picp_80,0.8908317580340265
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,r2,0.8756261084998794
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse,1.967793499415367
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse_sp,2.9787477469173047
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_climatology,0.36300443902085877
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_cliper,0.2497200899670422
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_sp,0.3393890095420704
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.1,0.07378174330816746
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.2,0.15991763898421413
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.3,0.2491420727522306
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.4,0.3562113932738504
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.5,0.46190803019903914
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.6,0.5785861358956761
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.7,0.6942347288949897
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.8,0.8239533287577213
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.9,0.9193548387096774
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps,1.489474124711648
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps_skill_sp,0.4640574198196894
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mae,1.959565691648232
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mbe,-0.1395832463078767
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,n_hours,2914.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,ncrps,0.04474238884685035
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmae,0.058863493290724905
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmbe,-0.004192948221924803
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nrmse,0.08723473153234013
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nwidth_80,0.2042005130108266
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,picp_80,0.8459162663006177
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,r2,0.780761603985632
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse,2.904044212711603
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse_sp,4.3961612762714
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_climatology,0.3630381264944852
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_cliper,0.2497479575402538
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_sp,0.33941363152748905
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.1,0.5100308641975309
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.2,0.5529320987654321
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.3,0.5986111111111111
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.4,0.6526234567901235
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.5,0.7098765432098766
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.6,0.7694444444444445
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.7,0.8358024691358025
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.8,0.8941358024691358
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.9,0.9453703703703704
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps,1.2141951418431947
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps_skill_sp,0.4826337314849132
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mae,1.5905077834555963
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mbe,-0.09516059553929182
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,ncrps,0.025311551841634243
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmae,0.03315630151043561
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmbe,-0.001983752252226221
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nrmse,0.0697793724093398
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nwidth_80,0.12055607548068706
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,picp_80,0.8955246913580247
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,r2,0.8840717861484262
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse,3.3473164944760305
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse_sp,5.256790333712754
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_climatology,0.39042207944148677
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_cliper,0.2786813825491735
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_sp,0.3632394898824326
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.1,0.07070042749095692
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.2,0.15455442288720816
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.3,0.24432752384084183
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.4,0.35251561986188756
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.5,0.4662939822426833
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.6,0.5859914501808615
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.7,0.7221308780006577
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.8,0.8388687931601447
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.9,0.9398224268332785
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps,2.576058679413814
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps_skill_sp,0.4829878146208575
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mae,3.374900576462157
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mbe,-0.20011575569672727
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,ncrps,0.0537014525623059
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmae,0.0703544001764052
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmbe,-0.004171685547148786
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nrmse,0.10185101939006758
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nwidth_80,0.2561824426118212
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,picp_80,0.8691219993423216
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,r2,0.7924667614038932
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse,4.885793400141542
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse_sp,7.673056067834889
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_climatology,0.39044352446379493
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_cliper,0.27869881944931163
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_sp,0.3632532648076727
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.1,0.5120370370370371
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.2,0.5541666666666667
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.3,0.6030864197530864
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.4,0.653395061728395
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.5,0.7100308641975308
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.6,0.7646604938271605
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.7,0.8341049382716049
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.8,0.8961419753086419
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.9,0.9445987654320988
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps,0.7384470871977711
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps_skill_sp,0.47826348211899905
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mae,0.9732052408372025
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mbe,-0.061864435059978656
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,ncrps,0.029537883487910845
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmae,0.0389282096334881
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmbe,-0.002474577402399146
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nrmse,0.08251719063135775
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nwidth_80,0.13862658951127155
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,picp_80,0.895216049382716
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,r2,0.8831003537753072
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse,2.062929765783944
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse_sp,3.2053892628403386
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_climatology,0.3837231933527183
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_cliper,0.2718864311870065
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_sp,0.3564183328061834
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.1,0.07135810588622164
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.2,0.15422558368957578
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.3,0.2525485037816508
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.4,0.3521867806642552
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.5,0.4662939822426833
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.6,0.574482078263729
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.7,0.7155540940480105
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.8,0.8385399539625124
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.9,0.9342321604735284
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps,1.5661877582652555
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps_skill_sp,0.4786647218810257
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mae,2.0643598659987745
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mbe,-0.1299857894217518
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,ncrps,0.06264751033061022
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmae,0.08257439463995098
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmbe,-0.005199431576870072
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nrmse,0.12044176492042713
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nwidth_80,0.29454825245070254
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,picp_80,0.8628740545873068
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,r2,0.7937930400802891
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse,3.011044123010678
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse_sp,4.6786814908710745
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_climatology,0.3837468049664493
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_cliper,0.2719047976433343
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_sp,0.35643318980235106
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.1,0.5309706758663949
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.2,0.5690763681982123
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.3,0.6101615179551513
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.4,0.6620668025717422
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.5,0.724792222047985
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.6,0.7851654382938686
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.7,0.8482044848674926
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.8,0.9096753959542104
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,cov_q0.9,0.9488787831268621
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,crps,1.0678102459113321
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,crps_skill_sp,0.2711732737446767
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,mae,1.3354973841605178
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,mbe,-0.028322036710501975
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,n_hours,6377.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,ncrps,0.04271240983645328
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,nmae,0.05341989536642071
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,nmbe,-0.001132881468420079
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,nrmse,0.11698757138129011
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,nwidth_80,0.19088269285661139
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,picp_80,0.8892896346244316
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,r2,0.7781997998496449
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,rmse,2.9246892845322527
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,rmse_sp,3.31783978608236
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,skill_climatology,0.16135958354415136
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,skill_cliper,0.004908216637542928
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,all,True,skill_sp,0.11849592713888435
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.1,0.08800543662928983
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.2,0.163438668025824
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.3,0.24838600067957867
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.4,0.35575942915392456
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.5,0.48487937478763166
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.6,0.6085626911314985
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.7,0.7366632687733605
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.8,0.8596670064559973
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,cov_q0.9,0.9347604485219164
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,crps,2.3049985745743635
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,crps_skill_sp,0.2711186820702267
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,mae,2.8828881683540404
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,mbe,-0.06042113402914339
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,n_hours,2943.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,ncrps,0.09219994298297454
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,nmae,0.11531552673416162
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,nmbe,-0.0024168453611657357
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,nrmse,0.1721946969421886
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,nwidth_80,0.4126024218277414
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,picp_80,0.8477743798844716
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,r2,0.5990623830912836
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,rmse,4.3048674235547155
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,rmse_sp,4.883543583839771
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,skill_climatology,0.16136992574517106
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,skill_cliper,0.004911673340100786
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,CYT (Station 2),25.0,daytime,True,skill_sp,0.11849513582718163
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.1,0.5115740740740741
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.2,0.557716049382716
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.3,0.596141975308642
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.4,0.6441358024691358
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.5,0.7055555555555556
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.6,0.7799382716049382
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.7,0.8419753086419753
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.8,0.9003086419753087
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,cov_q0.9,0.9447530864197531
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,crps,2.332712959870477
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,crps_skill_sp,0.28204934859994957
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,mae,2.9429683496271712
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,mbe,0.030640832661919245
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,ncrps,0.04241296290673595
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,nmae,0.05350851544776675
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,nmbe,0.0005571060483985317
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,nrmse,0.11455758245189962
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,nwidth_80,0.1910082162394236
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,picp_80,0.8887345679012346
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,r2,0.7775310077327737
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,rmse,6.300667034854479
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,rmse_sp,7.208667434340293
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,skill_climatology,0.1613670648313661
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,skill_cliper,0.009250993675990027
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,all,True,skill_sp,0.12595953520623326
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.1,0.08582703058204538
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.2,0.1759289707333114
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.3,0.2515619861887537
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.4,0.349227227885564
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.5,0.4735284445905952
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.6,0.623150279513318
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.7,0.7448207826372903
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.8,0.8615586977967774
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,cov_q0.9,0.9440973364024992
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,crps,4.9503289731080224
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,crps_skill_sp,0.2820289569879064
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,mae,6.245497967752422
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,mbe,0.06896972560873992
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,ncrps,0.09000598132923678
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,nmae,0.11355450850458948
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,nmbe,0.0012539950110679985
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,nrmse,0.16721147599896227
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,nwidth_80,0.40597281094083554
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,picp_80,0.8582703058204538
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,r2,0.5957171923210427
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,rmse,9.196631179942925
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,rmse_sp,10.52191749855498
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,skill_climatology,0.16137335647341677
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,skill_cliper,0.009248186080452303
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,LSK North,55.0,daytime,True,skill_sp,0.12595482893627163
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.1,0.5391972405142678
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.2,0.581530260269677
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.3,0.623392913138915
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.4,0.6696456569457511
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.5,0.7298526183756664
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.6,0.7935089369708372
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.7,0.8574788334901223
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.8,0.9148635936030104
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,cov_q0.9,0.9567262464722484
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,crps,1.0911909791599608
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,crps_skill_sp,0.2722483835789964
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,mae,1.3861982103526964
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,mbe,0.03625890366001763
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,n_hours,6378.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,ncrps,0.039535905042027565
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,nmae,0.05022457283886581
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,nmbe,0.0013137283934788998
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,nrmse,0.10968543631654044
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,nwidth_80,0.17769536314893108
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,picp_80,0.8952649733458764
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,r2,0.791919463755637
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,rmse,3.0273180423365162
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,rmse_sp,3.421051338581982
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,skill_climatology,0.17569333232910944
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,skill_cliper,0.005323667909755803
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,all,True,skill_sp,0.115091314709316
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.1,0.09186798230690711
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.2,0.17727118067369854
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.3,0.26471588975842125
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.4,0.35896563456958147
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.5,0.48451854372235453
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.6,0.6138142225246682
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.7,0.7444709084722695
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.8,0.863218781898605
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,cov_q0.9,0.9445389588295339
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,crps,2.3587702518585796
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,crps_skill_sp,0.27213039431668684
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,mae,2.9966313534158777
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,mbe,0.0790409807827704
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,n_hours,2939.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,ncrps,0.08546269028473114
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,nmae,0.10857359976144484
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,nmbe,0.002863803651549652
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,nrmse,0.16156811962299464
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,nwidth_80,0.3846411466888756
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,picp_80,0.8557332425995237
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,r2,0.6226455611617491
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,rmse,4.459280101594652
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,rmse_sp,5.039204832332722
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,skill_climatology,0.17569854713260613
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,skill_cliper,0.005318231150188146
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ1,27.6,daytime,True,skill_sp,0.11508258743862443
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.1,0.5359168241965974
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.2,0.5768746061751733
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.3,0.6168872085696282
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.4,0.6669817265280403
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.5,0.7265280403276623
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.6,0.7898550724637681
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.7,0.8486137366099559
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.8,0.9040642722117203
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,cov_q0.9,0.9431316950220542
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,crps,0.9308343896904491
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,crps_skill_sp,0.2735832274747544
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,mae,1.1816674917988188
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,mbe,0.010631360525800966
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,n_hours,6348.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,ncrps,0.027961381486646113
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,nmae,0.03549616977467164
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,nmbe,0.000319355978546139
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,nrmse,0.07941658620539704
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,nwidth_80,0.12394397255181017
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,picp_80,0.8853182104599874
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,r2,0.7754980076889316
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,rmse,2.6437781547776673
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,rmse_sp,2.9787477469173047
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,skill_climatology,0.14418105898442135
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,skill_cliper,-0.00801920359174324
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,all,True,skill_sp,0.11245315837378178
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.1,0.0875085792724777
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.2,0.17055593685655457
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.3,0.2546328071379547
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.4,0.35895676046671243
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.5,0.48112560054907344
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.6,0.6142759094028827
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.7,0.7381606039807824
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.8,0.8524365133836651
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,cov_q0.9,0.9313658201784488
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,crps,2.018543097931439
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,crps_skill_sp,0.27368782165318495
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,mae,2.562954696831544
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,mbe,0.025917049725276527
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,n_hours,2914.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,ncrps,0.06063511859211292
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,nmae,0.07698872624907012
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,nmbe,0.000778523572402419
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,nrmse,0.11720621794291537
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,nwidth_80,0.26938377709382155
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,picp_80,0.8442004118050789
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,r2,0.6042334703745144
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,rmse,3.9017949953196527
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,rmse_sp,4.3961612762714
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,skill_climatology,0.14419531239414396
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,skill_cliper,-0.008018284185983493
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ15,33.29,daytime,True,skill_sp,0.11245408206931007
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.1,0.5185185185185185
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.2,0.5563271604938271
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.3,0.5995370370370371
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.4,0.6555555555555556
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.5,0.716820987654321
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.6,0.783641975308642
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.7,0.8444444444444444
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.8,0.9092592592592592
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,cov_q0.9,0.9487654320987654
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,crps,1.6999389475945934
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,crps_skill_sp,0.27565920854750126
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,mae,2.154708338962098
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,mbe,0.011094968062812348
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,ncrps,0.03543754320605782
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,nmae,0.04491783070590156
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,nmbe,0.00023128972405279025
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,nrmse,0.09635648951944599
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,nwidth_80,0.16091331301332235
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,picp_80,0.8888888888888888
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,r2,0.7789467191942071
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,rmse,4.622220802247824
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,rmse_sp,5.256790333712754
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,skill_climatology,0.15824997437609112
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,skill_cliper,0.003950201861103064
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,all,True,skill_sp,0.12071425550213022
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.1,0.08615586977967774
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.2,0.16014468924695824
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.3,0.24662939822426833
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.4,0.36040776060506413
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.5,0.4827359421243012
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.6,0.6195330483393621
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.7,0.7418612298585991
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.8,0.869450838539954
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,cov_q0.9,0.9470568891811904
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,crps,3.609326092298055
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,crps_skill_sp,0.27561216456854776
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,mae,4.5752986433106795
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,mbe,0.026154756533555125
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,ncrps,0.07524131941417667
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,nmae,0.09537833319388533
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,nmbe,0.0005452315308224958
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,nrmse,0.14064709653142596
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,nwidth_80,0.3421325707941819
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,picp_80,0.861229858599145
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,r2,0.6042522579953593
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,rmse,6.746841220612503
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,rmse_sp,7.673056067834889
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,skill_climatology,0.15825733537570297
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,skill_cliper,0.00394794890941097
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,SQ567,47.97,daytime,True,skill_sp,0.12071003248693013
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.1,0.5194444444444445
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.2,0.5595679012345679
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.3,0.6032407407407407
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.4,0.6557098765432099
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.5,0.7143518518518519
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.6,0.7787037037037037
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.7,0.8459876543209877
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.8,0.9067901234567901
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,cov_q0.9,0.9516975308641975
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,crps,1.0188826010932222
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,crps_skill_sp,0.2801268098420374
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,mae,1.303781897866213
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,mbe,0.01632496254296374
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,n_hours,6480.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,ncrps,0.04075530404372889
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,nmae,0.05215127591464852
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,nmbe,0.0006529985017185495
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,nrmse,0.1128181694218585
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,nwidth_80,0.18413856051682093
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,picp_80,0.8933641975308642
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,r2,0.7814844101596564
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,rmse,2.8204542355464626
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,rmse_sp,3.2053892628403386
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,skill_climatology,0.15742137303601333
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,skill_cliper,0.0045172486339806195
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,all,True,skill_sp,0.12008994718874799
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.1,0.0864847089773101
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.2,0.1644195988161789
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.3,0.2522196645840184
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.4,0.35909240381453467
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.5,0.47615915817165405
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.6,0.6044064452482736
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.7,0.739888194672805
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.8,0.862216376192042
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,cov_q0.9,0.9490299243669845
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,crps,2.162586636612727
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,crps_skill_sp,0.2801420521230207
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,mae,2.7676279677525577
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,mbe,0.03643781872567445
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,n_hours,3041.0
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,ncrps,0.08650346546450909
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,nmae,0.1107051187101023
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,nmbe,0.0014575127490269778
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,nrmse,0.1646737300887029
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,nwidth_80,0.391486314357482
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,picp_80,0.8625452153896744
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,r2,0.6145236450283831
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,rmse,4.116843252217572
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,rmse_sp,4.6786814908710745
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_climatology,0.1574292159177384
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_cliper,0.004513484911361054
+chronos2_base_ctx8192,Chronos-B-max,foundation_zero_shot,False,none,UG Hall6,25.0,daytime,True,skill_sp,0.12008473749490034
 chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.1,0.5410067429825937
 chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.2,0.5921279598557315
 chronos2_ft,Chronos-S-FT,foundation_fine_tuned,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.3,0.6393288380116042
@@ -8399,6 +9023,630 @@ timesfm,TimesFM,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,rmse_s
 timesfm,TimesFM,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_climatology,0.10815917803678654
 timesfm,TimesFM,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_cliper,-0.05369842942865155
 timesfm,TimesFM,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_sp,0.06863094971269645
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.1,0.5427316920181904
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.2,0.5893053159793006
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.3,0.6388583973655324
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.4,0.6747687000156813
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.5,0.7145993413830956
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.6,0.7586639485651561
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.7,0.8196644190058021
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.8,0.8812921436412106
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,cov_q0.9,0.9443311902148346
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,crps,1.0979437440055322
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,crps_skill_sp,0.2506058565928839
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,mae,1.4330536064097388
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,mbe,-0.0003426478533675345
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,n_hours,6377.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,ncrps,0.04391774976022129
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,nmae,0.057322144256389554
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,nmbe,-1.3705914134701378e-05
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,nrmse,0.1176965120967803
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,nwidth_80,0.20249902863641103
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,picp_80,0.8720401442684648
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,r2,0.7755034512557608
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,rmse,2.9424128024195073
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,rmse_sp,3.31783978608236
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,skill_climatology,0.15627745105895408
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,skill_cliper,-0.00112200582579991
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,all,True,skill_sp,0.11315404234938942
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.1,0.10601427115188583
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.2,0.20149507305470607
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.3,0.3041114509004417
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.4,0.38056405028882095
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.5,0.46381243628950053
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.6,0.5572545022086306
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.7,0.6833163438668026
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.8,0.8127760788311247
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,cov_q0.9,0.9384981311586816
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,crps,2.3694331122435024
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,crps_skill_sp,0.25074334160167566
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,mae,3.0931505204277987
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,mbe,0.0005765030693507764
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,n_hours,2943.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,ncrps,0.09477732448974009
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,nmae,0.12372602081711195
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,nmbe,2.3060122774031057e-05
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,nrmse,0.17323894158131
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,nwidth_80,0.4379311768811518
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,picp_80,0.8335032279986408
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,r2,0.5941848060096883
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,rmse,4.33097353953275
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,rmse_sp,4.883543583839771
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,skill_climatology,0.15628420025653655
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,skill_cliper,-0.0011228658705679795
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,CYT (Station 2),25.0,daytime,True,skill_sp,0.11314940366981485
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.1,0.524074074074074
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.2,0.578395061728395
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.3,0.6271604938271605
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.4,0.6694444444444444
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.5,0.7095679012345679
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.6,0.7560185185185185
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.7,0.8177469135802469
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.8,0.879783950617284
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,cov_q0.9,0.9412037037037037
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,crps,2.3889671046186116
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,crps_skill_sp,0.26473573112507676
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,mae,3.1215273233464034
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,mbe,0.18017569439126774
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,n_hours,6480.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,ncrps,0.04343576553852021
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,nmae,0.05675504224266188
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,nmbe,0.0032759217162048678
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,nrmse,0.11493734081069455
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,nwidth_80,0.20188491390364383
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,picp_80,0.8729938271604938
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,r2,0.7760535936575743
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,rmse,6.321553744588201
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,rmse_sp,7.208667434340293
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,skill_climatology,0.15858699684918132
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,skill_cliper,0.005966660953821257
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,all,True,skill_sp,0.12306209127169665
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.1,0.10259782966129563
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.2,0.20914172969417955
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.3,0.30943768497204865
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.4,0.3962512331469911
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.5,0.47846103255508055
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.6,0.5741532390660967
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.7,0.7014140085498192
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.8,0.8267017428477474
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,cov_q0.9,0.9444261756001315
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,crps,5.068504312695198
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,crps_skill_sp,0.26488939469161676
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,mae,6.624138763515937
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,mbe,0.3863432816623175
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,n_hours,3041.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,ncrps,0.09215462386718541
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,nmae,0.12043888660938067
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,nmbe,0.007024423302951228
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,nrmse,0.16776599943640275
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,nwidth_80,0.42930548154226433
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,picp_80,0.8418283459388359
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,r2,0.5930312998358775
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,rmse,9.227129969002151
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,rmse_sp,10.52191749855498
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,skill_climatology,0.15859221883726304
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,skill_cliper,0.005962555723906249
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,LSK North,55.0,daytime,True,skill_sp,0.12305623283309797
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.1,0.5518971464408906
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.2,0.6019128253370962
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.3,0.6505174035747884
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.4,0.6887739103167138
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.5,0.7234242709313264
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.6,0.768579492003763
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.7,0.8298839761680777
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.8,0.887739103167137
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,cov_q0.9,0.9485732204452807
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,crps,1.1464690171414444
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,crps_skill_sp,0.23538161849212236
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,mae,1.5053186235326423
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,mbe,0.10123772800768185
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,n_hours,6378.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,ncrps,0.0415387325051248
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,nmae,0.054540529838139215
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,nmbe,0.0036680336234667338
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,nrmse,0.11186397835564259
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,nwidth_80,0.19033703056326878
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,picp_80,0.8733145186578865
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,r2,0.7835717014213783
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,rmse,3.0874458026157354
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,rmse_sp,3.421051338581982
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,skill_climatology,0.15932117948056912
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,skill_cliper,-0.01443232046508136
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,all,True,skill_sp,0.09751550121563657
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.1,0.11364409663150732
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.2,0.21708063967335828
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.3,0.31915617556992176
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.4,0.39707383463763185
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.5,0.46920721333787
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.6,0.5651582170806396
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.7,0.6920721333787002
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.8,0.8125212657366451
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,cov_q0.9,0.9370534195304525
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,crps,2.477492640033402
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,crps_skill_sp,0.23549502561195623
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,mae,3.2536867989084155
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,mbe,0.220019887735677
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,n_hours,2939.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,ncrps,0.08976422608816674
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,nmae,0.11788720285900056
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,nmbe,0.007971735062886847
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,nrmse,0.1647774168862254
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,nwidth_80,0.4122425284378147
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,picp_80,0.8251105818305546
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,r2,0.60750556570745
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,rmse,4.547856706059822
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,rmse_sp,5.039204832332722
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,skill_climatology,0.15932509175701992
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,skill_cliper,-0.014439561946643309
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ1,27.6,daytime,True,skill_sp,0.09750509110490901
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.1,0.5574984247006931
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.2,0.6033396345305608
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.3,0.6463453056080656
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.4,0.6798991808443604
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.5,0.7139256458727158
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.6,0.7654379332073094
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.7,0.8245116572148709
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.8,0.8733459357277883
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,cov_q0.9,0.9374606175173283
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,crps,0.9786418323403601
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,crps_skill_sp,0.2362746271726287
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,mae,1.2785232672339206
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,mbe,0.08753412481515759
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,n_hours,6348.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,ncrps,0.02939747168339922
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,nmae,0.03840562532994655
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,nmbe,0.002629442019079531
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,nrmse,0.08079424447909472
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,nwidth_80,0.1275259342537146
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,picp_80,0.8594833018273472
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,r2,0.7676414709219513
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,rmse,2.6896403987090634
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,rmse_sp,2.9787477469173047
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,skill_climatology,0.12933496572843628
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,skill_cliper,-0.025505550741980576
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,all,True,skill_sp,0.09705667373393312
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.1,0.12903225806451613
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.2,0.2237474262182567
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.3,0.3143445435827042
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.4,0.3853809196980096
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.5,0.45710363761153056
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.6,0.5652024708304736
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.7,0.6908030199039121
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.8,0.7937542896362388
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,cov_q0.9,0.9282772820864791
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,crps,2.121939095515223
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,crps_skill_sp,0.23648387375909297
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,mae,2.773318862982849
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,mbe,0.1934599475459241
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,n_hours,2914.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,ncrps,0.06374103621253299
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,nmae,0.08330786611543553
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,nmbe,0.005811353185518898
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,nrmse,0.11923970492661468
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,nwidth_80,0.277319134057006
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,picp_80,0.800617707618394
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,r2,0.5903815181536212
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,rmse,3.9694897770070026
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,rmse_sp,4.3961612762714
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,skill_climatology,0.1293473996862794
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,skill_cliper,-0.025507049681526173
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ15,33.29,daytime,True,skill_sp,0.0970554700910059
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.1,0.5304012345679012
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.2,0.5816358024691358
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.3,0.629783950617284
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.4,0.6714506172839506
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.5,0.7129629629629629
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.6,0.7604938271604939
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.7,0.825925925925926
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.8,0.8882716049382716
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,cov_q0.9,0.9464506172839506
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,crps,1.7387448804206687
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,crps_skill_sp,0.25912407348511235
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,mae,2.2703669204814783
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,mbe,0.15069839502411303
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,n_hours,6480.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,ncrps,0.036246505741519046
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,nmae,0.04732889140048944
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,nmbe,0.0031415133421745472
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,nrmse,0.09657504410792447
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,nwidth_80,0.1699822342736197
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,picp_80,0.8739197530864198
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,r2,0.7779428013546413
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,rmse,4.632704865857137
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,rmse_sp,5.256790333712754
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,skill_climatology,0.1563407274600871
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,skill_cliper,0.0016909741243725795
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,all,True,skill_sp,0.11871987053644573
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.1,0.10391318645182505
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.2,0.2071686945083854
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.3,0.305162775402828
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.4,0.39131864518250575
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.5,0.47714567576455114
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.6,0.5757974350542585
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.7,0.7079907925024663
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.8,0.8342650443932916
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,cov_q0.9,0.9470568891811904
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,crps,3.691136220070741
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,crps_skill_sp,0.25919296057916974
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,mae,4.820679152859897
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,mbe,0.32382736676953794
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,n_hours,3041.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,ncrps,0.07694676297833523
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,nmae,0.10049362419970602
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,nmbe,0.00675062261349881
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,nrmse,0.14096646302211033
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,nwidth_80,0.36158505449962164
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,picp_80,0.8431437027293653
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,r2,0.6024529736084164
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,rmse,6.762161231170633
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,rmse_sp,7.673056067834889
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,skill_climatology,0.15634599552233952
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,skill_cliper,0.0016862196882556635
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,SQ567,47.97,daytime,True,skill_sp,0.11871343420552949
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.1,0.534104938271605
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.2,0.5841049382716049
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.3,0.633179012345679
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.4,0.6731481481481482
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.5,0.7132716049382716
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.6,0.7595679012345679
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.7,0.8199074074074074
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.8,0.8864197530864197
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,cov_q0.9,0.9445987654320988
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,crps,1.0507186075760242
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,crps_skill_sp,0.25763365162726926
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,mae,1.3777576964989522
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,mbe,0.09178728031587752
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,n_hours,6480.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,ncrps,0.04202874430304097
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,nmae,0.05511030785995809
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,nmbe,0.0036714912126351008
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,nrmse,0.1141228464998006
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,nwidth_80,0.19108399880330018
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,picp_80,0.8722222222222222
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,r2,0.7764011731840756
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,rmse,2.853071162495015
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,rmse_sp,3.2053892628403386
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,skill_climatology,0.14767743704948544
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,skill_cliper,-0.00699493538610807
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,all,True,skill_sp,0.10991429478775061
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.1,0.10687273923051628
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.2,0.20914172969417955
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.3,0.31009536336731336
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.4,0.39066096678724105
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.5,0.4735284445905952
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.6,0.568891811903979
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.7,0.6931930286090102
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.8,0.8276882604406445
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,cov_q0.9,0.9427819796119697
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,crps,2.2296782948702587
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,crps_skill_sp,0.25780932213418783
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,mae,2.9244729728123215
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,mbe,0.1972436646813941
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,n_hours,3041.0
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,ncrps,0.08918713179481035
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,nmae,0.11697891891249286
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,nmbe,0.007889746587255764
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,nrmse,0.166578420874685
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,nwidth_80,0.4064560943444219
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,picp_80,0.8359092403814534
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,r2,0.6055548874453158
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,rmse,4.164460521867125
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,rmse_sp,4.6786814908710745
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_climatology,0.1476836614318181
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_cliper,-0.007000762029164331
+timesfm_ctx16k,TimesFM-max,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_sp,0.10990723989382156
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.1,0.5842872824212012
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.2,0.6314881605770739
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.3,0.665359887094245
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.4,0.6976634781245099
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.5,0.7265171710835816
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.6,0.7572526266269406
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.7,0.7904970989493493
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.8,0.8315822487062883
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.9,0.8916418378547907
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps,0.8412383466182627
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps_skill_sp,0.4258184049892131
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mae,1.0406563242765414
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mbe,0.023793374385204173
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,n_hours,6377.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,ncrps,0.033649533864730505
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmae,0.04162625297106166
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmbe,0.000951734975408167
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nrmse,0.08765844297773384
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nwidth_80,0.10097755869165745
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,picp_80,0.7834404892582719
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,r2,0.8754711470619597
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse,2.191461074443346
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse_sp,3.31783978608236
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_climatology,0.37160920380919116
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_cliper,0.25438065497409
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_sp,0.3394915921992182
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.1,0.20081549439347604
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.2,0.29867482161060144
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.3,0.37003058103975534
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.4,0.4386680258239891
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.5,0.49915052667346244
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.6,0.563370710159701
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.7,0.6320081549439348
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.8,0.7162759089364594
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.9,0.8399592252803262
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps,1.810537651655701
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps_skill_sp,0.4274759714573918
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mae,2.240907503026632
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mbe,0.05963972804060875
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,n_hours,2943.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,ncrps,0.07242150606622805
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmae,0.08963630012106527
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmbe,0.00238558912162435
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nrmse,0.12900863682140368
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nwidth_80,0.21823122257297353
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,picp_80,0.6401630988786952
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,r2,0.7749521685907581
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse,3.2252159205350917
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse_sp,4.883543583839771
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_climatology,0.37169654700010246
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_cliper,0.25447768822761774
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_sp,0.3395746622989674
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.1,0.5669753086419753
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.2,0.6186728395061728
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.3,0.6550925925925926
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.4,0.6882716049382716
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.5,0.715895061728395
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.6,0.746141975308642
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.7,0.7834876543209877
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.8,0.8308641975308642
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.9,0.8939814814814815
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps,1.8660755633870343
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps_skill_sp,0.4256686573345799
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mae,2.3138953466737346
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mbe,0.18712426548607652
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,n_hours,6480.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,ncrps,0.03392864660703699
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmae,0.042070824484976996
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmbe,0.0034022593724741187
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nrmse,0.087948211252732
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nwidth_80,0.10213384055263089
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,picp_80,0.7848765432098765
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,r2,0.8688779201350181
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse,4.83715161890026
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse_sp,7.208667434340293
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_climatology,0.35616425410619623
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_cliper,0.23938161890589493
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_sp,0.3289811656649221
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.1,0.19796119697467937
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.2,0.30187438342650447
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.3,0.37750739888194673
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.4,0.44656363038474184
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.5,0.502795133179875
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.6,0.564288063137126
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.7,0.6399210785925682
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.8,0.7365998026964814
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.9,0.862216376192042
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps,3.948652368873204
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps_skill_sp,0.42730713955114663
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mae,4.898898350481461
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mbe,0.41682767082055383
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,n_hours,3041.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,ncrps,0.07179367943405826
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmae,0.08907087909966292
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmbe,0.0075786849240100694
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nrmse,0.1283538920896151
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nwidth_80,0.2170381915857719
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,picp_80,0.664584018414995
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,r2,0.7617838524408168
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse,7.05946406492883
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse_sp,10.52191749855498
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_climatology,0.3562583365548714
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_cliper,0.2394849058553299
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_sp,0.32907057426573283
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.1,0.5871746629037315
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.2,0.6433051113201631
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.3,0.6823455628723738
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.4,0.7141737221699592
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.5,0.7383192223267482
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.6,0.766541235497021
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.7,0.8002508623392913
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.8,0.8486986516149263
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.9,0.9063969896519285
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps,0.8893281155142261
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps_skill_sp,0.4068774522931181
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mae,1.1073846366831768
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mbe,0.11001134888390647
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,n_hours,6378.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,ncrps,0.03222203317080529
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmae,0.04012263176388321
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmbe,0.003985918437822698
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nrmse,0.08473223341370245
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nwidth_80,0.10062896773063705
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,picp_80,0.8037002195045468
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,r2,0.8758259540582815
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse,2.338609642218188
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse_sp,3.421051338581982
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_climatology,0.3632213417285868
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_cliper,0.23161041272125127
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_sp,0.31640615390836657
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.1,0.1963252807077237
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.2,0.31439265056141547
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.3,0.3963933310649881
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.4,0.4630826811840762
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.5,0.5154814562776454
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.6,0.5736645117386866
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.7,0.6444368832936372
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.8,0.7454916638312351
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.9,0.86594079618918
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps,1.9166369267115941
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps_skill_sp,0.40856394853020794
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mae,2.3880962452329064
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mbe,0.24807787422989605
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,n_hours,2939.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,ncrps,0.06944336690984036
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmae,0.08652522627655458
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmbe,0.008988328776445509
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nrmse,0.12479369287033273
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nwidth_80,0.21786832179917628
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,picp_80,0.6716570261993875
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,r2,0.7748751716028491
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse,3.4443059232211835
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse_sp,5.039204832332722
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_climatology,0.3633173265757169
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_cliper,0.23171717628942234
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_sp,0.3164981305935992
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.1,0.5894770006301198
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.2,0.6350031505986138
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.3,0.6706049149338374
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.4,0.704473850031506
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.5,0.7391304347826086
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.6,0.7687460617517329
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.7,0.8043478260869565
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.8,0.847511027095148
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.9,0.9028040327662256
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps,0.7469199420119562
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps_skill_sp,0.4171088008560757
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mae,0.9319904632029218
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mbe,0.08349872131112723
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,n_hours,6348.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,ncrps,0.022436766056231787
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmae,0.027996108837576503
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmbe,0.002508222328360686
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nrmse,0.05997593276199856
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nwidth_80,0.07198944983198531
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,picp_80,0.7953686200378072
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,r2,0.8719581936898086
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse,1.9965988016469318
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse_sp,2.9787477469173047
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_climatology,0.35367985813388014
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_cliper,0.23873721012055849
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_sp,0.32971873710581745
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.1,0.20178448867536034
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.2,0.29924502402196296
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.3,0.37577213452299246
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.4,0.4478380233356211
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.5,0.5209334248455731
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.6,0.5830473575840769
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.7,0.6582017844886754
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.8,0.7491420727522307
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.9,0.8641043239533288
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps,1.6154593692832127
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps_skill_sp,0.4187254090649518
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mae,2.017153829137492
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mbe,0.18956102635221042
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,n_hours,2914.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,ncrps,0.04852686600430197
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmae,0.06059338627628393
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmbe,0.005694233293848315
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nrmse,0.08850559427767585
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nwidth_80,0.15646420521964577
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,picp_80,0.6630061770761839
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,r2,0.7743272072653572
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse,2.946351233503829
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse_sp,4.3961612762714
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_climatology,0.3537586674875264
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_cliper,0.23881805205850593
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_sp,0.3297900035180752
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.1,0.5717592592592593
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.2,0.6229938271604938
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.3,0.6620370370370371
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.4,0.6932098765432099
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.5,0.7240740740740741
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.6,0.7521604938271605
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.7,0.7887345679012345
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.8,0.8364197530864198
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.9,0.8949074074074074
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps,1.3470094648389177
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps_skill_sp,0.42604179800925723
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mae,1.6748260693963655
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mbe,0.1202374319052067
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,n_hours,6480.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,ncrps,0.028080247338730827
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmae,0.03491403104849626
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmbe,0.0025065130686930726
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nrmse,0.07304914460041606
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nwidth_80,0.08623393174345763
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,picp_80,0.7859567901234568
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,r2,0.8729527421389709
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse,3.504167466481958
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse_sp,5.256790333712754
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_climatology,0.36185803731677524
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_cliper,0.24488131420790837
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_sp,0.33340170635889854
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.1,0.19796119697467937
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.2,0.3015455442288721
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.3,0.3830976652416968
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.4,0.44820782637290363
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.5,0.5116737915159487
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.6,0.5695494902992436
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.7,0.6451825057546859
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.8,0.7405458730680697
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.9,0.8579414666228214
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps,2.85235352563213
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps_skill_sp,0.4275357383953148
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mae,3.548487772079165
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mbe,0.26930719898116795
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,n_hours,3041.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,ncrps,0.05946119503089702
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmae,0.07397306174857547
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmbe,0.005614075442592619
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nrmse,0.10661429522249621
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nwidth_80,0.18334821220190117
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,picp_80,0.6609667872410391
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,r2,0.7726014013849374
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse,5.114287741823143
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse_sp,7.673056067834889
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_climatology,0.3619363416608201
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_cliper,0.24496566192379754
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_sp,0.33347447267301866
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.1,0.5763888888888888
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.2,0.6285493827160494
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.3,0.6637345679012345
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.4,0.6967592592592593
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.5,0.7265432098765432
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.6,0.754783950617284
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.7,0.7899691358024692
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.8,0.8354938271604938
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.9,0.8986111111111111
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps,0.8146941093511296
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps_skill_sp,0.4243925189494542
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mae,1.013197334026995
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mbe,0.07341155602127175
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,n_hours,6480.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,ncrps,0.03258776437404518
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmae,0.0405278933610798
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmbe,0.00293646224085087
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nrmse,0.08580343583846509
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nwidth_80,0.0999057750337759
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,picp_80,0.7878086419753086
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,r2,0.8736038961611177
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse,2.145085895961627
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse_sp,3.2053892628403386
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_climatology,0.3591799837911652
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_cliper,0.2428893251605656
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_sp,0.3307877078053112
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.1,0.20453798092732653
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.2,0.3107530417625781
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.3,0.3817823084511674
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.4,0.4501808615586978
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.5,0.5123314699112134
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.6,0.5711936862874054
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.7,0.64156527458073
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.8,0.7356132851035844
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.9,0.862216376192042
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps,1.7243945081764729
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps_skill_sp,0.4260026067993583
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mae,2.1458649339617883
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mbe,0.16465719614604268
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,n_hours,3041.0
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,ncrps,0.06897578032705892
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmae,0.08583459735847153
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmbe,0.006586287845841707
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nrmse,0.1252257000864388
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nwidth_80,0.21239775215771417
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,picp_80,0.6576783952647156
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,r2,0.7770866727022395
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse,3.13064250216097
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse_sp,4.6786814908710745
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_climatology,0.3592692881114298
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_cliper,0.24298492715605213
+timesfm_xreg,TimesFM-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_sp,0.33087077881462956
 tirex,TiRex,foundation_zero_shot,True,nwp,CYT (Station 2),25.0,all,True,cov_q0.1,0.5453975223459306
 tirex,TiRex,foundation_zero_shot,True,nwp,CYT (Station 2),25.0,all,True,cov_q0.2,0.5886780617845382
 tirex,TiRex,foundation_zero_shot,True,nwp,CYT (Station 2),25.0,all,True,cov_q0.3,0.6333699231613611
@@ -9647,3 +10895,315 @@ tirex_ctx2048,TiRex-long,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,Tr
 tirex_ctx2048,TiRex-long,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_climatology,0.16015287838839154
 tirex_ctx2048,TiRex-long,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_cliper,0.00773145699443234
 tirex_ctx2048,TiRex-long,foundation_zero_shot,True,none,UG Hall6,25.0,daytime,True,skill_sp,0.12292911831502396
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.1,0.5686059275521405
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.2,0.6209816528148032
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.3,0.6628508703151952
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.4,0.6918613768229575
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.5,0.7200878155872668
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.6,0.7516073388740787
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.7,0.7911243531441117
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.8,0.8458522816371334
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,cov_q0.9,0.9148502430610005
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps,0.8295446053481446
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,crps_skill_sp,0.43379988971480976
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mae,1.0227512898942275
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,mbe,0.012899124190792288
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,n_hours,6377.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,ncrps,0.033181784213925786
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmae,0.0409100515957691
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nmbe,0.0005159649676316915
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nrmse,0.08699086647021734
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,nwidth_80,0.11362592111776566
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,picp_80,0.8287596048298573
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,r2,0.8773606623107807
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse,2.1747716617554333
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,rmse_sp,3.31783978608236
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_climatology,0.37639481166196964
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_cliper,0.260059035075087
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,all,True,skill_sp,0.34452179671901484
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.1,0.1712538226299694
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.2,0.2793068297655454
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.3,0.36255521576622496
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.4,0.4199796126401631
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.5,0.47536527353041114
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.6,0.5375467210329595
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.7,0.6160380564050288
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.8,0.7261297995242949
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,cov_q0.9,0.8647638464152225
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps,1.7879421993161786
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,crps_skill_sp,0.43462105313428245
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mae,2.2041558046714997
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,mbe,0.03171455052188491
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,n_hours,2943.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,ncrps,0.07151768797264714
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmae,0.08816623218685998
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nmbe,0.0012685820208753965
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nrmse,0.1280323635718157
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,nwidth_80,0.24519641667184236
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,picp_80,0.6945293917770982
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,r2,0.7783453810442136
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse,3.2008090892953924
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,rmse_sp,4.883543583839771
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_climatology,0.3764512352822267
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_cliper,0.26011943057826314
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,CYT (Station 2),25.0,daytime,True,skill_sp,0.34457243304078367
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.1,0.5530864197530864
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.2,0.6072530864197531
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.3,0.6516975308641976
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.4,0.6791666666666667
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.5,0.7089506172839506
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.6,0.7388888888888889
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.7,0.7805555555555556
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.8,0.832716049382716
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,cov_q0.9,0.904783950617284
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps,1.8486465950856557
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,crps_skill_sp,0.4310328574571275
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mae,2.276142474122935
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,mbe,0.09149088545696175
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,n_hours,6480.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,ncrps,0.03361175627428465
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmae,0.04138440862041699
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nmbe,0.001663470644672032
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nrmse,0.0870699748104209
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,nwidth_80,0.11462310099819976
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,picp_80,0.8126543209876543
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,r2,0.8714835722993988
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse,4.7888486145731495
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,rmse_sp,7.208667434340293
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_climatology,0.3625934924824221
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_cliper,0.2469770295623881
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,all,True,skill_sp,0.33568184991302696
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.1,0.17329825715225256
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.2,0.2811575139756659
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.3,0.3686287405458731
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.4,0.42157185136468267
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.5,0.4807629069385071
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.6,0.538638605721802
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.7,0.6211772443275239
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.8,0.7221308780006577
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,cov_q0.9,0.8645182505754686
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps,3.9169188444073892
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,crps_skill_sp,0.43190961178742426
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mae,4.822125084467188
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,mbe,0.20447338984196833
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,n_hours,3041.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,ncrps,0.07121670626195253
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmae,0.08767500153576704
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nmbe,0.003717697997126697
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nrmse,0.12707862890077587
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,nwidth_80,0.24326793358056006
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,picp_80,0.6915488326208484
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,r2,0.7664939415723433
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse,6.989324589542672
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,rmse_sp,10.52191749855498
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_climatology,0.36265424736948493
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_cliper,0.24704102190549337
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,LSK North,55.0,daytime,True,skill_sp,0.33573660974793373
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.1,0.5796487927249921
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.2,0.6296644716211979
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.3,0.6702728127939793
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.4,0.7030417058639071
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.5,0.7329883976168078
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.6,0.7632486672938226
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.7,0.8058952649733458
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.8,0.8585763562245218
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,cov_q0.9,0.9247412982126059
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps,0.8839612211776496
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,crps_skill_sp,0.4104568129212741
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mae,1.0947484101254539
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,mbe,0.08838426598382948
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,n_hours,6378.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,ncrps,0.03202758047745107
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmae,0.03966479746831354
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nmbe,0.003202328477674981
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nrmse,0.08454142656051468
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,nwidth_80,0.11132677013515607
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,picp_80,0.8334901222953904
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,r2,0.8763845745692223
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse,2.333343373070205
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,rmse_sp,3.421051338581982
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_climatology,0.36465529108961303
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_cliper,0.23334073414987544
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,all,True,skill_sp,0.3179455254718946
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.1,0.18339571282749234
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.2,0.2837699897924464
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.3,0.3667914256549847
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.4,0.4338210275603947
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.5,0.4930248383804015
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.6,0.5542701599183396
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.7,0.6420551207893841
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.8,0.7499149370534195
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,cov_q0.9,0.8805716230010208
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps,1.9079045634510432
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,crps_skill_sp,0.4112585822267846
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mae,2.362797987358215
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,mbe,0.19637054342828988
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,n_hours,2939.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,ncrps,0.069126976936632
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmae,0.0856086227303701
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nmbe,0.007114874761894561
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nrmse,0.12451982631091071
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,nwidth_80,0.2406695828546217
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,picp_80,0.6995576726777816
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,r2,0.7758621847934637
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse,3.4367472061811357
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,rmse_sp,5.039204832332722
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_climatology,0.36471456139747593
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_cliper,0.23340321481230886
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ1,27.6,daytime,True,skill_sp,0.31799811269227274
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.1,0.5804977945809704
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.2,0.6249212350346566
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.3,0.6638311279143038
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.4,0.694234404536862
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.5,0.7277882797731569
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.6,0.7603969754253308
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.7,0.8005671077504726
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.8,0.8516068052930057
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,cov_q0.9,0.9117832388153749
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps,0.738303139861625
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,crps_skill_sp,0.42383329414603
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mae,0.9108200890091931
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,mbe,0.051833041447360936
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,n_hours,6348.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,ncrps,0.02217792549899745
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmae,0.02736017089243596
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nmbe,0.0015570153633932392
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nrmse,0.059283322861948665
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,nwidth_80,0.07392647151155007
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,picp_80,0.8171077504725898
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,r2,0.8748984051062748
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse,1.973541818074271
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,rmse_sp,2.9787477469173047
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_climatology,0.3611436474947646
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_cliper,0.24752837218388823
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,all,True,skill_sp,0.3374592326199215
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.1,0.1849691146190803
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.2,0.27899794097460534
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.3,0.35895676046671243
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.4,0.41969800960878517
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.5,0.4876458476321208
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.6,0.5555936856554564
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.7,0.63761153054221
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.8,0.744337680164722
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,cov_q0.9,0.8685655456417296
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps,1.5986408124329483
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,crps_skill_sp,0.4247770621978889
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mae,1.9724138534969051
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,mbe,0.1176073043941988
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,n_hours,2914.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,ncrps,0.0480216525212661
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmae,0.059249439876746926
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nmbe,0.003532811787149258
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nrmse,0.08748638866201033
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,nwidth_80,0.16045816820557363
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,picp_80,0.6842827728208648
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,r2,0.7794948496405639
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse,2.912421878558324
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,rmse_sp,4.3961612762714
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_climatology,0.3612006015318924
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_cliper,0.24758361001240436
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ15,33.29,daytime,True,skill_sp,0.337507953978319
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.1,0.557716049382716
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.2,0.6129629629629629
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.3,0.6532407407407408
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.4,0.6876543209876543
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.5,0.7189814814814814
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.6,0.7521604938271605
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.7,0.7901234567901234
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.8,0.8424382716049382
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,cov_q0.9,0.9117283950617284
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps,1.3362658687875637
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,crps_skill_sp,0.43061962409995014
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mae,1.6564022217974144
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,mbe,0.08278755014249352
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,n_hours,6480.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,ncrps,0.02785628244293441
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmae,0.03452996084630841
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nmbe,0.0017258192650092458
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nrmse,0.0729468717444508
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,nwidth_80,0.09691809169429691
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,picp_80,0.8229938271604939
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,r2,0.8733082395284171
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse,3.4992614375813047
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,rmse_sp,5.256790333712754
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_climatology,0.36275147147527076
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_cliper,0.24593852226983892
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,all,True,skill_sp,0.33433498095978764
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.1,0.17066754357119368
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.2,0.2795133179875041
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.3,0.36073659980269646
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.4,0.430121670503124
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.5,0.49095692206511016
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.6,0.5573824399868464
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.7,0.6317000986517592
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.8,0.7346267675106872
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,cov_q0.9,0.870437356132851
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps,2.8331729487577686
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,crps_skill_sp,0.43138525938871963
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mae,3.5119033060771296
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,mbe,0.18307695677003957
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,n_hours,3041.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,ncrps,0.05906134977606355
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmae,0.07321040871538732
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nmbe,0.003816488571399616
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nrmse,0.10646989175594428
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,nwidth_80,0.20581784826308044
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,picp_80,0.7010851693521868
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,r2,0.773216983146564
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse,5.107360707532647
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,rmse_sp,7.673056067834889
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_climatology,0.3628005653932259
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_cliper,0.24598831630195972
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,SQ567,47.97,daytime,True,skill_sp,0.33437724651296674
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.1,0.5591049382716049
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.2,0.6100308641975308
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.3,0.6513888888888889
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.4,0.6858024691358025
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.5,0.7174382716049382
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.6,0.7487654320987654
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.7,0.787962962962963
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.8,0.8424382716049382
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,cov_q0.9,0.9123456790123456
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps,0.8062099126269732
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,crps_skill_sp,0.43038687566453904
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mae,1.0008641662071762
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,mbe,0.023839259365208195
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,n_hours,6480.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,ncrps,0.03224839650507893
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmae,0.04003456664828705
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nmbe,0.0009535703746083278
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nrmse,0.0853938200633728
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,nwidth_80,0.11230177575828748
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,picp_80,0.8223765432098765
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,r2,0.8748078166417246
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse,2.13484550158432
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,rmse_sp,3.2053892628403386
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_climatology,0.3622391851514487
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_cliper,0.24650368480565998
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,all,True,skill_sp,0.3339824506392073
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.1,0.1729694179546202
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.2,0.2719500164419599
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.3,0.3551463334429464
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.4,0.42157185136468267
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.5,0.4830647813219336
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.6,0.5445577112791845
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.7,0.623150279513318
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.8,0.7310095363367314
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,cov_q0.9,0.8707661953304834
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps,1.7087549777393864
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,crps_skill_sp,0.4312085209096177
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mae,2.121356411073214
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,mbe,0.0548111730018235
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,n_hours,3041.0
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,ncrps,0.06835019910957546
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmae,0.08485425644292857
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nmbe,0.00219244692007294
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nrmse,0.12463436970364157
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,nwidth_80,0.2384348302694109
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,picp_80,0.698454455771128
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,r2,0.7791869476323598
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse,3.115859242591039
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,rmse_sp,4.6786814908710745
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_climatology,0.3622948933735244
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_cliper,0.24655964075317394
+tirex_xreg,TiRex-XReg,foundation_zero_shot,False,nwp,UG Hall6,25.0,daytime,True,skill_sp,0.3340304851547118

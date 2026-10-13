@@ -32,20 +32,13 @@ PV stations, with archived weather forecasts as inputs and one protocol for ever
 experiments ran on one 16 GB laptop, with no GPU server, so the time and memory that each model
 needs are measured on consumer hardware.
 
-<!-- TODO(Lorenzo): state in one clause your own reason for the consumer-hardware constraint (title,
-umbrella question); the text above states only the fact. -->
-
 ## Research questions {#sec:intro-questions}
 
 The thesis asks whether time-series foundation models, zero-shot or fine-tuned, can match or beat
 purpose-trained models and simple reference forecasts for day-ahead hourly PV power on consumer
 hardware, and at what compute cost. Three foundation models are tested zero-shot: Chronos-2, TimesFM
-and TiRex. Chronos-2, the only one of the three that can take weather forecasts as inputs through the
-software used here (@sec:method-covariates), is also fine-tuned. Four research questions break this
+and TiRex. Only Chronos-2 is also fine-tuned, because it is the only one of the three that reads weather forecasts natively in the software used here (@sec:method-covariates). Four research questions break this
 down:
-
-<!-- TODO(Lorenzo): if your reason for fine-tuning only Chronos-2 was something else (for example
-the fine-tuning support of the software), say so here in one clause. -->
 
 - **RQ1.** How accurate are zero-shot foundation models for day-ahead hourly PV power, compared
   with purpose-trained models and reference forecasts?
@@ -58,7 +51,7 @@ the fine-tuning support of the software), say so here in one clause. -->
 ## Approach and contributions {#sec:intro-contributions}
 
 Every model runs through one evaluation pipeline. Except for two of the simple reference forecasts,
-every model predicts the clear-sky index, the ratio of a station's power to the power it would deliver under a cloudless sky, which removes the known daily and seasonal cycle from the series
+every model predicts the clear-sky index, the ratio of a station's power to the power it would deliver under a cloudless sky, which removes most of the known daily and seasonal cycle from the series
 (@sec:background-concepts). The data are six of the 60 stations of a public dataset from a campus in
 Hong Kong [@lin2025hkust] (Chapter [-@sec:data]). The models are scored on the same 270 test days and
 the same hours by their skill over CLIPER: the relative reduction in RMSE against this reference
@@ -73,7 +66,7 @@ The thesis contributes:
    zero-shot and fine-tuned, with one evaluation pipeline on the same test days and hours, never
    lets a model read power measured after the issue time, compares models with confidence intervals
    and significance tests, and traces every run to its configuration;
-2. a forecasting-ready version of the dataset (Chapter [-@sec:data]): corrected time labels for the hourly files, light quality control, a model of each station's clear-sky power learned from its clearest hours, and an analysis of the lead times of the archived weather forecasts;
+2. a documented processing of the dataset for forecasting (Chapter [-@sec:data]): corrected time labels for the hourly files, light quality control, a model of each station's clear-sky power learned from its clearest hours, and an analysis of the lead times of the archived weather forecasts;
 3. an account of the time and memory that each model needs on one 16 GB laptop.
 
 In brief, with weather forecasts three models lead and cannot be told apart: LightGBM at default
@@ -87,7 +80,7 @@ forecasts, no model beats CLIPER, so the weather forecasts, not the model class,
 skill of the models that can use them; this gain is an upper bound, because the archived forecasts
 come from weather-model runs not yet available at the issue time (@sec:data-weather). With weather forecasts,
 the fine-tuned model's forecast intervals are the closest to calibrated, and every model needs at
-most about four minutes on the laptop per 30 days of test forecasts.
+most about four minutes on the laptop per station and 30 days of test forecasts.
 
 ## Outline {#sec:intro-outline}
 

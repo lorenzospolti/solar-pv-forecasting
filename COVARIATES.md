@@ -1,9 +1,10 @@
 # Weather covariates for TiRex and TimesFM, longer contexts, newer checkpoints
 
-Written 10 Oct 2026. **Nothing in this file has run on the test days** (5 Jul 2022 –
-26 Nov 2023). The design choices below were made on development days before the first
-test day (section 4). The proposed runs are in `configs/covariates.yaml`; declare them in
-`DECISIONS.md` before starting them (draft entry in section 6).
+Written 10 Oct 2026, before any of it ran on the test days (5 Jul 2022 – 26 Nov 2023).
+The design choices below were made on development days before the first test day
+(section 4). Sections 1-2 of `configs/covariates.yaml` then ran on 12-13 Oct 2026 as
+declared in `DECISIONS.md`, which holds the declaration, the outcome and the results.
+TimesFM-3 and TiRex-2 (section 3) have not run.
 
 ## 1. How long a context each model accepts
 
@@ -157,18 +158,20 @@ What to expect on the test days:
 
 ```bash
 conda activate pv
-python -m pip install -e ".[forecast,covariates,dev]"   # [covariates]: only for timesfm3 / tirex2
+# [covariates] (timesfm3 / tirex2 only) goes into a clone, never into pv, the env of the
+# reported runs:  conda create -n pv-cov --clone pv; conda activate pv-cov;
+#                 python -m pip install -e ".[covariates]"
 hf auth login                                          # TiRex-2 is gated: accept its terms first
 python experiments/fetch_checkpoints.py --all          # + amazon/chronos-2, TimesFM-3, TiRex-2
 make test                                              # incl. tests/test_covariate_models.py
-# declare the runs in DECISIONS.md (section 6), then:
+# declare the runs in DECISIONS.md, then (exact commands: DECISIONS.md, 12 Oct 2026):
 python experiments/run_panel.py --config configs/covariates.yaml \
     --results results/covariates/results.parquet \
-    --predictions-dir results/covariates/predictions --logs-dir results/covariates/logs
-python experiments/covariate_summary.py                # skill over CLIPER next to the reported rows
+    --predictions-dir results/covariates/predictions --logs-dir results/covariates/logs_<batch>
+python experiments/covariate_summary.py --root ~/Thesis/solar-pv-forecasting   # intervals, E6-E19
 ```
 
-Start with `--models tirex_xreg,timesfm_xreg`: they need no new install. The whole file is roughly one night on the M4. TimesFM-3 at 15,360 h is the slowest entry.
+Start with `--models tirex_xreg,timesfm_xreg`: they need no new install. Sections 1-2 took 1.95 h on the M4 (DECISIONS.md, 13 Oct 2026); TimesFM-3 at 15,360 h is likely the slowest entry.
 
 If MPS misbehaves for TimesFM-3 or TiRex-2, you have two options:
 
@@ -178,6 +181,8 @@ If MPS misbehaves for TimesFM-3 or TiRex-2, you have two options:
 `experiments/covariate_summary.py` reproduces the master-table skill exactly on the existing predictions. For example, LightGBM NWP is 0.2803 and Chronos-B-long NWP 0.2736. The thesis tables still come from `experiments/report.py`, which needs the new names in `POST_HOC_MODELS` / `MAIN_MODELS` if you report them.
 
 ## 6. Draft entry for DECISIONS.md
+
+Superseded: the entry as committed, with the exact runs, is in `DECISIONS.md` (12 Oct 2026).
 
 > ## 10 Oct 2026, written before the runs it declares
 >

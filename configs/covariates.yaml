@@ -1,16 +1,17 @@
 # Weather covariates for TiRex and TimesFM, the longest contexts the models accept, and
-# two newer checkpoints that read covariates natively. Written 10 Oct 2026; NONE of these
-# configurations has run on the test days. Declare the runs in DECISIONS.md before starting
-# them (draft entry in COVARIATES.md). Same data, folds and code path as panel v2 and the
-# extras; results go to their own store so the panel and the extras stay untouched:
+# two newer checkpoints that read covariates natively. Written 10 Oct 2026. Sections 1-2 ran
+# on the test days on 12-13 Oct 2026 as declared in DECISIONS.md (12 Oct entry: the exact
+# runs and commands; 13 Oct: the outcome); section 3 has not. Same data, folds and code
+# path as panel v2 and the extras; results go to their own store so the panel and the
+# extras stay untouched:
 #
 #   python experiments/run_panel.py --config configs/covariates.yaml \
 #       --results results/covariates/results.parquet \
 #       --predictions-dir results/covariates/predictions --logs-dir results/covariates/logs
-#   python experiments/covariate_summary.py          # quick look, skill over CLIPER
+#   python experiments/covariate_summary.py --root ~/Thesis/solar-pv-forecasting
 #
 # Pick a subset with --models (e.g. --models tirex_xreg,timesfm_xreg). Sections 1-2 need
-# nothing new; section 3 needs `python -m pip install -e ".[covariates]"` (COVARIATES.md).
+# nothing new; section 3 needs the [covariates] extra in a clone of pv (env pv-cov), never in pv.
 seed: 0
 data:
   dataset: hkust_rooftop_pv

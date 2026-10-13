@@ -32,7 +32,8 @@ Definitions (the Method chapter cites them; each function's docstring has its ow
   every station cannot use weather, so its forecast is a no-weather forecast. This
   is detected from the data (never from a list of names) and such a model is
   reported once, under "No weather", marked † in tables and "(no covariates)" in
-  figures.
+  figures. The one exception is ``RUN_ONCE``: univariate configurations declared to
+  run under No weather only (DECISIONS.md, 12 Oct 2026), which have no pair to compare.
 * Significance. The comparisons in ``COMPARISONS`` (fixed before panel v2 ran),
   tested on daily losses with Diebold-Mariano (Newey-West variance,
   Harvey-Leybourne-Newbold correction), Holm-adjusted over the family, checked by a
@@ -42,7 +43,7 @@ Definitions (the Method chapter cites them; each function's docstring has its ow
   intervals only, no tests.
 
 Inputs. ``--predictions-dir`` and ``--results`` take one or more paths (default: the
-panel and the extra runs); a missing path is skipped with a warning.
+panel, the extra runs and the covariate runs); a missing path is skipped with a warning.
 
 Outputs. ``--tables-dir`` gets each table as CSV (full-precision numbers) and as a
 pandoc pipe table whose first line is its caption, the appendix tables in its
@@ -52,7 +53,7 @@ pandoc pipe table whose first line is its caption, the appendix tables in its
   T2 chronos2_configs     the Chronos-2 configurations: skill, PICP-80, time
   T3 probabilistic        quantile score / C, PICP-80 (95 % interval), width-80 / C
   T4 compute              median fit / predict seconds, maximum peak RSS
-  T5 significance         P1-P11 (skill difference, Holm p) and post hoc E1-E5
+  T5 significance         P1-P11 (skill difference, Holm p) and post hoc E1-E15
   appendix/master_skill_full    every model, skill over SP and CLIPER [min, max], nRMSE, nMBE
   appendix/significance_detail  the test statistics of P1-P11
   appendix/skill_by_fold        skill per test window
@@ -139,12 +140,16 @@ MODELS: tuple[tuple[str, str, str], ...] = (
     ("chronos2_ctx2048", "Chronos-S-long", FOUNDATION_ZS),
     ("chronos2_base", "Chronos-B", FOUNDATION_ZS),
     ("chronos2_base_ctx2048", "Chronos-B-long", FOUNDATION_ZS),
+    ("chronos2_base_ctx8192", "Chronos-B-max", FOUNDATION_ZS),
     ("chronos2_ft", "Chronos-S-FT", FOUNDATION_FT),
     ("chronos2_ft_s1", "Chronos-S-FT, seed 1", FOUNDATION_FT),
     ("chronos2_ft_s2", "Chronos-S-FT, seed 2", FOUNDATION_FT),
     ("timesfm", "TimesFM", FOUNDATION_ZS),
+    ("timesfm_ctx16k", "TimesFM-max", FOUNDATION_ZS),
+    ("timesfm_xreg", "TimesFM-XReg", FOUNDATION_ZS),
     ("tirex", "TiRex", FOUNDATION_ZS),
     ("tirex_ctx2048", "TiRex-long", FOUNDATION_ZS),
+    ("tirex_xreg", "TiRex-XReg", FOUNDATION_ZS),
 )
 
 #: Chronos-2 configuration -> (checkpoint, context in hours, training), for the
@@ -155,24 +160,31 @@ CHRONOS2_SETUP: dict[str, tuple[str, int, str]] = {
     "chronos2_ctx2048": ("small", 2048, "zero-shot"),
     "chronos2_base": ("base", 336, "zero-shot"),
     "chronos2_base_ctx2048": ("base", 2048, "zero-shot"),
+    "chronos2_base_ctx8192": ("base", 8192, "zero-shot"),
     "chronos2_ft": ("small", 336, "fine-tuned"),
     "chronos2_ft_s1": ("small", 336, "fine-tuned, seed 1"),
     "chronos2_ft_s2": ("small", 336, "fine-tuned, seed 2"),
 }
-#: configurations run after the main run (panel v2) had been seen (configs/extras.yaml;
-#: DECISIONS.md): every table and figure marks them with POST_HOC_MARK
+#: configurations run after the main run (panel v2) had been seen (configs/extras.yaml,
+#: configs/covariates.yaml; DECISIONS.md): every table and figure marks them with
+#: POST_HOC_MARK
 POST_HOC_MODELS = frozenset({
     "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base", "chronos2_base_ctx2048",
-    "chronos2_ft_s1", "chronos2_ft_s2", "tirex_ctx2048"})
+    "chronos2_ft_s1", "chronos2_ft_s2", "tirex_ctx2048",
+    "chronos2_base_ctx8192", "timesfm_ctx16k", "timesfm_xreg", "tirex_xreg"})
+#: univariate configurations run under No weather only (DECISIONS.md, 12 Oct 2026): with
+#: one setting, ``detect_no_covariates`` has no pair to compare, so they are named here
+RUN_ONCE = frozenset({"timesfm_ctx16k"})
 
 #: the models of the main tables (T1, T3, T4) and figures, in this order
 MAIN_MODELS: tuple[str, ...] = (
     "smart_persistence", "cliper", "sarima", "lightgbm", "lstm", "chronos2",
-    "chronos2_base_ctx2048", "chronos2_ft", "timesfm", "tirex")
+    "chronos2_base_ctx2048", "chronos2_ft", "timesfm", "timesfm_xreg", "tirex", "tirex_xreg")
 #: the Chronos-2 configurations of T2, in this order
 CHRONOS2_MODELS: tuple[str, ...] = (
     "chronos2", "chronos2_ctx1024", "chronos2_ctx2048", "chronos2_base",
-    "chronos2_base_ctx2048", "chronos2_ft", "chronos2_ft_s1", "chronos2_ft_s2")
+    "chronos2_base_ctx2048", "chronos2_base_ctx8192", "chronos2_ft", "chronos2_ft_s1",
+    "chronos2_ft_s2")
 #: the reference of every main table and figure ("smart_persistence" switches them all)
 HEADLINE_REF = "cliper"
 
@@ -216,15 +228,25 @@ COMPARISONS: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("P10", ("chronos2", "nwp"), ("chronos2", "none")),
     ("P11", ("cliper", "nwp"), ("smart_persistence", "nwp")),
 )
-#: Post hoc comparisons (T5 block 2; DECISIONS.md, 4 Oct 2026): they involve the runs
-#: added after panel v2, so they get a paired skill difference with its interval and
-#: no test. Same layout as ``COMPARISONS``.
+#: Post hoc comparisons (T5 block 2; DECISIONS.md, E1-E5 on 4 Oct, E6-E15 on 12 Oct 2026):
+#: they involve the runs added after panel v2, so they get a paired skill difference
+#: with its interval and no test. Same layout as ``COMPARISONS``.
 POST_HOC: tuple[tuple[str, tuple[str, str], tuple[str, str]], ...] = (
     ("E1", ("chronos2_ctx2048", "nwp"), ("chronos2", "nwp")),
     ("E2", ("lightgbm", "nwp"), ("chronos2_ctx2048", "nwp")),
     ("E3", ("chronos2_ft", "nwp"), ("chronos2_ctx2048", "nwp")),
     ("E4", ("lightgbm", "nwp"), ("chronos2_base_ctx2048", "nwp")),
     ("E5", ("chronos2_ft", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E6", ("tirex_xreg", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E7", ("tirex_xreg", "nwp"), ("lightgbm", "nwp")),
+    ("E8", ("tirex_xreg", "nwp"), ("tirex_ctx2048", "none")),
+    ("E9", ("timesfm_xreg", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E10", ("timesfm_xreg", "nwp"), ("lightgbm", "nwp")),
+    ("E11", ("timesfm_xreg", "nwp"), ("timesfm_ctx16k", "none")),
+    ("E12", ("timesfm_ctx16k", "none"), ("chronos2_base_ctx2048", "nwp")),
+    ("E13", ("timesfm_ctx16k", "none"), ("lightgbm", "nwp")),
+    ("E14", ("chronos2_base_ctx8192", "nwp"), ("chronos2_base_ctx2048", "nwp")),
+    ("E15", ("chronos2_base_ctx8192", "nwp"), ("lightgbm", "nwp")),
 )
 #: the P2 pair whose robustness the appendix shows, and the fine-tuning seeds of its B side
 P2_PAIR = ("lightgbm", "chronos2_ft")
@@ -1423,6 +1445,11 @@ def _no_cov_note(panel: Panel, models: Iterable[str]) -> str:
     if panel.no_covariates & models:
         note += (f" {NO_COV_MARK} No covariates: the forecasts are identical in both weather "
                  "settings, so the model is reported once, under No weather.")
+        once = model_order(panel.no_covariates & models & RUN_ONCE)
+        if once:
+            note += (f" {', '.join(display_name(m) for m in once)} "
+                     f"{'takes' if len(once) == 1 else 'take'} no covariates and "
+                     f"{'was' if len(once) == 1 else 'were'} run under No weather only.")
     if POST_HOC_MODELS & models:
         note += (f" {POST_HOC_MARK} Post hoc: added after the results of the main run had "
                  "been seen.")
@@ -1717,7 +1744,7 @@ def _side(panel: Panel, model: str, setting: str) -> str:
     """One side named as in T1: a no-covariate model with †, any other with its setting."""
     if model in panel.no_covariates:
         return _model_cell(panel, model)
-    return f"{display_name(model)}, {setting_label(setting)}"
+    return f"{_post_hoc(model)}, {setting_label(setting)}"
 
 
 def _comparison(panel: Panel, r: dict) -> str:
@@ -1739,7 +1766,7 @@ def _difference_cell(r: dict) -> str:
 
 def table_significance(panel: Panel, sig: pd.DataFrame, post_hoc: pd.DataFrame) -> Table:
     """T5: the comparisons fixed before panel v2 (P1-P11: paired skill difference over
-    ``HEADLINE_REF`` with its interval, Holm p, verdict) and the post hoc ones (E1-E5:
+    ``HEADLINE_REF`` with its interval, Holm p, verdict) and the post hoc ones (E1-E15:
     skill difference with its interval only, no test). ``sig`` comes from
     ``add_skill_differences``; the test statistics are in ``significance_detail``."""
     columns = ["ID", "Comparison (A vs B)", f"Skill difference (A {MINUS} B)", "Holm p",
@@ -2616,11 +2643,13 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
                                              "from the saved predictions.")
     ap.add_argument("--results", nargs="+",
                     default=[str(ROOT / "results" / "results.parquet"),
-                             str(ROOT / "results" / "extra" / "results.parquet")],
+                             str(ROOT / "results" / "extra" / "results.parquet"),
+                             str(ROOT / "results" / "covariates" / "results.parquet")],
                     help="results stores (timing and memory only); missing ones are skipped")
     ap.add_argument("--predictions-dir", nargs="+",
                     default=[str(ROOT / "results" / "predictions"),
-                             str(ROOT / "results" / "extra" / "predictions")],
+                             str(ROOT / "results" / "extra" / "predictions"),
+                             str(ROOT / "results" / "covariates" / "predictions")],
                     help="folders of per-run prediction parquets (the source of every "
                          "accuracy number); missing ones are skipped")
     ap.add_argument("--tables-dir", default=str(ROOT / "thesis" / "tables"))
@@ -2637,7 +2666,8 @@ def main(argv: Sequence[str] | None = None) -> list[Path]:
     runs = check_runs(load_predictions([Path(p) for p in args.predictions_dir],
                                        args.include_synthetic, stored_hashes(results_paths)))
     panel = Panel(runs=runs, capacity=load_capacities(runs, Path(args.processed_dir)))
-    panel.no_covariates = detect_no_covariates(runs)
+    panel.no_covariates = detect_no_covariates(runs) | {
+        m for m in RUN_ONCE if panel.has(m, "none") and not panel.has(m, "nwp")}
     panel.timing = load_timing(results_paths, runs, args.include_synthetic)
     _log_inputs(panel)
 
