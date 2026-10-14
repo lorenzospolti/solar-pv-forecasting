@@ -52,7 +52,15 @@ rescore: # rebuild every metric row of results/results.parquet from results/pred
 report: # build thesis tables + figures from results/predictions, results/extra/predictions and results/covariates/predictions (timing and memory from the three results stores)
 	python experiments/report.py
 
-manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc + tectonic)
+# One tectonic process per TeX pass, repeated until the .aux settles. Within one process tectonic
+# keeps the glyph sizes it cached under each font number, the numbers shift between passes, and on
+# the last pass lines with italics came out too tall, so their line spacing was uneven.
+manuscript: # build thesis/build/thesis.pdf from thesis/chapters/*.md (pandoc + pandoc-crossref + citeproc -> thesis/build/thesis.tex -> tectonic)
 	mkdir -p thesis/build && cd thesis && pandoc chapters/*.md --lua-filter filters/include.lua --filter pandoc-crossref --citeproc \
 		--top-level-division=chapter --number-sections -V documentclass=report -V geometry:margin=2.5cm \
-		-V fontsize=11pt -V linkcolor=blue --pdf-engine=tectonic -o build/thesis.pdf
+		-V fontsize=11pt -V linkcolor=blue --standalone -o build/thesis.tex
+	cd thesis && for pass in 1 2 3 4; do \
+		cp -f build/thesis.aux build/thesis.aux.prev 2>/dev/null || rm -f build/thesis.aux.prev; \
+		tectonic -Z search-path=. --reruns 0 --keep-intermediates build/thesis.tex || exit 1; \
+		if cmp -s build/thesis.aux build/thesis.aux.prev; then break; fi; \
+	done
