@@ -1,0 +1,44 @@
+# The two zero-shot Chronos-2 configurations that complete the candidate grid of the
+# real-time selection, {small, base} x {336, 1,024, 2,048, 8,192} h (DECISIONS.md,
+# 13 Oct 2026; VALIDATION.md). Same data, folds and code path as panel v2, the extras and
+# the covariate runs: the nine 30-day test windows from 5 Jul 2022. Results go to their own
+# store:
+#
+#   python experiments/run_panel.py --config configs/grid.yaml \
+#       --results results/grid/results.parquet --predictions-dir results/grid/predictions \
+#       --logs-dir results/grid/logs
+#
+# Each configuration copies the params of its grid neighbours: chronos2_ctx8192 those of
+# chronos2_base_ctx8192 (configs/covariates.yaml) with the small checkpoint,
+# chronos2_base_ctx1024 those of chronos2_ctx1024 (configs/extras.yaml) with the base one.
+seed: 0
+data:
+  dataset: hkust_rooftop_pv
+  etl_version: 4
+  site_id: CYT (Station 2)
+  panel: [LSK North, SQ1, SQ567, UG Hall6, CYT (Station 2), SQ15]
+  synthetic_days: 540
+  target: power
+  weather_mode: nwp
+  capacity_kw: null
+splits:
+  initial_train_days: 365
+  first_test_day: '2022-07-05'
+  test_days: 30
+  embargo_days: 1
+  step_days: 60
+  max_folds: 9
+  day_tz: Asia/Hong_Kong
+evaluation:
+  daytime_only: true
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence
+models:
+- name: chronos2_ctx8192               # Chronos-2-small at its maximum context, 8,192 h
+  params: {arch: chronos2, hub_model_name: autogluon/chronos-2-small,
+           input_chunk_length: [2048, 8192], output_chunk_length: 24, quantile: true,
+           context_days: 345}
+- name: chronos2_base_ctx1024          # Chronos-2-base at 1,024 h
+  params: {input_chunk_length: 1024, output_chunk_length: 24, quantile: true,
+           hub_model_name: amazon/chronos-2, arch: chronos2, context_days: 90}

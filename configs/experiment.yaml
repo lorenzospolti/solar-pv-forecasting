@@ -1,0 +1,110 @@
+# The definitive run (DEFINITIVE_RUN.md, 14 Oct 2026): the main run of the thesis, every
+# model from scratch in env pv-definitive, 13 models x 2 weather settings x 6 stations =
+# 156 runs (`make panel`, with HF_HUB_OFFLINE=1). TimesFM-2.5 and TiRex are replaced by
+# TimesFM-3 and TiRex-2, which read the weather forecast as known-future covariates, as
+# Chronos-2 does. The full resolved dict is SHA1-hashed into the results-row key, so
+# editing this file produces a new, traceable run.
+seed: 0
+
+data:
+  dataset: hkust_rooftop_pv          # primary (Dryad doi:10.5061/dryad.m37pvmd99)
+  etl_version: 4                     # the pvfc.data.ETL_VERSION these runs use. It is hashed,
+                                     #   so runs on rebuilt data never share a config hash with
+                                     #   runs on older data; run.py refuses a mismatch.
+  site_id: "CYT (Station 2)"         # development station (best-covered hourly station);
+                                     #   override per run with --site. CYT (Station 1) is
+                                     #   excluded: pvfc.data.EXCLUDED_STATIONS says why.
+  # thesis panel: complete or near-complete records with a full training year before
+  # first_test_day, stable output (k at its 1.3 ceiling in < 5% of daytime hours every
+  # year; check_data.py), stratified
+  # by size (25-55 kW) and inverter type (optimizer 15-min / no optimizer hourly). Zone A2
+  # (249.5 kW) was the planned large system but changes output regime in May 2023 — see
+  # pvfc.data.EXCLUDED_STATIONS; UG Hall6 replaces it.
+  panel: ["LSK North", "SQ1", "SQ567", "UG Hall6", "CYT (Station 2)", "SQ15"]
+  synthetic_days: 540                # used with --synthetic (harness dev / tests)
+  target: power                      # modelled in clear-sky-index space (k = power/p_clear)
+  weather_mode: nwp                  # nwp (forecast archive) | none (no weather covariates)
+                                     #   | oracle (tower; its pyranometer drifts: diagnostics only)
+  capacity_kw: null                  # filled from metadata at load time
+
+splits:                              # expanding-window blocked walk-forward (whole-day blocks)
+  initial_train_days: 365            # minimum training days (= the clear-sky fit window)
+  first_test_day: "2022-07-05"       # calendar anchor: every station is scored on the same days
+  test_days: 30
+  embargo_days: 1                    # >= horizon (day-ahead = 1 day)
+  step_days: 60                      # 60-day stride x 9 folds -> 30-day test windows from
+  max_folds: 9                       #   5 Jul 2022 to 26 Nov 2023, incl. a winter
+  day_tz: Asia/Hong_Kong             # day blocks & issue times on LOCAL days (no DST in HK);
+                                     #   UTC days would put the issue time at 08:00 local
+
+evaluation:
+  daytime_only: true                 # report daytime mask; also rerun all-hours for the thesis
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence       # skill-score denominator
+
+# Model ladder (DEFINITIVE_RUN.md section 2). Pick a subset per run with --models.
+# Cost per fold differs by orders of magnitude (baselines: ms; LightGBM: 24 horizons x
+# 9 quantile boosters; SARIMA: one AutoARIMA fit per fold, then statsforecast forward()
+# on the last 60 days at each issue — no daily refit; LSTM and chronos2_ft: training),
+# so the synthetic `make smoke` stays baseline-only via --synthetic. Foundation models
+# need darts>=0.44, the [covariates] extra and the checkpoints from `make checkpoints`;
+# they run on MPS. See darts_wrapper.py for the arch/label mechanism. The params of every
+# model except timesfm3 and tirex2 are those of panel v2 (chronos2: chronos2_base_ctx8192
+# of configs/covariates.yaml), so those rows should reproduce the earlier forecasts.
+# Moirai-2 and TTM are not run: they read no covariates (univariate zero-shot).
+models:
+  - name: persistence              # same-hour-yesterday (24 h lag)
+  - name: smart_persistence
+  - name: seasonal_naive           # weekly lag — 24 h would duplicate `persistence`
+    params: {season_hours: 168}
+  - name: climatology              # training-window mean daytime clear-sky index x p_clear
+  - name: cliper                   # CLIPER: rho-weighted climatology + persistence (Yang 2019)
+  # --- classical / ML / deep ---
+  - name: sarima              # AutoARIMA (statsforecast); falls back to fixed-order SARIMAX
+    params: {seasonal_m: 24, context_days: 60, quantile: true}
+  - name: lightgbm            # global, native quantile likelihood. lags: 24 = yesterday's
+    params: {lags: 24, quantile: true}   # profile; future-covariate lags 0..23 by default
+                                         #   (darts lags are relative to the forecast origin)
+  - name: lstm                # point forecast; PyTorch via darts, MPS/CPU auto
+    params: {input_chunk_length: 168, hidden_dim: 32, n_epochs: 30}
+  # --- foundation models: ZERO-SHOT, each family at its maximum context, all three read
+  # the weather forecast (p_clear, the weather columns and the calendar terms) ---
+  - name: chronos2            # Chronos-B: Chronos-2-base (120M), up to its maximum 8,192 h
+    params: {arch: chronos2, hub_model_name: amazon/chronos-2, input_chunk_length: [2048, 8192],
+             output_chunk_length: 24, quantile: true, context_days: 345}
+  - name: chronos2_small      # Chronos-S: Chronos-2-small (28M), 336 h, as Chronos-S-FT
+    params: {arch: chronos2, input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+             hub_model_name: "autogluon/chronos-2-small"}
+  - name: timesfm3            # Google TimesFM-3 (Aug 2026), 331M parameters
+    params:
+      arch: timesfm3
+      input_chunk_length: 15360        # its maximum
+      output_chunk_length: 24
+      quantile: true
+      context_days: 641
+      accept_license: true             # TimesFM non-commercial licence v1.0, accepted by
+                                       #   Lorenzo on 14 Oct 2026
+      revision: "43046b85ec22d584a13f8098c2ed39c889e129c2"
+      device: mps                      # fail fast if MPS is missing (no silent CPU run)
+  - name: tirex2              # NXAI TiRex-2 (Jul 2026), 82.5M parameters; Apache-2.0, not gated
+    params:
+      arch: tirex2
+      input_chunk_length: 2048         # its maximum (context_len in model-config.yaml)
+      output_chunk_length: 24
+      quantile: true
+      context_days: 87
+      revision: "30788a311699acba7e6393ad9700ea7b7cb9bb2d"
+      device: mps
+  # --- foundation models: FINE-TUNED (`arch` selects the class, `name` is the label) ---
+  # Recipe fixed a priori: lr 1e-5 = AutoGluon's Chronos-2 `fine_tune_lr` default (AutoGluon
+  # applies it with LoRA; this is full fine-tuning, for which its docs suggest 1e-6 - a
+  # sensitivity check; darts' Adam default 1e-3 wrecks the pretrained weights). A fresh
+  # copy of the pretrained checkpoint is fine-tuned in every fold. One training window per day,
+  # ending at local midnight (fit_stride 24 = the day-ahead task itself, 1/24 of the cost).
+  # Smoke, CYT (Station 2) fold 0: zero-shot +0.24 skill; FT lr 1e-3 all hourly windows,
+  # 1 epoch: +0.25 in 574 s; lr 1e-3 strided 5 ep: +0.08; this recipe: +0.35 in 122 s.
+  - name: chronos2_ft         # Chronos-S-FT: Chronos-2-small, 336 h
+    params: {arch: chronos2, input_chunk_length: 336, output_chunk_length: 24, quantile: true,
+             finetune: true, n_epochs: 5, fit_stride: 24, optimizer_kwargs: {lr: 1.0e-5},
+             hub_model_name: "autogluon/chronos-2-small"}

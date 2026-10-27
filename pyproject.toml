@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pvfc"
+version = "0.0.1"
+description = "Day-ahead PV power forecasting benchmark: classical/ML/deep vs time-series foundation models"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Lorenzo Spolti" }]
+dependencies = [
+  "numpy",
+  "pandas",
+  "scikit-learn",
+  "scipy",
+  "statsmodels",
+  "lightgbm",
+  "pvlib",
+  "pyarrow",
+  "pyyaml",
+  "matplotlib",
+  "tqdm",
+]
+
+[project.optional-dependencies]
+# installed via pip after the conda core env (newer than conda-forge).
+# darts>=0.44: native Chronos-2 / TimesFM-2.5 foundation models, fine-tuning via
+# `enable_finetuning` (added 0.42) and TiRexModel (added 0.44). The PyPI package is
+# `darts`: the old `u8darts` name stopped at 0.41.0 (Feb 2026), so never pin u8darts.
+# TiRexModel imports the `tirex` package (PyPI `tirex-ts`; runs on CPU/MPS, no CUDA).
+forecast = ["darts[torch]>=0.44", "tirex-ts>=1.4"]
+# checkpoints that read the weather forecast natively, released after darts 0.47
+# (COVARIATES.md): TimesFM-3 (weights: TimesFM non-commercial licence v1.0) and TiRex-2
+# (Apache-2.0, not gated, 14 Oct 2026). Not needed for the xreg variants of TiRex/TimesFM.
+# Pinned: the definitive run's versions (env pv-definitive, DEFINITIVE_RUN.md section 3).
+covariates = ["timesfm[torch]==3.0.2", "tirex-2==0.3.1"]
+dev = ["pytest", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+# pytest resets warning filters per test, so repeat the one pvfc.utils.quiet_known_warnings
+# filter that the darts LightGBM tests trigger (sklearn feature-name check, harmless)
+filterwarnings = ["ignore:X does not have valid feature names:UserWarning:sklearn.utils.validation"]

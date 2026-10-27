@@ -1,0 +1,47 @@
+# data (large / re-downloadable) — keep the dirs, not the contents
+data/raw/*
+data/interim/*
+data/processed/*
+data/external/*
+!data/**/.gitkeep
+
+# results & model artifacts
+results/*.parquet
+results/*.log
+results/predictions/
+results/logs/*
+!results/logs/.gitkeep
+mlruns/
+*.ckpt
+*.pt
+
+# python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+build/
+dist/
+.ipynb_checkpoints/
+
+# os / editor
+.DS_Store
+.vscode/
+.Rhistory
+
+# thesis build output (make manuscript)
+thesis/build/
+
+# archived result sets (large; reproducible from the tagged code)
+results/archive/
+# runs added after panel v2 (configs/extras.yaml); same layout as results/, also large
+results/extra/
+# covariate runs (configs/covariates.yaml); same layout as results/extra/
+results/covariates/
+# grid runs and inner-window (validation) runs of the real-time selection
+# (configs/grid.yaml, configs/validation.yaml; VALIDATION.md); same layout, also large
+results/grid/
+results/validation/
+# the definitive run's development-day check (configs/dev_check.yaml); same layout
+results/dev_check/

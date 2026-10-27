@@ -1,0 +1,71 @@
+# Development-day integrity check of the definitive run (DEFINITIVE_RUN.md section 5, P3).
+# NOT test days: three 30-day windows in the first half of 2022,
+#
+#   4 Jan - 2 Feb 2022, 5 Mar - 3 Apr 2022, 4 May - 2 Jun 2022 (60-day stride),
+#
+# all before 4 Jun 2022, the embargo day of the first inner window (configs/validation.yaml)
+# and a month before the first test day (5 Jul 2022). Same data, evaluation and day-ahead
+# protocol as configs/experiment.yaml; the models carry its params exactly
+# (tests/test_definitive_config.py checks both). These days lie inside the clear-sky
+# template year, so their skill reads high: integrity only, no setting is chosen on them.
+#
+#   python experiments/run_panel.py --config configs/dev_check.yaml \
+#       --results results/dev_check/results.parquet \
+#       --predictions-dir results/dev_check/predictions --logs-dir results/dev_check/logs
+#   python experiments/check_runs.py --config configs/dev_check.yaml \
+#       --predictions-dir results/dev_check/predictions --logs-dir results/dev_check/logs \
+#       --expect-files 48 --dev-skill
+#
+# 4 models x 2 settings x 6 stations = 48 runs; check_runs reads the plan and the 2,160 rows
+# and 3 windows per file from this config. results/dev_check/ is git-ignored.
+#
+# initial_train_days: the splitter's guard on the first fold's training days. 150 days
+# before 4 Jan 2022 every panel station has a record (SQ567, the latest, starts 1 Jul 2021).
+seed: 0
+data:
+  dataset: hkust_rooftop_pv
+  etl_version: 4
+  site_id: CYT (Station 2)
+  panel: [LSK North, SQ1, SQ567, UG Hall6, CYT (Station 2), SQ15]
+  synthetic_days: 540
+  target: power
+  weather_mode: nwp
+  capacity_kw: null
+splits:
+  initial_train_days: 150
+  first_test_day: '2022-01-04'
+  test_days: 30
+  embargo_days: 1
+  step_days: 60
+  max_folds: 3
+  day_tz: Asia/Hong_Kong
+evaluation:
+  daytime_only: true
+  max_zenith_deg: 85
+  quantiles: [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
+  reference: smart_persistence
+models:
+- name: cliper
+- name: chronos2
+  params: {arch: chronos2, hub_model_name: amazon/chronos-2, input_chunk_length: [2048, 8192],
+           output_chunk_length: 24, quantile: true, context_days: 345}
+- name: timesfm3
+  params:
+    arch: timesfm3
+    input_chunk_length: 15360
+    output_chunk_length: 24
+    quantile: true
+    context_days: 641
+    accept_license: true               # TimesFM non-commercial licence v1.0, accepted by
+                                       #   Lorenzo on 14 Oct 2026
+    revision: "43046b85ec22d584a13f8098c2ed39c889e129c2"
+    device: mps
+- name: tirex2
+  params:
+    arch: tirex2
+    input_chunk_length: 2048
+    output_chunk_length: 24
+    quantile: true
+    context_days: 87
+    revision: "30788a311699acba7e6393ad9700ea7b7cb9bb2d"
+    device: mps

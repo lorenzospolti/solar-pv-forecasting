@@ -1,0 +1,31 @@
+# Reproducible conda environment for Apple Silicon (M4). conda-forge only —
+# avoids channel mixing and bundles libomp for LightGBM/XGBoost (plan §Env).
+# Create:  conda env create -f environment.yml   (or `mamba env create -f ...`)
+# Then:    conda activate pv && python -m pip install -e ".[forecast,dev]" && make checkpoints
+name: pv
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - numpy
+  - pandas
+  - scikit-learn
+  - scipy
+  - statsmodels
+  - statsforecast      # darts AutoARIMA backend (SARIMA auto-order search)
+  - lightgbm           # via conda-forge, NOT pip (bundles libomp)
+  - py-xgboost
+  - pvlib
+  - pytorch            # CPU/MPS build on osx-arm64
+  - pytorch-lightning
+  - pyarrow
+  - pyyaml
+  - matplotlib
+  - jupyterlab
+  - tqdm
+  - pytest
+  - ruff
+  - pip
+  # darts (with the foundation-model wrappers) and tirex go through pip after creation:
+  #   python -m pip install -e ".[forecast,dev]"     # darts[torch]>=0.44, tirex-ts (pyproject)
+  # (use `python -m pip`: a bare `pip` can resolve to another Python on this Mac)

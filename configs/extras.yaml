@@ -1,0 +1,104 @@
+seed: 0
+data:
+  dataset: hkust_rooftop_pv
+  etl_version: 4
+  site_id: CYT (Station 2)
+  panel:
+  - LSK North
+  - SQ1
+  - SQ567
+  - UG Hall6
+  - CYT (Station 2)
+  - SQ15
+  synthetic_days: 540
+  target: power
+  weather_mode: nwp
+  capacity_kw: null
+splits:
+  initial_train_days: 365
+  first_test_day: '2022-07-05'
+  test_days: 30
+  embargo_days: 1
+  step_days: 60
+  max_folds: 9
+  day_tz: Asia/Hong_Kong
+evaluation:
+  daytime_only: true
+  max_zenith_deg: 85
+  quantiles:
+  - 0.1
+  - 0.2
+  - 0.3
+  - 0.4
+  - 0.5
+  - 0.6
+  - 0.7
+  - 0.8
+  - 0.9
+  reference: smart_persistence
+models:
+- name: chronos2_ft_s1
+  params:
+    arch: chronos2
+    input_chunk_length: 336
+    output_chunk_length: 24
+    quantile: true
+    finetune: true
+    n_epochs: 5
+    fit_stride: 24
+    optimizer_kwargs: &id001
+      lr: 1.0e-05
+    hub_model_name: autogluon/chronos-2-small
+    seed: 1
+- name: chronos2_ft_s2
+  params:
+    arch: chronos2
+    input_chunk_length: 336
+    output_chunk_length: 24
+    quantile: true
+    finetune: true
+    n_epochs: 5
+    fit_stride: 24
+    optimizer_kwargs: *id001
+    hub_model_name: autogluon/chronos-2-small
+    seed: 2
+- name: chronos2_ctx1024
+  params:
+    input_chunk_length: 1024
+    output_chunk_length: 24
+    quantile: true
+    hub_model_name: autogluon/chronos-2-small
+    arch: chronos2
+    context_days: 90
+- name: chronos2_ctx2048
+  params:
+    input_chunk_length: 2048
+    output_chunk_length: 24
+    quantile: true
+    hub_model_name: autogluon/chronos-2-small
+    arch: chronos2
+    context_days: 90
+- name: chronos2_base
+  params:
+    input_chunk_length: 336
+    output_chunk_length: 24
+    quantile: true
+    hub_model_name: amazon/chronos-2
+    arch: chronos2
+- name: tirex_ctx2048
+  params:
+    input_chunk_length: 2048
+    output_chunk_length: 24
+    quantile: true
+    accept_license: true
+    arch: tirex
+    context_days: 90
+# Declared on 4 Oct 2026 before it ran (DECISIONS.md): the last model run of the thesis.
+- name: chronos2_base_ctx2048
+  params:
+    input_chunk_length: 2048
+    output_chunk_length: 24
+    quantile: true
+    hub_model_name: amazon/chronos-2
+    arch: chronos2
+    context_days: 90
